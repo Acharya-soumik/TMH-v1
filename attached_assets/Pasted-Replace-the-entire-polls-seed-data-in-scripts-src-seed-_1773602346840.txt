@@ -1,0 +1,121 @@
+Replace the entire polls seed data in scripts/src/seed.ts with the following. Keep the exact same data structure. These are the new questions:
+
+1. Question: "Your job will still exist in 5 years. Be honest."
+Context: "AI isn't coming for jobs — it already has. The question is whether you've accepted it yet."
+Options: ["Yes, I'm irreplaceable", "Probably not and I'm doing nothing about it", "Probably not but I have a plan", "I genuinely don't know"]
+Category: "AI & The Future", categorySlug: "ai-future"
+pollType: "multiple_choice", isFeatured: true, isEditorsPick: true
+tags: ["AI", "Jobs", "Future of Work", "Career"]
+votes: [1200, 2800, 1900, 3100]
+
+2. Question: "The most dangerous thing AI did wasn't take jobs — it exposed how many jobs were already pointless."
+Context: "Millions of roles existed because no alternative existed. Now there is one."
+Options: ["Brutally accurate", "Too harsh — most jobs have real value"]
+Category: "AI & The Future", categorySlug: "ai-future"
+pollType: "hot_take", isFeatured: false, isEditorsPick: true
+tags: ["AI", "Work", "Hot Take"]
+votes: [4200, 1100]
+
+3. Question: "Would you rather be managed by an AI or a mediocre human manager?"
+Options: ["Give me the AI", "I'll take the human, flaws and all"]
+Category: "AI & The Future", categorySlug: "ai-future"
+pollType: "binary"
+votes: [3800, 1400]
+
+4. Question: "If AI replaces your role, whose fault is it?"
+Options: ["Mine — I didn't upskill fast enough", "My company — they didn't train or warn me", "Nobody's — this was always going to happen", "The government — they should have regulated this"]
+Category: "AI & The Future", categorySlug: "ai-future"
+pollType: "multiple_choice", isEditorsPick: true
+votes: [2100, 1600, 2800, 900]
+
+5. Question: "Wasta still beats talent in this region. Agree?"
+Context: "You can be the best in the room and still lose to someone's cousin. Has anything actually changed?"
+Options: ["100% still true", "Getting better but slowly", "Depends on the country", "It's a myth — merit wins if you're good enough"]
+Category: "Work & Careers", categorySlug: "work-careers"
+pollType: "multiple_choice", isEditorsPick: true
+tags: ["Wasta", "Talent", "Culture", "Careers"]
+votes: [3400, 2100, 1800, 600]
+
+6. Question: "The real brain drain isn't people leaving — it's people staying and checking out."
+Context: "Physically present. Emotionally gone. Building nothing. The quiet resignation nobody talks about."
+Options: ["This is the actual crisis", "No — people leaving is still the bigger problem"]
+Category: "Work & Careers", categorySlug: "work-careers"
+pollType: "hot_take"
+votes: [3900, 1200]
+
+7. Question: "Most 'founders' in this region are consultants with a pitch deck. Change my mind."
+Options: ["Can't — this is painfully accurate", "Wrong — real builders are everywhere, just underreported"]
+Category: "Startups & Venture", categorySlug: "startups-venture"
+pollType: "hot_take", isEditorsPick: true
+tags: ["Founders", "Startups", "Hot Take"]
+votes: [2800, 1900]
+
+8. Question: "The next unicorn from this region will come from..."
+Options: ["Cairo", "Riyadh", "Dubai", "Somewhere nobody's watching yet"]
+Category: "Startups & Venture", categorySlug: "startups-venture"
+pollType: "multiple_choice"
+votes: [2100, 2400, 1800, 3200]
+
+9. Question: "LinkedIn in the Arab world is just a brag board. Nobody posts their failures."
+Options: ["Facts — it's completely performative", "Disagree — it's improving", "Same everywhere, not just here"]
+Category: "Culture & Identity", categorySlug: "culture-identity"
+pollType: "hot_take", isEditorsPick: true
+tags: ["LinkedIn", "Culture", "Authenticity"]
+votes: [4100, 600, 1800]
+
+10. Question: "Arab parents would rather their kid be a doctor than a founder. Can you blame them?"
+Context: "Founding a company in this region means navigating systems designed for established players. The risk is real."
+Options: ["Can't blame them — the odds are brutal", "This mindset is exactly why we fall behind", "It's changing with the new generation"]
+Category: "Culture & Identity", categorySlug: "culture-identity"
+pollType: "multiple_choice"
+votes: [2200, 2800, 1900]
+
+11. Question: "We're becoming obsessed with looking successful instead of actually being successful."
+Options: ["This is the defining disease of our generation", "Disagree — ambition drives real outcomes too"]
+Category: "Culture & Identity", categorySlug: "culture-identity"
+pollType: "hot_take"
+votes: [3600, 1100]
+
+12. Question: "The diaspora built half of what the Middle East is proud of — and gets none of the credit."
+Options: ["True — and it needs to change", "False — the credit is there if you look"]
+Category: "Culture & Identity", categorySlug: "culture-identity"
+pollType: "binary"
+votes: [3800, 900]
+
+13. Question: "Egypt is one bad IMF negotiation away from something really ugly."
+Options: ["Agree — the fundamentals are broken", "Disagree — Egypt always finds a way", "It's already ugly, we just aren't saying it"]
+Category: "Finance & Economy", categorySlug: "finance-economy"
+pollType: "multiple_choice", isEditorsPick: true
+tags: ["Egypt", "IMF", "Economy", "Crisis"]
+votes: [2400, 1200, 2900]
+
+14. Question: "Dubai property in 2025 — still inflating or finally about to correct?"
+Options: ["Still inflating — demand is structural", "Correction is coming within 2 years", "Already correcting, quietly"]
+Category: "Finance & Economy", categorySlug: "finance-economy"
+pollType: "multiple_choice"
+votes: [1800, 2100, 1400]
+
+15. Question: "In 10 years, the most valuable skill in the Middle East will be..."
+Options: ["Knowing how to work with AI", "Human judgment and emotional intelligence", "Arabic fluency at a professional level", "Knowing the right people"]
+Category: "AI & The Future", categorySlug: "ai-future"
+pollType: "multiple_choice", isEditorsPick: true
+votes: [3200, 2400, 1100, 1800]
+
+16. Question: "A 22-year-old in Cairo with a laptop has more opportunity than their parents ever did. True or false?"
+Context: "The internet removed gatekeepers. But it also created new ones. Algorithms, English fluency, access to capital."
+Options: ["True — the tools exist, excuses don't", "False — structural barriers are worse than ever", "True for some, completely false for most"]
+Category: "AI & The Future", categorySlug: "ai-future"
+pollType: "multiple_choice"
+votes: [2100, 1600, 3400]
+
+17. Question: "Saudi money changed the Gulf startup scene. Not always for the better."
+Options: ["Agree — it inflated valuations and created dependency", "Disagree — it unlocked a decade of real growth"]
+Category: "Startups & Venture", categorySlug: "startups-venture"
+pollType: "hot_take"
+votes: [2600, 1800]
+
+18. Question: "If your startup needs a government contract to survive Year 1, is it really a startup?"
+Options: ["No — that's a services business with a deck", "Yes — working with government is just a distribution strategy", "Depends entirely on the sector"]
+Category: "Startups & Venture", categorySlug: "startups-venture"
+pollType: "multiple_choice"
+votes: [2200, 1400, 2800]
