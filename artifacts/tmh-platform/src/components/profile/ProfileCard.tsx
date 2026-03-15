@@ -1,7 +1,6 @@
 import { Link } from "wouter"
-import { MapPin, TrendingUp } from "lucide-react"
+import { MapPin } from "lucide-react"
 import type { Profile } from "@workspace/api-client-react/src/generated/api.schemas"
-import { cn } from "@/lib/utils"
 
 export function ProfileCard({ profile }: { profile: Profile }) {
   const getInitials = (name: string) => {
@@ -10,48 +9,45 @@ export function ProfileCard({ profile }: { profile: Profile }) {
 
   return (
     <Link href={`/profiles/${profile.id}`}>
-      <div className="group bg-card hover:bg-secondary/20 border border-border hover:border-primary/40 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl cursor-pointer h-full flex flex-col">
+      <div className="group bg-card border border-border hover:border-primary p-6 transition-all duration-300 cursor-pointer h-full flex flex-col">
         <div className="flex items-start gap-4 mb-5">
           <div className="relative">
             {profile.imageUrl ? (
               <img 
                 src={profile.imageUrl} 
                 alt={profile.name} 
-                className="w-16 h-16 rounded-full object-cover border-2 border-background shadow-md group-hover:border-primary transition-colors"
+                className="w-16 h-16 rounded-sm object-cover grayscale group-hover:grayscale-0 transition-all border border-border"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center font-serif font-bold text-xl border-2 border-background shadow-md group-hover:border-primary transition-colors">
+              <div className="w-16 h-16 rounded-sm bg-secondary text-foreground flex items-center justify-center font-serif font-bold text-xl border border-border">
                 {getInitials(profile.name)}
               </div>
             )}
             {profile.isVerified && (
-              <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground p-0.5 rounded-full border-2 border-background" title="Verified Voice">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              </div>
+              <div className="absolute -bottom-1 -right-1 bg-primary w-2 h-2 rounded-full border border-background" title="Verified Voice" />
             )}
           </div>
           
           <div className="flex-1">
-            <h3 className="font-serif font-bold text-lg text-foreground group-hover:text-primary transition-colors">
+            <h3 className="font-serif font-bold text-base uppercase tracking-wider text-foreground group-hover:text-primary transition-colors leading-tight">
               {profile.name}
             </h3>
-            <p className="text-sm font-medium text-muted-foreground flex items-center gap-1.5 mt-1">
-              <MapPin className="w-3.5 h-3.5" /> {profile.city}, {profile.country}
+            <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground flex items-center gap-1 mt-1">
+              <MapPin className="w-3 h-3" /> {profile.city}
             </p>
           </div>
         </div>
 
-        <p className="text-sm text-foreground/80 line-clamp-3 mb-5 flex-1">
+        <p className="text-sm text-muted-foreground line-clamp-2 mb-5 flex-1 font-sans">
           {profile.headline}
         </p>
 
         <div className="pt-4 border-t border-border flex items-center justify-between text-xs mt-auto">
-          <span className="bg-secondary text-secondary-foreground px-2.5 py-1 rounded-md font-medium">
+          <span className="bg-foreground text-background text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full font-bold">
             {profile.sector}
           </span>
           {profile.associatedPollCount > 0 && (
-            <span className="flex items-center gap-1 text-muted-foreground font-medium">
-              <TrendingUp className="w-3.5 h-3.5" />
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
               {profile.associatedPollCount} Polls
             </span>
           )}

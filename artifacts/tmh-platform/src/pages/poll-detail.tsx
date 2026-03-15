@@ -20,8 +20,8 @@ export default function PollDetail() {
     return (
       <Layout>
         <div className="max-w-4xl mx-auto px-4 py-12">
-          <div className="h-8 w-24 bg-secondary animate-pulse mb-8 rounded" />
-          <div className="h-[500px] bg-secondary animate-pulse rounded-2xl" />
+          <div className="h-8 w-24 bg-secondary animate-pulse mb-8 border border-border" />
+          <div className="h-[500px] bg-secondary animate-pulse border border-border" />
         </div>
       </Layout>
     )
@@ -31,10 +31,10 @@ export default function PollDetail() {
     return (
       <Layout>
         <div className="max-w-4xl mx-auto px-4 py-24 text-center">
-          <AlertCircle className="w-16 h-16 text-destructive mx-auto mb-6" />
-          <h1 className="text-3xl font-serif font-bold mb-4">Poll not found</h1>
-          <p className="text-muted-foreground mb-8">This poll might have been removed or the link is invalid.</p>
-          <Link href="/polls" className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold">
+          <AlertCircle className="w-16 h-16 text-primary mx-auto mb-6" />
+          <h1 className="text-4xl font-serif font-black uppercase tracking-tight mb-4">Poll not found</h1>
+          <p className="text-muted-foreground mb-8 font-sans">This poll might have been removed or the link is invalid.</p>
+          <Link href="/polls" className="bg-foreground text-background px-6 py-3 font-bold text-xs uppercase tracking-widest hover:bg-primary transition-colors">
             Back to Polls
           </Link>
         </div>
@@ -45,8 +45,8 @@ export default function PollDetail() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 lg:py-16">
-        <Link href="/polls" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground font-medium mb-8 transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back to all polls
+        <Link href="/polls" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground font-bold mb-8 transition-colors">
+          <ArrowLeft className="w-3 h-3" /> Back to all polls
         </Link>
 
         {/* The featured poll card handles voting and result display perfectly */}
@@ -55,18 +55,18 @@ export default function PollDetail() {
         </div>
 
         {poll.context && (
-          <div className="bg-card border border-border p-8 rounded-2xl mb-16">
-            <h3 className="font-serif font-bold text-2xl flex items-center gap-3 mb-4">
-              <MessageSquare className="w-6 h-6 text-primary" /> The Context
+          <div className="bg-background border border-border p-8 md:p-12 mb-16">
+            <h3 className="font-serif font-black uppercase text-2xl tracking-wider flex items-center gap-3 mb-6">
+              The Context
             </h3>
-            <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground">
+            <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground font-sans">
               <p>{poll.context}</p>
             </div>
             
             {poll.tags && poll.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-border">
                 {poll.tags.map(tag => (
-                  <span key={tag} className="text-xs font-medium px-3 py-1 bg-secondary text-secondary-foreground rounded-md">
+                  <span key={tag} className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-secondary text-foreground border border-border">
                     #{tag}
                   </span>
                 ))}
@@ -78,8 +78,10 @@ export default function PollDetail() {
         {/* Related Polls */}
         {relatedData?.polls && relatedData.polls.length > 0 && (
           <div>
-            <h3 className="font-serif font-bold text-2xl mb-6">Related Debates</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="border-l-4 border-primary pl-4 mb-8">
+              <h3 className="font-serif font-black uppercase text-3xl tracking-tight">Related Debates</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {relatedData.polls.filter(p => p.id !== poll.id).map(p => (
                 <PollCard key={p.id} poll={p} />
               ))}

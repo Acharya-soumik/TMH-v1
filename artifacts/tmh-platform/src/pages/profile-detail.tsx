@@ -15,9 +15,9 @@ export default function ProfileDetail() {
     return (
       <Layout>
         <div className="max-w-4xl mx-auto px-4 py-12">
-          <div className="h-8 w-24 bg-secondary animate-pulse mb-8 rounded" />
-          <div className="h-[300px] bg-secondary animate-pulse rounded-2xl mb-8" />
-          <div className="h-64 bg-secondary animate-pulse rounded-2xl" />
+          <div className="h-8 w-24 bg-secondary animate-pulse mb-8" />
+          <div className="h-[300px] bg-secondary animate-pulse mb-8 border border-border" />
+          <div className="h-64 bg-secondary animate-pulse border border-border" />
         </div>
       </Layout>
     )
@@ -27,8 +27,8 @@ export default function ProfileDetail() {
     return (
       <Layout>
         <div className="max-w-4xl mx-auto px-4 py-24 text-center">
-          <h1 className="text-3xl font-serif font-bold mb-4">Profile not found</h1>
-          <Link href="/profiles" className="text-primary hover:underline font-bold">
+          <h1 className="text-4xl font-serif font-black uppercase tracking-tight mb-4 text-foreground">Profile not found</h1>
+          <Link href="/profiles" className="text-primary hover:underline font-bold text-xs uppercase tracking-widest">
             Back to Directory
           </Link>
         </div>
@@ -39,59 +39,58 @@ export default function ProfileDetail() {
   return (
     <Layout>
       {/* Header Banner */}
-      <div className="bg-card border-b border-border">
+      <div className="bg-background border-b border-border">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
-          <Link href="/profiles" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground font-medium mb-10 transition-colors">
+          <Link href="/profiles" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground font-bold mb-10 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to Directory
           </Link>
 
           <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
-            {profile.imageUrl ? (
-              <img 
-                src={profile.imageUrl} 
-                alt={profile.name} 
-                className="w-32 h-32 md:w-48 md:h-48 rounded-2xl object-cover border-4 border-background shadow-xl flex-shrink-0"
-              />
-            ) : (
-              <div className="w-32 h-32 md:w-48 md:h-48 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-serif font-bold text-5xl border-4 border-background shadow-xl flex-shrink-0">
-                {profile.name.substring(0,2).toUpperCase()}
-              </div>
-            )}
+            <div className="relative flex-shrink-0">
+              {profile.imageUrl ? (
+                <img 
+                  src={profile.imageUrl} 
+                  alt={profile.name} 
+                  className="w-32 h-32 md:w-48 md:h-48 object-cover border border-border grayscale"
+                />
+              ) : (
+                <div className="w-32 h-32 md:w-48 md:h-48 bg-secondary text-foreground flex items-center justify-center font-serif font-black text-5xl border border-border">
+                  {profile.name.substring(0,2).toUpperCase()}
+                </div>
+              )}
+              {profile.isVerified && (
+                <div className="absolute -bottom-2 -right-2 bg-primary w-4 h-4 border-2 border-background" title="Verified Voice" />
+              )}
+            </div>
             
             <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-3 mb-3">
-                <span className="px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full uppercase tracking-wider">
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <span className="px-3 py-1 bg-foreground text-background text-[10px] font-bold uppercase tracking-widest">
                   {profile.sector}
                 </span>
-                {profile.isVerified && (
-                  <span className="px-3 py-1 bg-accent text-accent-foreground text-xs font-bold rounded-full uppercase tracking-wider flex items-center gap-1">
-                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    Verified
-                  </span>
-                )}
-                <span className="text-muted-foreground text-sm font-medium flex items-center gap-1 ml-auto">
-                  <Eye className="w-4 h-4" /> {profile.viewCount.toLocaleString()}
+                <span className="text-muted-foreground text-[10px] uppercase tracking-widest font-bold flex items-center gap-1 ml-auto">
+                  <Eye className="w-4 h-4" /> {profile.viewCount.toLocaleString()} VIEWS
                 </span>
               </div>
               
-              <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4">
+              <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl font-black uppercase text-foreground mb-4 leading-none tracking-tight">
                 {profile.name}
               </h1>
-              <p className="text-xl text-muted-foreground mb-6 font-medium">
+              <p className="text-xl md:text-2xl text-foreground font-serif italic mb-6 leading-relaxed border-l-4 border-primary pl-4">
                 {profile.headline}
               </p>
               
-              <div className="flex flex-wrap items-center gap-6 text-sm font-semibold text-foreground/80">
+              <div className="flex flex-wrap items-center gap-6 text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-primary" /> {profile.role}
+                  <Briefcase className="w-4 h-4 text-foreground" /> {profile.role}
                 </div>
                 {profile.company && (
                   <div className="flex items-center gap-2">
-                    <Building className="w-4 h-4 text-primary" /> {profile.company}
+                    <Building className="w-4 h-4 text-foreground" /> {profile.company}
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-primary" /> {profile.city}, {profile.country}
+                  <MapPin className="w-4 h-4 text-foreground" /> {profile.city}, {profile.country}
                 </div>
               </div>
             </div>
@@ -99,21 +98,21 @@ export default function ProfileDetail() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 lg:grid-cols-3 gap-16">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-12">
+        <div className="lg:col-span-2 space-y-16">
           {profile.quote && (
-            <div className="relative p-8 bg-secondary/30 rounded-2xl border border-border">
-              <Quote className="absolute top-6 left-6 w-10 h-10 text-primary/20 rotate-180" />
-              <p className="relative z-10 font-serif text-xl md:text-2xl font-medium italic text-foreground leading-relaxed pt-4">
+            <div className="relative p-8 md:p-12 bg-background border border-border">
+              <Quote className="absolute top-6 left-6 w-8 h-8 text-primary opacity-20 rotate-180" />
+              <p className="relative z-10 font-serif text-2xl md:text-3xl font-black uppercase tracking-tight text-foreground leading-tight pt-4">
                 "{profile.quote}"
               </p>
             </div>
           )}
 
           <section>
-            <h2 className="font-serif text-2xl font-bold mb-4">The Story</h2>
-            <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground">
+            <h2 className="font-serif text-3xl font-black uppercase tracking-tight border-b-2 border-foreground pb-4 mb-6">The Story</h2>
+            <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground font-sans">
               {profile.story.split('\n').map((paragraph, i) => (
                 <p key={i}>{paragraph}</p>
               ))}
@@ -121,15 +120,15 @@ export default function ProfileDetail() {
           </section>
 
           {profile.lessonsLearned && profile.lessonsLearned.length > 0 && (
-            <section className="bg-card border border-border p-8 rounded-2xl shadow-sm">
-              <h2 className="font-serif text-2xl font-bold mb-6 text-primary">Lessons Learned</h2>
-              <ul className="space-y-4">
+            <section className="bg-background border border-border p-8 md:p-12">
+              <h2 className="font-serif text-2xl font-black uppercase tracking-tight mb-8 text-primary">Lessons Learned</h2>
+              <ul className="space-y-6">
                 {profile.lessonsLearned.map((lesson, i) => (
-                  <li key={i} className="flex gap-4">
-                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
-                      {i + 1}
+                  <li key={i} className="flex gap-4 items-start">
+                    <span className="flex-shrink-0 text-2xl font-serif font-black text-foreground/20 leading-none">
+                      {(i + 1).toString().padStart(2, '0')}
                     </span>
-                    <span className="text-lg font-medium text-foreground pt-1">{lesson}</span>
+                    <span className="text-lg font-medium text-foreground font-sans">{lesson}</span>
                   </li>
                 ))}
               </ul>
@@ -138,8 +137,8 @@ export default function ProfileDetail() {
 
           {profile.relatedPolls && profile.relatedPolls.length > 0 && (
             <section>
-              <h2 className="font-serif text-2xl font-bold mb-6">Associated Polls</h2>
-              <div className="grid gap-6">
+              <h2 className="font-serif text-3xl font-black uppercase tracking-tight border-b-2 border-foreground pb-4 mb-8">Associated Polls</h2>
+              <div className="grid gap-8">
                 {profile.relatedPolls.map(poll => (
                   <PollCard key={poll.id} poll={poll} />
                 ))}
@@ -151,9 +150,9 @@ export default function ProfileDetail() {
         {/* Right Sidebar */}
         <div className="space-y-8">
           {profile.similarProfiles && profile.similarProfiles.length > 0 && (
-            <div className="bg-card border border-border rounded-2xl p-6">
-              <h3 className="font-serif font-bold text-xl mb-6">Similar Voices</h3>
-              <div className="space-y-4">
+            <div className="bg-background border border-border p-6">
+              <h3 className="font-serif font-black uppercase tracking-wider text-xl mb-6 border-b border-border pb-4">Similar Voices</h3>
+              <div className="space-y-6">
                 {profile.similarProfiles.map(similar => (
                   <ProfileCard key={similar.id} profile={similar} />
                 ))}

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter"
-import { Moon, Sun, Menu, X, BarChart2 } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useTheme } from "@/hooks/use-theme"
 import { cn } from "@/lib/utils"
@@ -28,31 +28,31 @@ export function Navbar() {
     <header 
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b",
-        isScrolled 
-          ? "bg-background/80 backdrop-blur-lg border-border shadow-sm py-3" 
-          : "bg-transparent border-transparent py-5"
+        "bg-background border-border py-4"
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="bg-primary text-primary-foreground p-1.5 rounded-md group-hover:scale-105 transition-transform">
-                <BarChart2 className="w-5 h-5" />
-              </div>
-              <span className="font-serif font-bold text-xl tracking-tight text-foreground">
-                THE MIDDLE EAST HUSTLE
+          <div className="flex items-center gap-12">
+            <Link href="/" className="flex flex-col group">
+              <span className="font-serif font-black text-4xl uppercase tracking-widest text-foreground leading-none">
+                TMH
+              </span>
+              <span className="text-[10px] font-sans tracking-[0.3em] uppercase text-foreground leading-none mt-1">
+                The Middle East Hustle
               </span>
             </Link>
             
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-8">
               {navLinks.map((link) => (
                 <Link 
                   key={link.href} 
                   href={link.href}
                   className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary",
-                    location === link.href ? "text-primary" : "text-muted-foreground"
+                    "text-xs uppercase tracking-[0.2em] font-medium transition-all",
+                    location === link.href 
+                      ? "text-primary border-b-2 border-primary pb-1" 
+                      : "text-foreground hover:border-b-2 hover:border-foreground pb-1"
                   )}
                 >
                   {link.label}
@@ -61,13 +61,13 @@ export function Navbar() {
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <button 
               onClick={toggleTheme}
-              className="p-2 rounded-full hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+              className="text-xs uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Toggle theme"
             >
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {isDark ? 'Light' : 'Dark'}
             </button>
             
             <button 
@@ -88,8 +88,8 @@ export function Navbar() {
               key={link.href} 
               href={link.href}
               className={cn(
-                "text-lg font-medium p-2 rounded-lg transition-colors",
-                location === link.href ? "bg-secondary text-primary" : "text-foreground hover:bg-secondary/50"
+                "text-lg font-serif font-bold uppercase tracking-wider p-2 transition-colors",
+                location === link.href ? "text-primary" : "text-foreground"
               )}
               onClick={() => setMobileMenuOpen(false)}
             >

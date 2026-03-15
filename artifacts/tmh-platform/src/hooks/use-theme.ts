@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react"
 
 export function useTheme() {
-  const [isDark, setIsDark] = useState(true)
+  const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
-    // Default to dark mode if no preference
+    // Default to light mode if no preference
     const stored = localStorage.getItem("tmh_theme")
-    const isDarkMode = stored === "light" ? false : true
+    const isDarkMode = stored === "dark"
     
     setIsDark(isDarkMode)
     if (isDarkMode) {

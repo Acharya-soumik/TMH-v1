@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Link } from "wouter"
 import { motion, AnimatePresence } from "framer-motion"
-import { Clock, Users, ArrowRight, Share2, CheckCircle2 } from "lucide-react"
+import { ArrowRight, Share2 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { useVotePoll } from "@workspace/api-client-react"
 import type { Poll, PollOption } from "@workspace/api-client-react/src/generated/api.schemas"
@@ -77,25 +77,25 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
 
   return (
     <div className={cn(
-      "bg-card rounded-2xl border border-border shadow-lg overflow-hidden flex flex-col transition-all duration-300 hover:shadow-xl hover:border-primary/30",
+      "bg-card border border-border flex flex-col transition-all duration-300",
       featured ? "md:flex-row md:items-stretch" : ""
     )}>
       <div className={cn("p-6 sm:p-8 flex-1 flex flex-col", featured ? "md:p-12 md:w-1/2" : "")}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <span className="px-3 py-1 bg-secondary text-secondary-foreground text-xs font-semibold rounded-full uppercase tracking-wider">
+            <span className="px-2 py-1 bg-foreground text-background text-[10px] font-bold rounded-sm uppercase tracking-[0.25em]">
               {poll.category}
             </span>
             {isLive && (
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-primary">
-                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="flex items-center gap-1.5 text-[10px] font-bold text-primary uppercase tracking-[0.25em]">
+                <span className="w-2 h-2 rounded-full bg-primary" />
                 LIVE
               </span>
             )}
           </div>
           <button 
             onClick={handleShare}
-            className="text-muted-foreground hover:text-primary transition-colors p-2"
+            className="text-muted-foreground hover:text-foreground transition-colors p-2"
             aria-label="Share poll"
           >
             <Share2 className="w-4 h-4" />
@@ -104,43 +104,37 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
 
         <Link href={`/polls/${poll.id}`}>
           <h3 className={cn(
-            "font-serif font-bold text-foreground hover:text-primary transition-colors cursor-pointer mb-3",
-            featured ? "text-3xl md:text-4xl leading-tight" : "text-xl"
+            "font-serif font-black text-foreground uppercase tracking-tight hover:text-primary transition-colors cursor-pointer mb-4",
+            featured ? "text-4xl md:text-5xl leading-none" : "text-3xl leading-none"
           )}>
             {poll.question}
           </h3>
         </Link>
         
         {poll.context && (
-          <p className="text-muted-foreground text-sm line-clamp-2 mb-6 flex-1">
+          <p className="text-muted-foreground text-sm line-clamp-3 mb-6 flex-1 font-sans">
             {poll.context}
           </p>
         )}
 
-        <div className="mt-auto pt-6 border-t border-border flex items-center justify-between text-xs text-muted-foreground font-medium">
+        <div className="mt-auto pt-6 border-t border-border flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5">
-              <Users className="w-4 h-4" />
-              {localTotal.toLocaleString()} votes
-            </span>
+            <span>{localTotal.toLocaleString()} votes</span>
             {poll.endsAt && (
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" />
-                {isLive ? `Ends ${formatDistanceToNow(new Date(poll.endsAt))} from now` : 'Ended'}
-              </span>
+              <span>{isLive ? `Ends ${formatDistanceToNow(new Date(poll.endsAt))}` : 'Ended'}</span>
             )}
           </div>
           
           {!featured && (
-            <Link href={`/polls/${poll.id}`} className="text-primary hover:underline flex items-center gap-1">
-              View <ArrowRight className="w-3 h-3" />
+            <Link href={`/polls/${poll.id}`} className="text-foreground hover:text-primary flex items-center gap-1 transition-colors font-bold">
+              VIEW <ArrowRight className="w-3 h-3" />
             </Link>
           )}
         </div>
       </div>
 
       <div className={cn(
-        "p-6 sm:p-8 bg-secondary/30 border-t border-border flex flex-col justify-center", 
+        "p-6 sm:p-8 bg-background border-t border-border flex flex-col justify-center", 
         featured ? "md:w-1/2 md:border-t-0 md:border-l" : ""
       )}>
         <AnimatePresence mode="wait">
@@ -158,9 +152,9 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                   onClick={() => handleVote(option.id)}
                   disabled={!isLive}
                   className={cn(
-                    "w-full text-left px-5 py-4 rounded-xl border-2 transition-all duration-200 font-medium",
-                    "bg-card border-border hover:border-primary hover:shadow-md",
-                    !isLive && "opacity-50 cursor-not-allowed hover:border-border hover:shadow-none"
+                    "w-full text-left px-5 py-4 border border-border transition-all duration-200 font-medium text-sm font-sans",
+                    "bg-background text-foreground hover:bg-foreground hover:text-background",
+                    !isLive && "opacity-50 cursor-not-allowed hover:bg-background hover:text-foreground"
                   )}
                 >
                   {option.text}
@@ -172,36 +166,35 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
               key="results"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
+              className="space-y-6"
             >
               {localOptions.map((option) => (
                 <div key={option.id} className="relative">
-                  <div className="flex justify-between items-end mb-2 text-sm font-medium">
+                  <div className="flex justify-between items-end mb-1">
                     <span className={cn(
-                      "flex items-center gap-2", 
-                      option.id === votedOptionId ? "text-primary font-bold" : "text-foreground"
+                      "text-sm font-sans", 
+                      option.id === votedOptionId ? "text-primary font-bold" : "text-foreground font-medium"
                     )}>
                       {option.text}
-                      {option.id === votedOptionId && <CheckCircle2 className="w-4 h-4" />}
                     </span>
-                    <span className="text-foreground">{option.percentage}%</span>
+                    <span className="font-serif font-bold text-lg text-foreground leading-none">{option.percentage}%</span>
                   </div>
-                  <div className="h-3 w-full bg-secondary rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-secondary overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${option.percentage}%` }}
                       transition={{ duration: 1, ease: "easeOut" }}
                       className={cn(
-                        "h-full rounded-full",
-                        option.id === votedOptionId ? "bg-primary" : "bg-muted-foreground/40"
+                        "h-full",
+                        option.id === votedOptionId ? "bg-primary" : "bg-foreground/20"
                       )}
                     />
                   </div>
                 </div>
               ))}
-              <div className="text-center mt-6 pt-4 border-t border-border">
-                <p className="text-sm font-medium text-primary bg-primary/10 inline-block px-4 py-1.5 rounded-full">
-                  Your vote has been recorded
+              <div className="text-center mt-8 pt-4 border-t border-border">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                  Your vote recorded
                 </p>
               </div>
             </motion.div>

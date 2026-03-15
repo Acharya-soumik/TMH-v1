@@ -3,7 +3,6 @@ import { useLocation } from "wouter"
 import { useListPolls, useListCategories } from "@workspace/api-client-react"
 import { Layout } from "@/components/layout/Layout"
 import { PollCard } from "@/components/poll/PollCard"
-import { Filter, Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export default function Polls() {
@@ -25,34 +24,32 @@ export default function Polls() {
 
   return (
     <Layout>
-      <div className="bg-card border-b border-border py-12">
+      <div className="bg-background border-b border-border py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4">
+          <div className="h-1 w-12 bg-primary mb-6"></div>
+          <h1 className="font-serif font-black uppercase text-5xl md:text-7xl text-foreground leading-none tracking-tight">
             The Polls
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            Vote, debate, and see where the region stands on the issues that matter most.
-          </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col lg:flex-row gap-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col lg:flex-row gap-12">
         {/* Sidebar */}
-        <div className="lg:w-64 flex-shrink-0 space-y-8">
+        <div className="lg:w-64 flex-shrink-0 space-y-12">
           <div>
-            <h3 className="font-serif font-bold text-lg mb-4 flex items-center gap-2">
-              <Filter className="w-4 h-4" /> Sort By
+            <h3 className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-4 border-b border-border pb-2">
+              Sort By
             </h3>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
               {tabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setFilter(tab.id)}
                   className={cn(
-                    "text-left px-4 py-2.5 rounded-lg font-medium transition-colors",
+                    "text-left px-3 py-2 text-xs uppercase tracking-widest font-bold transition-colors",
                     filter === tab.id 
-                      ? "bg-primary/10 text-primary" 
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      ? "bg-foreground text-background" 
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {tab.label}
@@ -62,17 +59,17 @@ export default function Polls() {
           </div>
 
           <div>
-            <h3 className="font-serif font-bold text-lg mb-4 flex items-center gap-2">
-              <Search className="w-4 h-4" /> Categories
+            <h3 className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-4 border-b border-border pb-2">
+              Categories
             </h3>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
               <button
                 onClick={() => setCategory(undefined)}
                 className={cn(
-                  "text-left px-4 py-2.5 rounded-lg font-medium transition-colors flex justify-between",
+                  "text-left px-3 py-2 text-xs uppercase tracking-widest font-bold transition-colors flex justify-between",
                   !category 
-                    ? "bg-secondary text-foreground font-bold" 
-                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                    ? "bg-foreground text-background" 
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 All Topics
@@ -82,16 +79,13 @@ export default function Polls() {
                   key={cat.slug}
                   onClick={() => setCategory(cat.slug)}
                   className={cn(
-                    "text-left px-4 py-2.5 rounded-lg font-medium transition-colors flex justify-between items-center",
+                    "text-left px-3 py-2 text-xs uppercase tracking-widest font-bold transition-colors flex justify-between items-center",
                     category === cat.slug 
-                      ? "bg-secondary text-foreground font-bold" 
-                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                      ? "bg-foreground text-background" 
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <span className="flex items-center gap-2">
-                    <span>{cat.icon}</span> {cat.name}
-                  </span>
-                  {category === cat.slug && <X className="w-3 h-3 opacity-50" />}
+                  <span>{cat.name}</span>
                 </button>
               ))}
             </div>
@@ -101,23 +95,22 @@ export default function Polls() {
         {/* Main Content */}
         <div className="flex-1">
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[1,2,3,4].map(i => <div key={i} className="h-80 rounded-2xl bg-secondary animate-pulse" />)}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              {[1,2,3,4].map(i => <div key={i} className="h-80 bg-secondary animate-pulse border border-border" />)}
             </div>
           ) : pollsData?.polls.length === 0 ? (
-            <div className="text-center py-20 bg-card rounded-2xl border border-border border-dashed">
-              <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="text-xl font-bold text-foreground mb-2">No polls found</h3>
-              <p className="text-muted-foreground">Try adjusting your filters to find more discussions.</p>
+            <div className="text-center py-20 border border-border border-dashed bg-secondary/30">
+              <h3 className="font-serif font-bold text-2xl uppercase tracking-wider text-foreground mb-2">No polls found</h3>
+              <p className="text-sm text-muted-foreground mb-6 font-sans">Try adjusting your filters to find more discussions.</p>
               <button 
                 onClick={() => { setFilter('latest'); setCategory(undefined); }}
-                className="mt-6 text-primary font-semibold hover:underline"
+                className="text-xs font-bold uppercase tracking-widest text-primary hover:text-foreground transition-colors"
               >
                 Clear all filters
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               {pollsData?.polls.map(poll => (
                 <PollCard key={poll.id} poll={poll} />
               ))}
