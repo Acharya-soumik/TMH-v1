@@ -22,8 +22,8 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
   const voteMutation = useVotePoll()
   const [mobileStripDismissed, setMobileStripDismissed] = useState(false)
 
-  const [localOptions, setLocalOptions] = useState<PollOption[]>(poll.options)
-  const [localTotal, setLocalTotal] = useState(poll.totalVotes)
+  const [localOptions, setLocalOptions] = useState<PollOption[]>(poll.options ?? [])
+  const [localTotal, setLocalTotal] = useState(poll.totalVotes ?? 0)
   const isVoted = hasVoted(poll.id)
   const votedOptionId = getVotedOption(poll.id)
 
