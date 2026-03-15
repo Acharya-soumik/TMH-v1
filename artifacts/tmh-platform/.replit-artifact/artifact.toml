@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "The Middle East Hustle"
+version = "1.0.0"
+id = "artifacts/tmh-platform"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 22656
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/tmh-platform run dev"
+
+[services.env]
+PORT = "22656"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/tmh-platform", "run", "build"]
+publicDir = "artifacts/tmh-platform/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"

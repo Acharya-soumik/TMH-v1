@@ -1,22 +1,30 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: The Middle East Hustle API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: polls
+    description: Poll operations
+  - name: profiles
+    description: Profile operations
+  - name: votes
+    description: Vote operations
+  - name: rankings
+    description: Rankings operations
+  - name: categories
+    description: Category operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +32,207 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /polls:
+    get:
+      operationId: listPolls
+      tags: [polls]
+      summary: List polls
+      parameters:
+        - name: filter
+          in: query
+          schema:
+            type: string
+            enum: [latest, trending, most_voted, most_debated, ending_soon, editors_picks]
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of polls
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PollListResponse"
+
+  /polls/featured:
+    get:
+      operationId: getFeaturedPoll
+      tags: [polls]
+      summary: Get the featured hero poll
+      responses:
+        "200":
+          description: Featured poll
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Poll"
+
+  /polls/{id}:
+    get:
+      operationId: getPoll
+      tags: [polls]
+      summary: Get a single poll
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Poll
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Poll"
+        "404":
+          description: Not found
+
+  /polls/{id}/vote:
+    post:
+      operationId: votePoll
+      tags: [votes]
+      summary: Cast a vote on a poll
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoteRequest"
+      responses:
+        "200":
+          description: Vote result with updated counts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoteResult"
+
+  /profiles:
+    get:
+      operationId: listProfiles
+      tags: [profiles]
+      summary: List profiles
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: country
+          in: query
+          schema:
+            type: string
+        - name: sector
+          in: query
+          schema:
+            type: string
+        - name: filter
+          in: query
+          schema:
+            type: string
+            enum: [featured, newest, most_viewed, most_followed]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of profiles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileListResponse"
+
+  /profiles/{id}:
+    get:
+      operationId: getProfile
+      tags: [profiles]
+      summary: Get a single profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileDetail"
+        "404":
+          description: Not found
+
+  /rankings:
+    get:
+      operationId: getRankings
+      tags: [rankings]
+      summary: Get rankings data
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [founders, women_leaders, sectors, cities, profiles, topics]
+            default: profiles
+      responses:
+        "200":
+          description: Rankings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RankingsResponse"
+
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List all poll categories
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryListResponse"
+
+  /weekly-pulse:
+    get:
+      operationId: getWeeklyPulse
+      tags: [polls]
+      summary: Get this week's pulse summary
+      responses:
+        "200":
+          description: Weekly pulse
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeeklyPulse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +243,324 @@ components:
       required:
         - status
 
+    PollOption:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        voteCount:
+          type: integer
+        percentage:
+          type: number
+      required:
+        - id
+        - text
+        - voteCount
+        - percentage
+
+    Poll:
+      type: object
+      properties:
+        id:
+          type: integer
+        question:
+          type: string
+        context:
+          type: string
+        category:
+          type: string
+        categorySlug:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        pollType:
+          type: string
+          enum: [binary, multiple_choice, head_to_head, hot_take]
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/PollOption"
+        totalVotes:
+          type: integer
+        isFeatured:
+          type: boolean
+        isEditorsPick:
+          type: boolean
+        createdAt:
+          type: string
+        endsAt:
+          type: string
+          nullable: true
+        relatedProfileIds:
+          type: array
+          items:
+            type: integer
+      required:
+        - id
+        - question
+        - category
+        - categorySlug
+        - tags
+        - pollType
+        - options
+        - totalVotes
+        - isFeatured
+        - isEditorsPick
+        - createdAt
+        - relatedProfileIds
+
+    PollListResponse:
+      type: object
+      properties:
+        polls:
+          type: array
+          items:
+            $ref: "#/components/schemas/Poll"
+        total:
+          type: integer
+      required:
+        - polls
+        - total
+
+    VoteRequest:
+      type: object
+      properties:
+        optionId:
+          type: integer
+        voterToken:
+          type: string
+      required:
+        - optionId
+        - voterToken
+
+    VoteResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/PollOption"
+        totalVotes:
+          type: integer
+        alreadyVoted:
+          type: boolean
+      required:
+        - success
+        - options
+        - totalVotes
+        - alreadyVoted
+
+    Profile:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        headline:
+          type: string
+        role:
+          type: string
+        company:
+          type: string
+        sector:
+          type: string
+        country:
+          type: string
+        city:
+          type: string
+        imageUrl:
+          type: string
+          nullable: true
+        isFeatured:
+          type: boolean
+        isVerified:
+          type: boolean
+        viewCount:
+          type: integer
+        associatedPollCount:
+          type: integer
+      required:
+        - id
+        - name
+        - headline
+        - role
+        - sector
+        - country
+        - city
+        - isFeatured
+        - isVerified
+        - viewCount
+        - associatedPollCount
+
+    ProfileDetail:
+      allOf:
+        - $ref: "#/components/schemas/Profile"
+        - type: object
+          properties:
+            summary:
+              type: string
+            story:
+              type: string
+            lessonsLearned:
+              type: array
+              items:
+                type: string
+            quote:
+              type: string
+            relatedPolls:
+              type: array
+              items:
+                $ref: "#/components/schemas/Poll"
+            similarProfiles:
+              type: array
+              items:
+                $ref: "#/components/schemas/Profile"
+          required:
+            - summary
+            - story
+            - lessonsLearned
+            - quote
+            - relatedPolls
+            - similarProfiles
+
+    ProfileListResponse:
+      type: object
+      properties:
+        profiles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Profile"
+        total:
+          type: integer
+      required:
+        - profiles
+        - total
+
+    RankingEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        label:
+          type: string
+        sublabel:
+          type: string
+          nullable: true
+        score:
+          type: number
+        change:
+          type: integer
+          description: Position change from last period (+/-)
+        imageUrl:
+          type: string
+          nullable: true
+      required:
+        - rank
+        - label
+        - score
+        - change
+
+    RankingsResponse:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/RankingEntry"
+      required:
+        - type
+        - title
+        - entries
+
+    Category:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        pollCount:
+          type: integer
+        icon:
+          type: string
+      required:
+        - slug
+        - name
+        - pollCount
+        - icon
+
+    CategoryListResponse:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+      required:
+        - categories
+
+    WeeklyPulseStat:
+      type: object
+      properties:
+        label:
+          type: string
+        value:
+          type: string
+        change:
+          type: string
+          nullable: true
+        sentiment:
+          type: string
+          enum: [positive, negative, neutral]
+      required:
+        - label
+        - value
+        - sentiment
+
+    WeeklyPulse:
+      type: object
+      properties:
+        weekLabel:
+          type: string
+        topPolls:
+          type: array
+          items:
+            $ref: "#/components/schemas/Poll"
+        biggestSurprise:
+          type: string
+        stats:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeeklyPulseStat"
+        sectorSentiment:
+          type: array
+          items:
+            type: object
+            properties:
+              sector:
+                type: string
+              sentiment:
+                type: number
+              label:
+                type: string
+            required:
+              - sector
+              - sentiment
+              - label
+      required:
+        - weekLabel
+        - topPolls
+        - biggestSurprise
+        - stats
+        - sectorSentiment

@@ -1,8 +1,8 @@
-# Workspace
+# The Middle East Hustle Platform
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+Full-stack polling and opinion platform for the Middle East. Users vote on daily high-signal questions across business, culture, technology, and identity. Features curated profiles of regional voices, rankings, and a weekly editorial digest.
 
 ## Stack
 
@@ -10,87 +10,81 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Node.js version**: 24
 - **Package manager**: pnpm
 - **TypeScript version**: 5.9
+- **Frontend**: React + Vite (Tailwind CSS, Framer Motion, shadcn/ui, Wouter routing)
 - **API framework**: Express 5
 - **Database**: PostgreSQL + Drizzle ORM
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+- **Build**: esbuild (CJS bundle for API)
 
 ## Structure
 
 ```text
 artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
-├── lib/                    # Shared libraries
+├── artifacts/
+│   ├── api-server/         # Express API server (port 8080, served at /api)
+│   └── tmh-platform/       # React + Vite frontend (served at /)
+├── lib/
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
 │   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+├── scripts/
+│   └── src/seed.ts         # Database seeding script
+└── ...
 ```
 
-## TypeScript & Composite Projects
+## Features
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
+### Pages
+- **Home** (`/`) — Hero featured poll with voting, trending polls strip, featured voices, category browser, rankings snapshot, weekly pulse preview
+- **Polls** (`/polls`) — Full poll browser with filter tabs (Latest/Trending/Most Voted/Ending Soon/Editor's Picks) and category sidebar
+- **Poll Detail** (`/polls/:id`) — Full poll with context, voting UI, animated result reveal, share CTA, related polls
+- **Profiles** (`/profiles`) — Searchable directory with country/sector/role filters
+- **Profile Detail** (`/profiles/:id`) — Portrait, headline, story, lessons, quote, associated polls, similar voices
+- **Rankings** (`/rankings`) — Top Voices, Top Founders, Women Leaders, Hottest Sectors, Rising Cities, Debated Topics
+- **Weekly Pulse** (`/weekly-pulse`) — Editorial digest of biggest votes, surprises, sector sentiment
+- **About** (`/about`) — Platform manifesto
 
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
+### Database Schema
+- `polls` — Poll questions with category, type, and metadata
+- `poll_options` — Answer options with vote counts
+- `votes` — Vote records keyed by voterToken (localStorage UUID)
+- `profiles` — Curated regional voices with full editorial profiles
 
-## Root Scripts
+### API Endpoints
+- `GET /api/polls` — List polls (with filter/category query params)
+- `GET /api/polls/featured` — Get featured hero poll
+- `GET /api/polls/:id` — Get single poll
+- `POST /api/polls/:id/vote` — Cast a vote
+- `GET /api/profiles` — List profiles (with search/country/sector filters)
+- `GET /api/profiles/:id` — Get profile detail
+- `GET /api/rankings` — Get rankings (type: profiles/founders/women_leaders/sectors/cities/topics)
+- `GET /api/categories` — List all categories with poll counts
+- `GET /api/weekly-pulse` — Weekly editorial digest
 
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
+## Design System
+- Dark mode by default (charcoal soft-black background, warm ivory text)
+- Muted gold primary accent (`#C9921F` approx)
+- Deep olive/teal secondary accent
+- DM Sans for UI, Playfair Display for editorial headings
+- Light mode toggle in navbar
 
-## Packages
+## Running Locally
 
-### `artifacts/api-server` (`@workspace/api-server`)
+```bash
+# Start API server
+pnpm --filter @workspace/api-server run dev
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+# Start frontend
+pnpm --filter @workspace/tmh-platform run dev
 
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
+# Seed database
+pnpm --filter @workspace/scripts run seed
 
-### `lib/db` (`@workspace/db`)
+# Run codegen after OpenAPI changes
+pnpm --filter @workspace/api-spec run codegen
 
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
-
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
-
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
-
-### `lib/api-spec` (`@workspace/api-spec`)
-
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
-
-Run codegen: `pnpm --filter @workspace/api-spec run codegen`
-
-### `lib/api-zod` (`@workspace/api-zod`)
-
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+# Push DB schema changes
+pnpm --filter @workspace/db run push
+```

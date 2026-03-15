@@ -1,0 +1,24 @@
+packages:
+  "framer-motion": "For premium smooth animations and page transitions"
+  "clsx": "Utility for conditionally joining classNames"
+  "tailwind-merge": "Utility to merge tailwind classes"
+  "lucide-react": "For crisp, beautiful icons across the application"
+  "date-fns": "For elegant date formatting in polls and weekly pulse"
+  "uuid": "For generating unique voter tokens"
+  "@types/uuid": "Types for uuid package"
+
+images:
+  - path: "artifacts/tmh-platform/public/images/hero-bg.png"
+    description: "Dark, moody, abstract editorial background. Deep charcoal and muted gold tones, subtle grainy texture, like a high-end financial magazine cover."
+    aspect_ratio: "16:9"
+  - path: "artifacts/tmh-platform/public/images/about-texture.png"
+    description: "Abstract architectural shadow patterns on warm ivory stone, creating a feeling of Middle Eastern modernism, high contrast, cinematic lighting."
+    aspect_ratio: "16:9"
+  - path: "artifacts/tmh-platform/public/images/avatar-placeholder.png"
+    description: "Abstract minimal geometric portrait placeholder in muted gold and dark teal, sophisticated and corporate."
+    aspect_ratio: "1:1"
+
+notes:
+  - Assuming @workspace/api-client-react provides all TanStack query hooks.
+  - Voter identity is tracked via an anonymous UUID stored in localStorage to allow frictionless voting without login.
+  - The app heavily relies on an editorial dark mode aesthetic; dark mode is the default state.

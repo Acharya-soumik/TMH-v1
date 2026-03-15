@@ -1,0 +1,43 @@
+import { pgTable, serial, text, integer, boolean, timestamp, real, jsonb } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod/v4";
+
+export const pollsTable = pgTable("polls", {
+  id: serial("id").primaryKey(),
+  question: text("question").notNull(),
+  context: text("context"),
+  category: text("category").notNull(),
+  categorySlug: text("category_slug").notNull(),
+  tags: jsonb("tags").$type<string[]>().notNull().default([]),
+  pollType: text("poll_type").notNull().default("binary"),
+  isFeatured: boolean("is_featured").notNull().default(false),
+  isEditorsPick: boolean("is_editors_pick").notNull().default(false),
+  endsAt: timestamp("ends_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  relatedProfileIds: jsonb("related_profile_ids").$type<number[]>().notNull().default([]),
+});
+
+export const pollOptionsTable = pgTable("poll_options", {
+  id: serial("id").primaryKey(),
+  pollId: integer("poll_id").notNull(),
+  text: text("text").notNull(),
+  voteCount: integer("vote_count").notNull().default(0),
+});
+
+export const votesTable = pgTable("votes", {
+  id: serial("id").primaryKey(),
+  pollId: integer("poll_id").notNull(),
+  optionId: integer("option_id").notNull(),
+  voterToken: text("voter_token").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPollSchema = createInsertSchema(pollsTable).omit({ id: true });
+export const insertPollOptionSchema = createInsertSchema(pollOptionsTable).omit({ id: true });
+export const insertVoteSchema = createInsertSchema(votesTable).omit({ id: true });
+
+export type Poll = typeof pollsTable.$inferSelect;
+export type PollOption = typeof pollOptionsTable.$inferSelect;
+export type Vote = typeof votesTable.$inferSelect;
+export type InsertPoll = z.infer<typeof insertPollSchema>;
+export type InsertPollOption = z.infer<typeof insertPollOptionSchema>;
