@@ -4,6 +4,7 @@ import pollsRouter from "./polls";
 import profilesRouter from "./profiles";
 import rankingsRouter from "./rankings";
 import categoriesRouter from "./categories";
+import applyRouter from "./apply";
 
 const router: IRouter = Router();
 
@@ -12,5 +13,6 @@ router.use(pollsRouter);
 router.use(profilesRouter);
 router.use(rankingsRouter);
 router.use(categoriesRouter);
+router.use(applyRouter);
 
 export default router;

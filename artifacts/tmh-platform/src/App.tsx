@@ -11,6 +11,7 @@ import ProfileDetail from "@/pages/profile-detail"
 import Rankings from "@/pages/rankings"
 import WeeklyPulse from "@/pages/weekly-pulse"
 import About from "@/pages/about"
+import Apply from "@/pages/apply"
 import NotFound from "@/pages/not-found"
 
 const queryClient = new QueryClient({
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/rankings" component={Rankings} />
       <Route path="/weekly-pulse" component={WeeklyPulse} />
       <Route path="/about" component={About} />
+      <Route path="/apply" component={Apply} />
       <Route component={NotFound} />
     </Switch>
   )

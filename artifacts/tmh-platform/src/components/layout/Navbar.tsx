@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter"
-import { Menu, X } from "lucide-react"
+import { Menu, X, Moon, Sun } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useTheme } from "@/hooks/use-theme"
 import { cn } from "@/lib/utils"
@@ -18,84 +18,101 @@ export function Navbar() {
 
   const navLinks = [
     { label: "Polls", href: "/polls" },
-    { label: "Profiles", href: "/profiles" },
+    { label: "The Hustlers", href: "/profiles" },
     { label: "Rankings", href: "/rankings" },
-    { label: "Weekly Pulse", href: "/weekly-pulse" },
     { label: "About", href: "/about" },
   ]
 
   return (
-    <header 
+    <header
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b",
-        "bg-background border-border py-4"
+        isScrolled
+          ? "bg-background/95 backdrop-blur-md border-border shadow-sm"
+          : "bg-background border-border"
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-12">
-            <Link href="/" className="flex flex-col group">
-              <span className="font-serif font-black text-4xl uppercase tracking-widest text-foreground leading-none">
-                TMH
-              </span>
-              <span className="text-[10px] font-sans tracking-[0.3em] uppercase text-foreground leading-none mt-1">
-                The Middle East Hustle
-              </span>
-            </Link>
-            
-            <nav className="hidden md:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <Link 
-                  key={link.href} 
-                  href={link.href}
-                  className={cn(
-                    "text-xs uppercase tracking-[0.2em] font-medium transition-all",
-                    location === link.href 
-                      ? "text-primary border-b-2 border-primary pb-1" 
-                      : "text-foreground hover:border-b-2 hover:border-foreground pb-1"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
+        <div className="flex items-center justify-between py-3">
+          <Link href="/" className="flex flex-col leading-none group">
+            <span className="font-display font-black text-3xl uppercase tracking-tight text-foreground leading-none group-hover:text-primary transition-colors">
+              TMH
+            </span>
+            <span className="text-[9px] font-serif tracking-[0.3em] uppercase text-muted-foreground leading-none mt-0.5">
+              The Middle East Hustle
+            </span>
+          </Link>
 
-          <div className="flex items-center gap-6">
-            <button 
+          <nav className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "text-[11px] uppercase tracking-[0.2em] font-bold transition-all font-serif",
+                  location === link.href
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/apply"
+              className="hidden sm:flex items-center gap-2 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.15em] px-4 py-2 hover:bg-primary/90 transition-colors font-serif"
+            >
+              Become a Hustler
+            </Link>
+
+            <button
               onClick={toggleTheme}
-              className="text-xs uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Toggle theme"
             >
-              {isDark ? 'Light' : 'Dark'}
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
-            
-            <button 
+
+            <button
               className="md:hidden p-2 text-foreground"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-background border-b border-border shadow-lg py-4 px-4 flex flex-col gap-4">
-          {navLinks.map((link) => (
-            <Link 
-              key={link.href} 
-              href={link.href}
-              className={cn(
-                "text-lg font-serif font-bold uppercase tracking-wider p-2 transition-colors",
-                location === link.href ? "text-primary" : "text-foreground"
-              )}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
+        <div className="md:hidden absolute top-full left-0 w-full bg-background border-b border-border shadow-xl z-50">
+          <div className="px-6 py-6 flex flex-col gap-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "py-3 border-b border-border font-serif font-bold uppercase tracking-wider text-base transition-colors",
+                  location === link.href ? "text-primary" : "text-foreground"
+                )}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <div className="pt-4">
+              <Link
+                href="/apply"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block w-full text-center bg-primary text-white font-bold uppercase tracking-[0.2em] text-sm py-3 font-serif hover:bg-primary/90 transition-colors"
+              >
+                Become a Hustler
+              </Link>
+            </div>
+          </div>
         </div>
       )}
     </header>

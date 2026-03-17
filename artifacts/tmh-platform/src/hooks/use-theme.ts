@@ -4,10 +4,10 @@ export function useTheme() {
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
-    // Default to light mode if no preference
     const stored = localStorage.getItem("tmh_theme")
-    const isDarkMode = stored === "dark"
-    
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+    const isDarkMode = stored ? stored === "dark" : (prefersDark || true)
+
     setIsDark(isDarkMode)
     if (isDarkMode) {
       document.documentElement.classList.add("dark")
