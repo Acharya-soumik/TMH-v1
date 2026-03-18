@@ -157,9 +157,9 @@ export default function Apply() {
                 Your Story
               </h2>
               <div className="space-y-5">
-                <Field label="Bio (100–200 words) *" required hint="Editorial voice. What you built, why it matters, what makes your story different.">
-                  <textarea required rows={6} value={form.bio} onChange={set("bio")}
-                    placeholder="Write in the third person or first person — either works. Be specific. Named outcomes beat vague claims every time."
+                <Field label="One-Line Tagline *" required hint="Max 50 words. Think: 'Built X, scaled it to Y, now building Z.' Specific. Punchy. No LinkedIn clichés.">
+                  <textarea required rows={3} value={form.bio} onChange={set("bio")}
+                    placeholder="e.g. 'Co-founded MUNCH:ON (2017), scaled to 50,000 corporate users across the Gulf, sold to Careem in 2022. Now building the next one.'"
                     className={cn(inputCn, "resize-none")} />
                 </Field>
                 <Field label="Signature Quote *" required hint="One sentence. First person. Specific to your experience. Not a motivational poster.">

@@ -8,6 +8,7 @@ export const profilesTable = pgTable("profiles", {
   headline: text("headline").notNull(),
   role: text("role").notNull(),
   company: text("company"),
+  companyUrl: text("company_url"),
   sector: text("sector").notNull(),
   country: text("country").notNull(),
   city: text("city").notNull(),

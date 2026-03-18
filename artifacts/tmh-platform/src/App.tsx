@@ -14,6 +14,8 @@ import WeeklyPulse from "@/pages/weekly-pulse"
 import About from "@/pages/about"
 import Apply from "@/pages/apply"
 import Join from "@/pages/join"
+import Terms from "@/pages/terms"
+import FAQ from "@/pages/faq"
 import NotFound from "@/pages/not-found"
 
 const queryClient = new QueryClient({
@@ -39,6 +41,8 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/apply" component={Apply} />
       <Route path="/join" component={Join} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/faq" component={FAQ} />
       <Route component={NotFound} />
     </Switch>
   )

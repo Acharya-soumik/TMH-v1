@@ -50,7 +50,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Top strip */}
           <div className="flex items-center justify-between py-2 text-[9px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border font-serif">
-            <span>Est. 2026 · Dubai · Issue No. 001</span>
+            <span>Est. 2026 · The Middle East · Issue No. 001</span>
             <span className="hidden sm:block">{issueDate}</span>
             <span className="text-primary font-bold">Opinion of Record</span>
           </div>

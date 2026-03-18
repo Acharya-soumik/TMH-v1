@@ -83,12 +83,12 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[10px] uppercase tracking-widest text-background/30 font-serif">
-            © {new Date().getFullYear()} The Middle East Hustle. Founded by Kareem Kaddoura. Dubai.
+            © {new Date().getFullYear()} The Middle East Hustle. Founded by Kareem Kaddoura.
           </p>
           <div className="flex items-center gap-6">
-            <span className="text-[9px] uppercase tracking-widest text-background/20 font-serif">Privacy</span>
-            <span className="text-[9px] uppercase tracking-widest text-background/20 font-serif">Terms</span>
-            <span className="text-[9px] uppercase tracking-widest text-background/20 font-serif">Contact</span>
+            <Link href="/faq" className="text-[9px] uppercase tracking-widest text-background/40 hover:text-background transition-colors font-serif">FAQ</Link>
+            <Link href="/terms" className="text-[9px] uppercase tracking-widest text-background/40 hover:text-background transition-colors font-serif">Terms</Link>
+            <a href="mailto:hello@themiddleeasthustle.com" className="text-[9px] uppercase tracking-widest text-background/40 hover:text-background transition-colors font-serif">Contact</a>
           </div>
         </div>
       </div>

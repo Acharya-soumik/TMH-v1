@@ -3,7 +3,63 @@ import { useGetProfile } from "@workspace/api-client-react"
 import { Layout } from "@/components/layout/Layout"
 import { PollCard } from "@/components/poll/PollCard"
 import { ProfileCard } from "@/components/profile/ProfileCard"
-import { ArrowLeft, MapPin, Building, Briefcase, Eye } from "lucide-react"
+import { ArrowLeft, MapPin, Building, Briefcase, Eye, ExternalLink } from "lucide-react"
+
+const COMPANY_URLS: Record<string, string> = {
+  "1833 Members Club": "https://1833.club",
+  "MUNCH:ON (acquired by Careem)": "https://careem.com",
+  "School of Humanity": "https://www.soh.earth",
+  "CoinMENA": "https://coinmena.com",
+  "Better (itsbetter.app)": "https://itsbetter.app",
+  "Dubai Future Foundation": "https://www.dubaifuture.ae",
+  "MSA Capital": "https://www.msacapital.com",
+  "Replit": "https://replit.com",
+  "Arzan Venture Capital": "https://arzanvc.com",
+  "Kitopi": "https://kitopi.com",
+  "Careem": "https://www.careem.com",
+  "noon": "https://www.noon.com",
+  "Anghami": "https://anghami.com",
+  "Luna PR": "https://lunapr.io",
+  "Washmen": "https://washmen.com",
+  "Swvl": "https://swvl.com",
+  "Mumzworld": "https://www.mumzworld.com",
+  "Sarwa": "https://sarwa.co",
+  "Baraka": "https://getbaraka.com",
+  "PayTabs": "https://paytabs.com",
+  "Magnitt": "https://magnitt.com",
+  "Wio Bank": "https://wio.io",
+  "Ziina": "https://ziina.com",
+  "Zbooni": "https://zbooni.com",
+  "Trukker": "https://trukker.com",
+  "Mawdoo3": "https://mawdoo3.com",
+  "The Lighthouse": "https://thelighthouse.ae",
+  "Miral": "https://miral.ae",
+  "Hub71": "https://www.hub71.com",
+  "AstroLabs": "https://astrolabs.com",
+  "Flat6Labs": "https://www.flat6labs.com",
+  "Global Ventures": "https://globalventures.vc",
+  "Endeavor": "https://endeavor.org",
+  "Crescent Enterprises": "https://www.crescententerprises.com",
+}
+
+function getCompanyUrl(company: string): string {
+  if (COMPANY_URLS[company]) return COMPANY_URLS[company]
+  for (const [key, url] of Object.entries(COMPANY_URLS)) {
+    if (company.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(company.toLowerCase())) return url
+  }
+  return ""
+}
+
+function CompanyLink({ company }: { company: string }) {
+  const url = getCompanyUrl(company)
+  if (!url) return <span>{company}</span>
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer"
+      className="hover:text-primary transition-colors inline-flex items-center gap-1">
+      {company} <ExternalLink className="w-3 h-3 opacity-60" />
+    </a>
+  )
+}
 
 export default function ProfileDetail() {
   const [, params] = useRoute("/profiles/:id")
@@ -89,7 +145,8 @@ export default function ProfileDetail() {
             </div>
             {profile.company && (
               <div className="flex items-center gap-2">
-                <Building className="w-4 h-4 text-foreground" /> {profile.company}
+                <Building className="w-4 h-4 text-foreground" />
+                <CompanyLink company={profile.company} />
               </div>
             )}
             <div className="flex items-center gap-2">
