@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useGetFeaturedPoll, useListPolls, useListProfiles, useListCategories } from "@workspace/api-client-react"
 import { Layout } from "@/components/layout/Layout"
 import { PollCard } from "@/components/poll/PollCard"
@@ -223,6 +223,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── COUNTRY LEADERBOARD ── */}
+      <CountryLeaderboard />
+
       {/* ── EXPLORE TOPICS ── */}
       {categories?.categories && categories.categories.length > 0 && (
         <section className="py-20 bg-background border-b border-border">
@@ -293,6 +296,72 @@ export default function Home() {
         </div>
       </section>
     </Layout>
+  )
+}
+
+const FLAG_MAP: Record<string, string> = {
+  AE: "🇦🇪", SA: "🇸🇦", EG: "🇪🇬", JO: "🇯🇴", LB: "🇱🇧", KW: "🇰🇼",
+  BH: "🇧🇭", QA: "🇶🇦", OM: "🇴🇲", MA: "🇲🇦", TN: "🇹🇳", IQ: "🇮🇶",
+  PS: "🇵🇸", TR: "🇹🇷", US: "🇺🇸", GB: "🇬🇧", DE: "🇩🇪", IN: "🇮🇳", AU: "🇦🇺",
+}
+
+function CountryLeaderboard() {
+  const [countries, setCountries] = useState<{ code: string; name: string; count: number; percentage: number }[]>([])
+
+  useEffect(() => {
+    fetch("/api/stats/countries")
+      .then(r => r.json())
+      .then(d => { if (d.countries?.length >= 2) setCountries(d.countries.slice(0, 8)) })
+      .catch(() => {})
+  }, [])
+
+  if (countries.length < 2) return null
+
+  const top = countries[0].count
+
+  return (
+    <section className="py-16 bg-secondary/20 border-b border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-end justify-between mb-10">
+          <div className="border-l-4 border-primary pl-4">
+            <h2 className="font-serif font-black uppercase text-2xl text-foreground">
+              How Does Your Country Vote?
+            </h2>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1 font-serif">
+              Live participation — updated with every vote
+            </p>
+          </div>
+          <a href="/polls" className="hidden sm:inline-block text-[10px] uppercase tracking-widest font-bold text-primary font-serif hover:text-foreground transition-colors">
+            Represent Your Country →
+          </a>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {countries.map((country, i) => (
+            <div key={country.code} className="flex items-center gap-4">
+              <div className="flex items-center gap-3 w-44 flex-shrink-0">
+                <span className="text-xl">{FLAG_MAP[country.code] ?? "🌍"}</span>
+                <div>
+                  <div className={cn("font-serif font-bold text-sm uppercase tracking-wide", i === 0 ? "text-primary" : "text-foreground")}>
+                    {country.name}
+                  </div>
+                  <div className="text-[9px] text-muted-foreground font-sans">{country.count.toLocaleString()} votes</div>
+                </div>
+              </div>
+              <div className="flex-1 h-2 bg-secondary overflow-hidden">
+                <div
+                  className={cn("h-full transition-all duration-700", i === 0 ? "bg-primary" : "bg-foreground/25")}
+                  style={{ width: `${Math.round((country.count / top) * 100)}%` }}
+                />
+              </div>
+              <span className={cn("text-sm font-bold font-serif flex-shrink-0 w-10 text-right", i === 0 ? "text-primary" : "text-foreground")}>
+                {country.percentage}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
 

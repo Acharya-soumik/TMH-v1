@@ -29,6 +29,17 @@ export const votesTable = pgTable("votes", {
   pollId: integer("poll_id").notNull(),
   optionId: integer("option_id").notNull(),
   voterToken: text("voter_token").notNull(),
+  countryCode: text("country_code"),
+  countryName: text("country_name"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const newsletterSubscribersTable = pgTable("newsletter_subscribers", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  source: text("source").notNull().default("share_gate"),
+  pollId: integer("poll_id"),
+  countryCode: text("country_code"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

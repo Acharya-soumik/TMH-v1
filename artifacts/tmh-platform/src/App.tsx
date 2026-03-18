@@ -6,12 +6,14 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import Home from "@/pages/home"
 import Polls from "@/pages/polls"
 import PollDetail from "@/pages/poll-detail"
+import PollArchive from "@/pages/poll-archive"
 import Profiles from "@/pages/profiles"
 import ProfileDetail from "@/pages/profile-detail"
 import Rankings from "@/pages/rankings"
 import WeeklyPulse from "@/pages/weekly-pulse"
 import About from "@/pages/about"
 import Apply from "@/pages/apply"
+import Join from "@/pages/join"
 import NotFound from "@/pages/not-found"
 
 const queryClient = new QueryClient({
@@ -28,6 +30,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/polls" component={Polls} />
+      <Route path="/polls/archive" component={PollArchive} />
       <Route path="/polls/:id" component={PollDetail} />
       <Route path="/profiles" component={Profiles} />
       <Route path="/profiles/:id" component={ProfileDetail} />
@@ -35,6 +38,7 @@ function Router() {
       <Route path="/weekly-pulse" component={WeeklyPulse} />
       <Route path="/about" component={About} />
       <Route path="/apply" component={Apply} />
+      <Route path="/join" component={Join} />
       <Route component={NotFound} />
     </Switch>
   )

@@ -1,8 +1,45 @@
 import { Router, type IRouter } from "express";
-import { db, pollsTable, pollOptionsTable, votesTable, profilesTable } from "@workspace/db";
+import { db, pollsTable, pollOptionsTable, votesTable, profilesTable, newsletterSubscribersTable } from "@workspace/db";
 import { eq, desc, sql, and, inArray } from "drizzle-orm";
+import https from "https";
+import http from "http";
 
 const router: IRouter = Router();
+
+async function getCountryFromIp(ip: string): Promise<{ code: string; name: string } | null> {
+  if (!ip || ip === "127.0.0.1" || ip === "::1" || ip.startsWith("10.") || ip.startsWith("172.") || ip.startsWith("192.168.")) {
+    return null;
+  }
+  return new Promise((resolve) => {
+    const req = http.get(`http://ip-api.com/json/${ip}?fields=status,countryCode,country`, (res) => {
+      let data = "";
+      res.on("data", (chunk) => (data += chunk));
+      res.on("end", () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.status === "success" && parsed.countryCode) {
+            resolve({ code: parsed.countryCode, name: parsed.country });
+          } else {
+            resolve(null);
+          }
+        } catch {
+          resolve(null);
+        }
+      });
+    });
+    req.on("error", () => resolve(null));
+    req.setTimeout(2000, () => { req.destroy(); resolve(null); });
+  });
+}
+
+function getClientIp(req: any): string {
+  const xff = req.headers["x-forwarded-for"];
+  if (xff) {
+    const ips = (typeof xff === "string" ? xff : xff[0]).split(",");
+    return ips[0].trim();
+  }
+  return req.socket?.remoteAddress ?? req.ip ?? "";
+}
 
 async function enrichWithProfiles(profileIds: number[]) {
   if (!profileIds || profileIds.length === 0) return [];
@@ -74,8 +111,8 @@ router.get("/polls", async (req, res) => {
       })
     );
 
-    const total = await db.select({ count: sql<number>`count(*)` }).from(pollsTable);
-    res.json({ polls: result, total: Number(total[0].count) });
+    const [countRow] = await db.select({ count: sql<number>`count(*)` }).from(pollsTable);
+    res.json({ polls: result, total: Number(countRow.count) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch polls" });
@@ -96,6 +133,36 @@ router.get("/polls/featured", async (_req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch featured poll" });
+  }
+});
+
+router.get("/polls/:id/breakdown", async (req, res) => {
+  try {
+    const pollId = parseInt(req.params.id);
+    const rows = await db
+      .select({
+        countryCode: votesTable.countryCode,
+        countryName: votesTable.countryName,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(votesTable)
+      .where(and(eq(votesTable.pollId, pollId), sql`country_code IS NOT NULL`))
+      .groupBy(votesTable.countryCode, votesTable.countryName)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+
+    const total = rows.reduce((s, r) => s + Number(r.count), 0);
+    const countries = rows.map((r) => ({
+      code: r.countryCode!,
+      name: r.countryName ?? r.countryCode!,
+      count: Number(r.count),
+      percentage: total > 0 ? Math.round((Number(r.count) / total) * 100) : 0,
+    }));
+
+    res.json({ countries, total });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ countries: [], total: 0 });
   }
 });
 
@@ -142,7 +209,17 @@ router.post("/polls/:id/vote", async (req, res) => {
       });
     }
 
-    await db.insert(votesTable).values({ pollId, optionId, voterToken });
+    const ip = getClientIp(req);
+    const geoData = await getCountryFromIp(ip);
+
+    await db.insert(votesTable).values({
+      pollId,
+      optionId,
+      voterToken,
+      countryCode: geoData?.code ?? null,
+      countryName: geoData?.name ?? null,
+    });
+
     await db
       .update(pollOptionsTable)
       .set({ voteCount: sql`vote_count + 1` })
@@ -154,6 +231,7 @@ router.post("/polls/:id/vote", async (req, res) => {
     res.json({
       success: true,
       alreadyVoted: false,
+      country: geoData ?? null,
       options: options.map((o) => ({
         id: o.id,
         text: o.text,
@@ -165,6 +243,58 @@ router.post("/polls/:id/vote", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to record vote" });
+  }
+});
+
+router.post("/polls/:id/email-unlock", async (req, res) => {
+  try {
+    const pollId = parseInt(req.params.id);
+    const { email } = req.body;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: "Valid email required" });
+    }
+    const ip = getClientIp(req);
+    const geoData = await getCountryFromIp(ip);
+    await db.insert(newsletterSubscribersTable).values({
+      email: email.toLowerCase().trim(),
+      source: "share_gate",
+      pollId,
+      countryCode: geoData?.code ?? null,
+    }).onConflictDoNothing();
+    console.log(`[NEWSLETTER] New subscriber: ${email} (poll ${pollId}, ${geoData?.name ?? "unknown"})`);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return res.json({ success: true });
+  }
+});
+
+router.get("/stats/countries", async (_req, res) => {
+  try {
+    const rows = await db
+      .select({
+        countryCode: votesTable.countryCode,
+        countryName: votesTable.countryName,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(votesTable)
+      .where(sql`country_code IS NOT NULL`)
+      .groupBy(votesTable.countryCode, votesTable.countryName)
+      .orderBy(desc(sql`count(*)`))
+      .limit(12);
+
+    const total = rows.reduce((s, r) => s + Number(r.count), 0);
+    const countries = rows.map((r) => ({
+      code: r.countryCode!,
+      name: r.countryName ?? r.countryCode!,
+      count: Number(r.count),
+      percentage: total > 0 ? Math.round((Number(r.count) / total) * 100) : 0,
+    }));
+
+    res.json({ countries, total });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ countries: [], total: 0 });
   }
 });
 

@@ -96,6 +96,13 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
     setTimeout(unlock, 800)
   }
 
+  const handleShareTelegram = () => {
+    const pollUrl = getPollUrl(poll.id)
+    const msg = encodeURIComponent(`"${poll.question}" — where does the region stand? Vote: ${pollUrl}`)
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(pollUrl)}&text=${msg}`, "_blank", "noopener,noreferrer")
+    setTimeout(unlock, 800)
+  }
+
   const handleCopyLink = () => {
     const pollUrl = getPollUrl(poll.id)
     setLinkCopied(true)
@@ -110,6 +117,12 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
     e.preventDefault()
     if (!email.trim()) return
     setEmailSubmitted(true)
+    const baseUrl = (import.meta as any).env?.VITE_API_BASE_URL ?? ""
+    fetch(`${baseUrl}/api/polls/${poll.id}/email-unlock`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim() }),
+    }).catch(() => {})
     setTimeout(unlock, 1000)
   }
 
@@ -284,13 +297,13 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                 </button>
 
                 {/* Secondary share row */}
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   <button
                     onClick={handleShareLinkedIn}
                     className="flex flex-col items-center gap-1.5 px-2 py-3 border border-border hover:border-[#0A66C2] hover:bg-[#0A66C2]/5 transition-all duration-150 group"
                   >
                     <Linkedin className="w-4 h-4 text-[#0A66C2]" />
-                    <span className="text-[9px] uppercase tracking-[0.15em] font-bold text-muted-foreground group-hover:text-[#0A66C2] transition-colors">LinkedIn</span>
+                    <span className="text-[9px] uppercase tracking-[0.1em] font-bold text-muted-foreground group-hover:text-[#0A66C2] transition-colors">LinkedIn</span>
                   </button>
 
                   <button
@@ -300,7 +313,17 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                     <svg className="w-4 h-4 text-foreground" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.732-8.853L2.16 2.25H8.08l4.213 5.567zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                     </svg>
-                    <span className="text-[9px] uppercase tracking-[0.15em] font-bold text-muted-foreground group-hover:text-foreground transition-colors">X / Twitter</span>
+                    <span className="text-[9px] uppercase tracking-[0.1em] font-bold text-muted-foreground group-hover:text-foreground transition-colors">X</span>
+                  </button>
+
+                  <button
+                    onClick={handleShareTelegram}
+                    className="flex flex-col items-center gap-1.5 px-2 py-3 border border-border hover:border-[#2AABEE] hover:bg-[#2AABEE]/5 transition-all duration-150 group"
+                  >
+                    <svg className="w-4 h-4 text-[#2AABEE]" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                    </svg>
+                    <span className="text-[9px] uppercase tracking-[0.1em] font-bold text-muted-foreground group-hover:text-[#2AABEE] transition-colors">Telegram</span>
                   </button>
 
                   <button
@@ -318,8 +341,8 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                         <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
                       </svg>
                     )}
-                    <span className={cn("text-[9px] uppercase tracking-[0.15em] font-bold transition-colors", linkCopied ? "text-primary" : "text-muted-foreground group-hover:text-foreground")}>
-                      {linkCopied ? "Copied!" : "Copy Link"}
+                    <span className={cn("text-[9px] uppercase tracking-[0.1em] font-bold transition-colors", linkCopied ? "text-primary" : "text-muted-foreground group-hover:text-foreground")}>
+                      {linkCopied ? "Copied!" : "Copy"}
                     </span>
                   </button>
                 </div>
