@@ -1,0 +1,314 @@
+# TMH: NEW ROAST-STYLE POLL QUESTIONS
+
+## What This Is
+
+This prompt adds **84 new poll questions** to the existing TMH polls database. These are deliberately more raw, provocative, stat-backed, and "petty" than the current set. They are designed to split WhatsApp groups and make people screenshot their results.
+
+**DO NOT** delete, modify, or replace any existing polls. Add these alongside the current 80+ questions. Use the same `polls` table schema, same `category` values, same `status = 'draft'` default. Same slug generation logic (kebab-case from question text, truncated to ~60 chars).
+
+For answer options: use the suggested options provided. If none are listed, default to contextually appropriate 3-4 options (never just Yes/No on roast questions -- give people specific, opinionated choices they'll want to argue about).
+
+---
+
+## THE QUESTIONS
+
+### TECHNOLOGY & AI (12) -- category: 'technology_ai'
+
+1. **90% of "AI startups" in MENA are just a ChatGPT wrapper with a logo. Change my mind.**
+   - Options: "Accurate and embarrassing" / "Harsh but fair" / "There are real ones too" / "You're just hating"
+
+2. **$3.5 trillion in sovereign wealth and we still can't build a global consumer app. Why?**
+   - Options: "Talent keeps leaving" / "Government money kills innovation" / "We build for exits, not users" / "Give it time"
+
+3. **Your company's 'AI strategy' is one guy with a ChatGPT Plus subscription. Admit it.**
+   - Options: "Personally attacked right now" / "We actually have a real one" / "Even that is generous" / "AI strategy is a scam anyway"
+
+4. **NEOM has spent $500B+ and the main export so far is renders. Is this a country or a Behance portfolio?**
+   - Options: "Most expensive mood board ever" / "Long-term vision, relax" / "The renders are fire though" / "It's a jobs program"
+
+5. **Be honest: you mass-applied to jobs using AI and still didn't get a callback.**
+   - Options: "I feel seen" / "Got the job actually" / "Recruiters use AI too so we're even" / "I hire people, and yes I can tell"
+
+6. **The average MENA developer makes $24K/year. Their Silicon Valley counterpart makes $180K. Same code. Is this fair?**
+   - Options: "Cost of living is different" / "No, it's exploitation" / "That's why they leave" / "Remote work is fixing it"
+
+7. **Half the 'tech founders' at MENA conferences have never shipped a product. They just have a deck and a lanyard.**
+   - Options: "The lanyard economy is real" / "Networking IS the product" / "I've seen this exact person" / "I might be this person"
+
+8. **Smart City rankings put Dubai top 10 globally, but your Etisalat bill still takes 45 minutes to dispute. Thoughts?**
+   - Options: "Smart cities, dumb customer service" / "It's actually gotten better" / "du is worse" / "I just pay and cry"
+
+9. **ChatGPT writes better strategy decks than 80% of consultants billing $500/hr in the Gulf. And everyone knows it.**
+   - Options: "Consultants are shaking" / "ChatGPT can't read the room" / "The slides are the same, the fees aren't" / "I'm a consultant and I use it too"
+
+10. **Your startup says 'AI-powered' but your actual moat is a WhatsApp group and one ops guy named Ahmed.**
+    - Options: "Ahmed is carrying the region" / "WhatsApp IS infrastructure here" / "Stop exposing my business model" / "Ahmed quit last week actually"
+
+11. **MENA produced 0 of the top 100 AI research papers in 2025. Zero. But we hosted 47 AI conferences. Priorities?**
+    - Options: "Conference economy goes crazy" / "Research doesn't need a stage" / "We're funding, not building" / "The food at those events though"
+
+12. **If every 'blockchain' startup in Dubai actually had users, crypto adoption would be 100%. It's 4%.**
+    - Options: "The math isn't mathing" / "It's still early" / "Most are just token launchers" / "4% is actually decent for the region"
+
+---
+
+### CULTURE & SOCIETY (12) -- category: 'culture_society'
+
+1. **72% of Arabs under 30 want to emigrate. But y'all get mad when someone actually leaves. Which one is it?**
+   - Options: "We want options, not exile" / "Leaving IS the option" / "The guilt trip is cultural" / "They leave and come back anyway"
+
+2. **Wasta got you your first job. Be honest. (67% of MENA professionals say connections matter more than CVs.)**
+   - Options: "My CV was strong AND I had wasta" / "Wasta opened the door, I kept it open" / "No wasta, pure grind" / "I AM the wasta for others now"
+
+3. **You post 'Free Palestine' but won't buy from a Palestinian business. Solidarity or performance?**
+   - Options: "This one hurt" / "I actually do support them" / "Most people don't even know Palestinian brands" / "It's more complicated than that"
+
+4. **Ramadan productivity drops 40% but nobody's allowed to say it. Why are we pretending?**
+   - Options: "Spiritual gains > KPIs" / "Honestly, Ramadan is my most focused month" / "The iftar meetings are the real work" / "HR is watching, I can't answer this"
+
+5. **Your family asks when you're getting married more than they ask about your actual career. Are we okay?**
+   - Options: "Every single Eid" / "They stopped asking (gave up)" / "My career IS the problem" / "Married and they still find something"
+
+6. **We complain about Western media stereotypes while our own media barely covers anything outside Dubai and Riyadh.**
+   - Options: "Amman and Cairo left the chat" / "Gulf media IS the region's media now" / "Diaspora media fills the gap" / "Fair point, no excuse"
+
+7. **Be honest: you judge people by their accent -- Gulf Arabic vs. Levantine vs. Egyptian. We all do it.**
+   - Options: "Gulf = money" / "Egyptian = funny" / "Levantine = pretty" / "I don't do this (lying)"
+
+8. **80% of Gulf residents are expats but have zero path to permanent residency. Is this sustainable for another 20 years?**
+   - Options: "Built the country, can't stay in it" / "Golden visa fixed this" / "It's a feature not a bug" / "20 years is generous"
+
+9. **You spent $200 on an iftar at a hotel but haggle with the delivery driver over a AED 5 tip. Explain yourself.**
+   - Options: "I tip well actually" / "The hotel iftar was a mistake too" / "This is about class and we know it" / "AED 5 IS a good tip"
+
+10. **The region built $50B in malls but your neighborhood still doesn't have a decent public park. Progress?**
+    - Options: "Air-conditioned malls ARE the parks" / "This is genuinely sad" / "My neighborhood has a park (barely)" / "Parks don't generate rent"
+
+11. **You call yourself self-made but your dad's driver dropped you at your first interview. We see you.**
+    - Options: "The driver was emotional support" / "Privilege acknowledged" / "I took the metro actually" / "Self-made is a spectrum"
+
+12. **Arab hospitality is legendary until it's time to split the bill. Then it's a hostage negotiation.**
+    - Options: "I always grab the bill" / "The fake wallet reach is an art form" / "Whoever invited should pay, period" / "Venmo would fix the Middle East"
+
+---
+
+### BUSINESS & STARTUPS (12) -- category: 'business'
+
+1. **The average MENA startup dies in 18 months. The average MENA VC fund takes 3 years to deploy. Who's failing who?**
+   - Options: "VCs are too slow" / "Founders burn too fast" / "Both are mid" / "18 months is generous"
+
+2. **Your LinkedIn says 'Serial Entrepreneur' but your last 3 startups had the same 12 customers. Serially mid.**
+   - Options: "Serial pivoter is more accurate" / "12 loyal customers is a moat" / "LinkedIn bios are fiction" / "I'm in this photo and I don't like it"
+
+3. **MENA founders raise $2M and immediately get a Porsche Cayenne. Investors: y'all see this, right?**
+   - Options: "The Cayenne is a networking tool" / "I've literally seen this happen" / "Founders need to look successful" / "That's the LP's money, not theirs"
+
+4. **Dubai has 40,000+ registered companies. 80% have fewer than 5 employees. Are we building businesses or buying visas?**
+   - Options: "Visa economics is real" / "Small doesn't mean fake" / "Most are freelancer shells" / "Still more real than a pitch deck"
+
+5. **Your co-founder 'brings the network.' Three months in, the network is one uncle and a group chat.**
+   - Options: "The uncle came through though" / "Co-founder breakups are the real pandemic" / "Network = one strong intro away" / "I am the network co-founder, mind your business"
+
+6. **Saudi Arabia created 450,000 SME licenses in 2024. How many have actual revenue?**
+   - Options: "Less than 10% let's be real" / "Revenue takes time" / "The license IS the business plan" / "Better than zero licenses"
+
+7. **Founders fly business class to conferences but pay their teams 30 days late. Accountability where?**
+   - Options: "Conference ROI is real though" / "Pay your people first, always" / "The business class is on miles" / "I know exactly who you're talking about"
+
+8. **90% of MENA accelerator 'graduates' never raise a follow-on round. Are accelerators building startups or content?**
+   - Options: "Demo day is the real product" / "Accelerators add value beyond funding" / "It's a LinkedIn photo opportunity" / "The 10% that make it justify it"
+
+9. **Family offices control $1T+ in the Gulf but most won't back a founder without a warm intro. Meritocracy?**
+   - Options: "Warm intros are universal, not regional" / "Family offices aren't VCs" / "If your idea was good, someone would intro you" / "The warm intro economy needs disrupting"
+
+10. **Your company has 6 VPs, 4 directors, 2 actual builders, and an office dog. This is most MENA startups.**
+    - Options: "The dog is the most productive" / "Title inflation is a regional disease" / "I'm a VP and I build things" / "Accurate for Series A+"
+
+11. **You've been 'pre-revenue' for 3 years and call it 'deep tech.' It's not deep tech. You have no customers.**
+    - Options: "Pre-revenue is a vibe" / "Deep tech genuinely takes longer" / "3 years with no revenue is a hobby" / "The market isn't ready (cope)"
+
+12. **The average exit in MENA is $15M. The average VC fund tells LPs they'll return 10x. Someone explain the math.**
+    - Options: "The math never mathed" / "There are outliers that carry" / "LPs don't check" / "This is why we need secondaries"
+
+---
+
+### CITIES & LIFESTYLE (12) -- category: 'cities'
+
+1. **Dubai rent went up 30% in 2 years. Salaries went up 3%. But sure, it's still the 'city of opportunity.'**
+   - Options: "Opportunity to go broke" / "Still better than back home" / "Salaries will catch up" / "I moved to Sharjah"
+
+2. **Riyadh's entertainment scene went from 0 to 100 in 3 years. But can you walk anywhere? The sidewalk test.**
+   - Options: "You need a car to buy water" / "They're building walkability" / "Entertainment > sidewalks" / "Riyadh in summer? Nobody's walking"
+
+3. **You moved to Dubai 'for 2 years' and it's been 11. The airport is closer than your hometown. Thoughts?**
+   - Options: "I'm going back next year (lying)" / "Dubai IS home now" / "I'm stuck, not staying" / "The 2-year plan is a regional meme"
+
+4. **Cairo has 22 million people, some of the best food on earth, and the worst traffic. Would you still choose it?**
+   - Options: "Cairo is chaos I can't quit" / "Great to visit, impossible to live" / "The food justifies everything" / "I left Cairo and miss it daily"
+
+5. **Doha built $200B in infrastructure for the World Cup. It's been 3 years. What's the vibe now?**
+   - Options: "Quiet luxury, literally" / "It was always a company town" / "Best airport, least nightlife" / "Doha doesn't need your validation"
+
+6. **You live in JBR, pay AED 120K in rent, eat at the same 3 restaurants, and call it 'living your best life.'**
+   - Options: "I'm in this caption and I'm upset" / "JBR is a lifestyle choice" / "Business Bay is where it's at" / "AED 120K for JBR is a deal now"
+
+7. **Amman has incredible talent, cheap rent, and no VC money. Is Jordan the most underrated city in MENA?**
+   - Options: "Amman is a sleeping giant" / "Underrated but under-invested" / "Talent leaves because there's no money" / "Lebanon said the same thing 10 years ago"
+
+8. **Bahrain is 30 minutes from Saudi but feels like a different planet. Is that a flex or a warning?**
+   - Options: "Bahrain is the vibe Saudi wants" / "30 minutes, 30 years apart" / "Bahrain is underrated" / "The causeway traffic disagrees"
+
+9. **You complain about Dubai but won't move. You complain about your home country but won't go back. Pick a struggle.**
+   - Options: "Both struggles are valid" / "Moving is not that simple" / "I complain because I care" / "I'm saving up to go back (lying)"
+
+10. **Abu Dhabi has more cultural institutions per capita than most European capitals. But people still say 'there's nothing to do.'**
+    - Options: "Louvre, Guggenheim, and no nightlife" / "Abu Dhabi is for grown-ups" / "Culture ≠ things to do" / "Weekend in Dubai fixes it"
+
+11. **Beirut's GDP dropped 60% since 2019 but the restaurants are still packed. Someone explain the economics of denial.**
+    - Options: "Lebanese resilience is unmatched" / "It's the diaspora money" / "Denial is a coping mechanism" / "Those restaurants are paid in cash, ask no questions"
+
+12. **KSA spent $1.5T on giga-projects. Egypt's new capital cost $58B. Oman did nothing flashy and might outlast both. Discuss.**
+    - Options: "Oman plays the long game" / "Giga-projects create giga-jobs" / "Egypt's capital is underrated" / "Oman is everyone's backup plan"
+
+---
+
+### IDENTITY & BELONGING (12) -- category: 'identity'
+
+1. **You code-switch between 3 languages, 2 accents, and a completely different personality depending on the meeting. Healthy?**
+   - Options: "It's a superpower" / "It's exhausting actually" / "Third culture kid syndrome" / "This is just being Arab abroad"
+
+2. **The most 'Arab' thing about half the diaspora is the food they post on Instagram. Are we losing the plot?**
+   - Options: "Hummus is identity" / "Culture is deeper than food" / "At least they're connected somehow" / "The diaspora does more than you think"
+
+3. **50% of MENA's top talent was educated abroad and came back. The other 50% was educated abroad and didn't. Who's right?**
+   - Options: "The ones who came back" / "The ones who stayed" / "Both made the right call" / "The ones who never left"
+
+4. **You fly Emirates but can't name a single Emirati friend. Living in the Gulf doesn't mean you're part of it.**
+   - Options: "It's hard to meet nationals" / "I have Emirati friends actually" / "The segregation is structural" / "Fair point, no excuses"
+
+5. **Arab parents will sacrifice everything to give you a better life and then guilt you about it for 40 years. A system.**
+   - Options: "The ROI on guilt is generational" / "Sacrifice with strings attached" / "They deserve gratitude though" / "I'm both the child and the parent now"
+
+6. **'Where are you really from?' -- asked by Arabs to other Arabs. We do the same thing we complain about.**
+   - Options: "We absolutely do this" / "It's curiosity not racism" / "When WE do it, it's different" / "Nationality obsession is a Gulf sport"
+
+7. **You left Lebanon/Iraq/Syria/Palestine due to crisis and now someone from the Gulf says you 'chose' to leave. Read a book.**
+   - Options: "Displacement is not a choice" / "People say this and it's enraging" / "Empathy gap is real" / "Most Gulf residents don't understand forced migration"
+
+8. **45% of Arabs under 25 identify more with global internet culture than with their national identity. Good or terrifying?**
+   - Options: "Good, borders are arbitrary" / "Terrifying, culture is dying" / "Both at the same time" / "National identity was always a construct"
+
+9. **Your kids speak better English than Arabic and you're 'planning to fix that.' You're not going to fix that.**
+   - Options: "Don't call me out like this" / "Arabic school every Saturday" / "My kids speak Arabic fine" / "English is survival, Arabic is heritage"
+
+10. **You have a passport that restricts your movement but you'll defend that country with your whole chest online. Why?**
+    - Options: "Home is home regardless" / "Patriotism isn't rational" / "The passport will improve" / "You can love a place and critique its systems"
+
+11. **Lebanese, Palestinian, Egyptian -- everyone claims the food. Nobody claims the political dysfunction. Selective identity.**
+    - Options: "We claim both actually" / "Food is the only thing we agree on" / "Political dysfunction is inherited trauma" / "Hummus belongs to all of us"
+
+12. **Gulf Arabs and Levantine Arabs in the same room pretending they have the same culture. Adorable.**
+    - Options: "We're more similar than different" / "Completely different worlds" / "United by language, divided by everything else" / "The real divide is class, not geography"
+
+---
+
+### ECONOMY & FINANCE (12) -- category: 'economy'
+
+1. **Dubai's GDP is $120B. The rent its residents pay might be $120B too. Is the economy just a landlord?**
+   - Options: "Landlord economy is the economy" / "There's diversification happening" / "My landlord is richer than my CEO" / "This is global, not just Dubai"
+
+2. **GCC saved $4T+ in sovereign wealth. The average citizen's personal savings rate is 8%. Trickle-down is a myth.**
+   - Options: "Sovereign wealth ≠ personal wealth" / "Jobs are the trickle-down" / "The gap is embarrassing" / "8% savings is generous"
+
+3. **You make $10K/month in Dubai and somehow still live paycheck to paycheck. Where is the money going?**
+   - Options: "Brunch culture is expensive" / "Rent takes 40% before I breathe" / "I send money home" / "I genuinely don't know"
+
+4. **Islamic finance is a $4T industry. But you still can't explain how it's structurally different from conventional banking.**
+   - Options: "It's the intention that matters" / "The structures are different, Google it" / "It's conventional banking in a thobe" / "I use it and don't ask questions"
+
+5. **Egypt devalued its currency 3 times in 3 years. The falafel sandwich is now the leading inflation indicator.**
+   - Options: "Falafel index is real" / "EGP will stabilize" / "Egypt's fundamentals are strong (delusional)" / "The people absorb everything, always"
+
+6. **You bought crypto in 2021 at the top, told everyone you were 'early,' and haven't checked your portfolio since. We know.**
+   - Options: "It's a long-term hold" / "I'm still in profit (barely)" / "The portfolio is a graveyard" / "I've learned my lesson (I haven't)"
+
+7. **Saudi Arabia needs 500,000 new jobs/year to hit Vision 2030 employment targets. They've created ~200K/year. Nobody mentions this.**
+   - Options: "The gap is concerning" / "Private sector is ramping" / "Government jobs will fill it" / "Saudization is working, slowly"
+
+8. **Average time to get paid by a client in the Gulf: 90-120 days. Average time for your rent to be due: 30 days. This system is broken.**
+   - Options: "Cash flow kills more businesses than competition" / "Post-dated checks are violence" / "Get better clients" / "Invoice factoring exists, use it"
+
+9. **Real estate makes up 30% of Dubai's GDP. If property prices drop 20%, what's the actual plan?**
+   - Options: "There is no plan B" / "Tourism carries the rest" / "Dubai always bounces back" / "This question made developers nervous"
+
+10. **The average Gulf wedding costs $80K-$150K. The average marriage lasts... let's not finish that sentence.**
+    - Options: "The wedding IS the ROI" / "Divorce rates say everything" / "Cultural obligation, not choice" / "Elope and invest the $150K"
+
+11. **You trust a random Telegram group for investment advice more than a licensed financial advisor. MENA finance culture.**
+    - Options: "The Telegram group has better returns" / "Financial advisors just sell insurance" / "I trust neither" / "The group admin drives a Lamborghini so..."
+
+12. **Oil will be irrelevant in 30 years. Half the GCC still hasn't meaningfully diversified. Clock's ticking.**
+    - Options: "UAE and Saudi are diversifying" / "30 years is a long time" / "Kuwait and Iraq are in trouble" / "Renewables are the new oil anyway"
+
+---
+
+### WOMEN & EQUALITY (12) -- category: 'women_equality'
+
+1. **Saudi women couldn't drive until 2018. Now they're outperforming men in university enrollment. Imagine if they had a 50-year head start.**
+   - Options: "Unstoppable when given the chance" / "The progress is real and fast" / "Enrollment ≠ employment though" / "This is the most important stat in the region"
+
+2. **'We respect women' -- said the company with 0 women in the C-suite, 0 on the board, and a women's day Instagram post.**
+   - Options: "The Instagram post is doing the heavy lifting" / "We have women in leadership actually" / "Tokenism is everywhere, not just MENA" / "Post the org chart, not the graphic"
+
+3. **65% of university graduates in the Gulf are women. 15% of senior leadership positions are held by women. Where's the leak?**
+   - Options: "The pipeline isn't the problem, the ceiling is" / "Cultural expectations push women out" / "It's changing, slowly" / "Companies promote who they're comfortable with"
+
+4. **You call yourself a feminist at conferences but still expect your wife to manage the house and the kids. We see you, bro.**
+   - Options: "Called out" / "I actually split responsibilities" / "Conference feminism is a genre" / "This goes both ways"
+
+5. **A woman in MENA gets asked about work-life balance in every interview. A man never does. Same role. Same company.**
+   - Options: "Happens constantly" / "This is changing in my experience" / "The question should be illegal" / "I've asked this and now I feel bad"
+
+6. **The highest-paid woman in most MENA companies still makes less than the lowest-paid man in the C-suite. But we're 'making progress.'**
+   - Options: "Progress is a comforting lie" / "Pay transparency would fix this" / "Not true at my company" / "The gap is global, not just MENA"
+
+7. **Gulf countries market themselves as progressive on women's rights while kafala still exists for domestic workers. Pick a lane.**
+   - Options: "Kafala reform is overdue" / "These are separate issues" / "You can't claim progress selectively" / "Some countries have reformed it"
+
+8. **Your startup's founding team is 4 guys from the same university. You call it 'culture fit.' We call it a pattern.**
+   - Options: "Diversity improves outcomes" / "Hire the best person regardless" / "Culture fit = comfort zone" / "This is most startups globally"
+
+9. **Women-led startups in MENA get 2% of VC funding. Two percent. And VCs wonder why their portfolio returns are mid.**
+   - Options: "2% is criminal" / "Deal flow is the problem" / "Fund managers need to look different" / "Returns-wise, women-led outperform"
+
+10. **A man fails in business: 'He took a risk.' A woman fails in business: 'Maybe she wasn't cut out for it.' Same region, different rules.**
+    - Options: "Double standard is structural" / "This is changing generationally" / "I've seen this exact dynamic" / "Failure should be equal opportunity"
+
+11. **54% of MENA women say they've been passed over for promotion due to gender. The other 46% might just not know it yet.**
+    - Options: "The 46% are in denial" / "54% is already devastating" / "Not every missed promotion is gender" / "Anonymous surveys tell the real story"
+
+12. **The region celebrates 'strong women' in marketing campaigns and then gives the actual budget to men. Every time.**
+    - Options: "Campaign feminism" / "Show me the budget allocation" / "Some brands genuinely invest" / "Marketing ≠ action"
+
+---
+
+## IMPLEMENTATION INSTRUCTIONS
+
+1. **Add these to the existing `polls` table** using the same schema. Do not create a new table or modify the existing one.
+
+2. **Category values must match exactly:** `technology_ai`, `culture_society`, `business`, `cities`, `identity`, `economy`, `women_equality`
+
+3. **All new polls should have:**
+   - `status: 'draft'` (admin will review and publish)
+   - `poll_type: 'card'` (default, admin can promote to 'hero' or 'strip' later)
+   - `is_featured: false`
+   - `created_at: now()`
+   - Auto-generated slug from the question text
+
+4. **Store the answer options** in the `options` JSONB field (or however the existing polls store their options). Each option should have a `text` field and a `votes` field initialized to 0.
+
+5. **Add a tag/label** to distinguish these: set a `batch` or `series` field (or a tag) to `'roast_series'` so they can be filtered in the admin panel. If no such field exists, add a `tags` array column or just prefix the slug with `roast-`.
+
+6. **Do not touch:** existing polls, the share gate, vote mechanics, fingerprinting, Supabase RLS, or any UI components. This is a data-only addition.
+
+7. After seeding, **log the count** of new polls added per category to confirm all 84 were inserted.

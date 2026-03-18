@@ -63,12 +63,21 @@ artifacts-monorepo/
 - `GET /api/categories` — List all categories with poll counts
 - `GET /api/weekly-pulse` — Weekly editorial digest
 
+## Database State (as of March 2026)
+- **219 polls** total (135 original + 84 roast_series batch)
+- **785 poll options** total
+- **95 profiles** total (67 original + 28 new Hustlers)
+- Profile photos use CamelCase filenames in `/profiles/` public dir (e.g., `Abe_Seksek.jpg`)
+- Roast polls tagged `["roast_series"]` with `poll_type: 'card'`, `is_featured: false`
+- New profiles (28) inserted with `is_featured: false` — appear under "Newly Added" tab
+
+**⚠️ WARNING:** Running `pnpm --filter @workspace/scripts run seed` will WIPE all DB data (polls, options, profiles). seed.ts needs updating to include the 28 new profiles and 84 roast polls before safe re-seeding.
+
 ## Design System
 - Dark mode by default (charcoal soft-black background, warm ivory text)
-- Muted gold primary accent (`#C9921F` approx)
-- Deep olive/teal secondary accent
-- DM Sans for UI, Playfair Display for editorial headings
-- Light mode toggle in navbar
+- Brand crimson primary: `hsl(348 83% 47%)` light / `hsl(348 83% 53%)` dark
+- Fonts: Playfair Display (`font-display`), Barlow Condensed (`font-serif`), DM Sans (`font-sans`)
+- Light mode toggle in navbar, persisted in `localStorage tmh_theme`
 
 ## Running Locally
 
