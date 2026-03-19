@@ -34,6 +34,15 @@ export const votesTable = pgTable("votes", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const pollSnapshotsTable = pgTable("poll_snapshots", {
+  id: serial("id").primaryKey(),
+  pollId: integer("poll_id").notNull(),
+  optionId: integer("option_id").notNull(),
+  snapshotDate: timestamp("snapshot_date").notNull(),
+  percentage: real("percentage").notNull().default(0),
+  voteCount: integer("vote_count").notNull().default(0),
+});
+
 export const newsletterSubscribersTable = pgTable("newsletter_subscribers", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
@@ -50,5 +59,6 @@ export const insertVoteSchema = createInsertSchema(votesTable).omit({ id: true }
 export type Poll = typeof pollsTable.$inferSelect;
 export type PollOption = typeof pollOptionsTable.$inferSelect;
 export type Vote = typeof votesTable.$inferSelect;
+export type PollSnapshot = typeof pollSnapshotsTable.$inferSelect;
 export type InsertPoll = z.infer<typeof insertPollSchema>;
 export type InsertPollOption = z.infer<typeof insertPollOptionSchema>;

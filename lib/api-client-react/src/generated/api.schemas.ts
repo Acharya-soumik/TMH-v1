@@ -9,6 +9,23 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface TrendSeriesPoint {
+  optionId: number;
+  optionText: string;
+  percentage: number;
+}
+
+export interface TrendDataPoint {
+  date: string;
+  series: TrendSeriesPoint[];
+}
+
+export interface PollTrendsResponse {
+  pollId: number;
+  question: string;
+  dataPoints: TrendDataPoint[];
+}
+
 export interface PollOption {
   id: number;
   text: string;

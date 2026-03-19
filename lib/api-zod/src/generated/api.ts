@@ -129,6 +129,30 @@ export const GetPollResponse = zod.object({
 });
 
 /**
+ * @summary Get historical trend data for a poll
+ */
+export const GetPollTrendsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetPollTrendsResponse = zod.object({
+  pollId: zod.number(),
+  question: zod.string(),
+  dataPoints: zod.array(
+    zod.object({
+      date: zod.string(),
+      series: zod.array(
+        zod.object({
+          optionId: zod.number(),
+          optionText: zod.string(),
+          percentage: zod.number(),
+        }),
+      ),
+    }),
+  ),
+});
+
+/**
  * @summary Cast a vote on a poll
  */
 export const VotePollParams = zod.object({

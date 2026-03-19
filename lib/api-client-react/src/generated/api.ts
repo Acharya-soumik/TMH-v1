@@ -24,6 +24,7 @@ import type {
   ListProfilesParams,
   Poll,
   PollListResponse,
+  PollTrendsResponse,
   ProfileDetail,
   ProfileListResponse,
   RankingsResponse,
@@ -352,6 +353,93 @@ export function useGetPoll<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetPollQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get historical trend data for a poll
+ */
+export const getGetPollTrendsUrl = (id: number) => {
+  return `/api/polls/${id}/trends`;
+};
+
+export const getPollTrends = async (
+  id: number,
+  options?: RequestInit,
+): Promise<PollTrendsResponse> => {
+  return customFetch<PollTrendsResponse>(getGetPollTrendsUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPollTrendsQueryKey = (id: number) => {
+  return [`/api/polls/${id}/trends`] as const;
+};
+
+export const getGetPollTrendsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPollTrends>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPollTrends>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPollTrendsQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPollTrends>>> = ({
+    signal,
+  }) => getPollTrends(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPollTrends>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPollTrendsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPollTrends>>
+>;
+export type GetPollTrendsQueryError = ErrorType<void>;
+
+/**
+ * @summary Get historical trend data for a poll
+ */
+
+export function useGetPollTrends<
+  TData = Awaited<ReturnType<typeof getPollTrends>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPollTrends>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPollTrendsQueryOptions(id, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { db, pollsTable, pollOptionsTable, votesTable, profilesTable, newsletterSubscribersTable } from "@workspace/db";
-import { eq, desc, sql, and, inArray } from "drizzle-orm";
+import { db, pollsTable, pollOptionsTable, votesTable, profilesTable, newsletterSubscribersTable, pollSnapshotsTable } from "@workspace/db";
+import { eq, desc, sql, and, inArray, asc } from "drizzle-orm";
 import https from "https";
 import http from "http";
 
@@ -163,6 +163,41 @@ router.get("/polls/:id/breakdown", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ countries: [], total: 0 });
+  }
+});
+
+router.get("/polls/:id/trends", async (req, res) => {
+  try {
+    const pollId = parseInt(req.params.id);
+
+    const [poll] = await db.select().from(pollsTable).where(eq(pollsTable.id, pollId));
+    if (!poll) return res.status(404).json({ error: "Poll not found" });
+
+    const options = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
+    const optionMap = new Map(options.map(o => [o.id, o.text]));
+
+    const snapshots = await db
+      .select()
+      .from(pollSnapshotsTable)
+      .where(eq(pollSnapshotsTable.pollId, pollId))
+      .orderBy(asc(pollSnapshotsTable.snapshotDate));
+
+    const grouped = new Map<string, { date: string; series: { optionId: number; optionText: string; percentage: number }[] }>();
+    for (const snap of snapshots) {
+      const dateKey = snap.snapshotDate.toISOString().slice(0, 10);
+      if (!grouped.has(dateKey)) grouped.set(dateKey, { date: dateKey, series: [] });
+      grouped.get(dateKey)!.series.push({
+        optionId: snap.optionId,
+        optionText: optionMap.get(snap.optionId) ?? "",
+        percentage: snap.percentage,
+      });
+    }
+
+    const dataPoints = Array.from(grouped.values()).sort((a, b) => a.date.localeCompare(b.date));
+    res.json({ pollId, question: poll.question, dataPoints });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch trends" });
   }
 });
 

@@ -2,7 +2,8 @@ import { useRoute, Link } from "wouter"
 import { useGetPoll, useListPolls } from "@workspace/api-client-react"
 import { Layout } from "@/components/layout/Layout"
 import { PollCard } from "@/components/poll/PollCard"
-import { ArrowLeft, MessageSquare, AlertCircle } from "lucide-react"
+import { TrendChart } from "@/components/poll/TrendChart"
+import { ArrowLeft, AlertCircle } from "lucide-react"
 
 export default function PollDetail() {
   const [, params] = useRoute("/polls/:id")
@@ -52,6 +53,15 @@ export default function PollDetail() {
         {/* The featured poll card handles voting and result display perfectly */}
         <div className="mb-16">
           <PollCard poll={poll} featured />
+        </div>
+
+        {/* Bloomberg-style opinion trend chart */}
+        <div className="bg-card border border-border p-6 md:p-10 mb-16">
+          <div className="h-px w-8 bg-primary mb-6" />
+          <h3 className="font-serif font-black uppercase text-xl tracking-wider mb-6">
+            How Opinion Has Shifted
+          </h3>
+          <TrendChart pollId={poll.id} />
         </div>
 
         {poll.context && (

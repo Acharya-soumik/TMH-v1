@@ -100,6 +100,27 @@ paths:
         "404":
           description: Not found
 
+  /polls/{id}/trends:
+    get:
+      operationId: getPollTrends
+      tags: [polls]
+      summary: Get historical trend data for a poll
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trend data series
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PollTrendsResponse"
+        "404":
+          description: Not found
+
   /polls/{id}/vote:
     post:
       operationId: votePoll
@@ -242,6 +263,41 @@ components:
           type: string
       required:
         - status
+
+    TrendSeriesPoint:
+      type: object
+      properties:
+        optionId:
+          type: integer
+        optionText:
+          type: string
+        percentage:
+          type: number
+      required: [optionId, optionText, percentage]
+
+    TrendDataPoint:
+      type: object
+      properties:
+        date:
+          type: string
+        series:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendSeriesPoint"
+      required: [date, series]
+
+    PollTrendsResponse:
+      type: object
+      properties:
+        pollId:
+          type: integer
+        question:
+          type: string
+        dataPoints:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendDataPoint"
+      required: [pollId, question, dataPoints]
 
     PollOption:
       type: object
