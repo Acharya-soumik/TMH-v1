@@ -132,6 +132,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
     const votedOption = localOptions.find(o => o.id === votedOptionId)
     if (!votedOption) return
     setIsSharing(true)
+    const shareText = `I voted "${votedOption.text}" on The Middle East Hustle 🔴\n\n"${poll.question}"\n\nWhere do you stand? 👇\n${pollUrl}`
     try {
       const blob = await generateShareCard({
         question: poll.question,
@@ -140,12 +141,15 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
         totalVotes: localTotal,
       })
       const isMobile = /Mobi|Android/i.test(navigator.userAgent)
-      if (isMobile && blob && navigator.canShare && navigator.canShare({ files: [new File([blob], "tmh-poll.png", { type: "image/png" })] })) {
-        const file = new File([blob], "tmh-poll.png", { type: "image/png" })
-        await navigator.share({ title: poll.question, url: pollUrl, files: [file] })
+      const file = blob ? new File([blob], "tmh-poll.png", { type: "image/png" }) : null
+      const canShareFile = file && navigator.canShare && navigator.canShare({ files: [file] })
+      if (isMobile && canShareFile) {
+        await navigator.share({ title: poll.question, text: shareText, files: [file!] })
+      } else if (navigator.share) {
+        await navigator.share({ title: poll.question, text: shareText, url: pollUrl })
       } else {
-        await navigator.clipboard.writeText(pollUrl)
-        toast({ title: "Link copied — share your take.", description: "Paste it anywhere to spread the debate." })
+        await navigator.clipboard.writeText(`${shareText}`)
+        toast({ title: "Copied — share your take!", description: "Paste it anywhere to spread the debate." })
       }
     } catch {
       await navigator.clipboard.writeText(pollUrl).catch(() => {})
