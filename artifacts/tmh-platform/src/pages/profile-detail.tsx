@@ -107,11 +107,11 @@ export default function ProfileDetail() {
             {/* Portrait photo */}
             {profile.imageUrl ? (
               <div className="relative flex-shrink-0 w-48 md:w-56 lg:w-64">
-                <div className="relative overflow-hidden border border-border" style={{ aspectRatio: '3/4' }}>
+                <div className="relative overflow-hidden border border-border bg-secondary flex items-center justify-center" style={{ aspectRatio: '3/4' }}>
                   <img
                     src={profile.imageUrl}
                     alt={profile.name}
-                    className="w-full h-full object-cover object-top grayscale"
+                    className="w-full h-full object-contain grayscale"
                   />
                   {profile.isVerified && (
                     <div className="absolute bottom-3 right-3 w-3 h-3 rounded-full bg-primary border-2 border-background" title="Verified Voice" />
