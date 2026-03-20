@@ -125,6 +125,110 @@ export async function generateShareCard(opts: ShareCardOptions): Promise<Blob | 
   })
 }
 
+export async function generateStoryCard(opts: ShareCardOptions): Promise<Blob | null> {
+  const W = 1080
+  const H = 1920
+  const PAD = 80
+
+  const canvas = document.createElement("canvas")
+  canvas.width = W
+  canvas.height = H
+  const ctx = canvas.getContext("2d")
+  if (!ctx) return null
+
+  await document.fonts.ready
+
+  const BLACK = "#0A0A0A"
+  const WHITE = "#F2EDE4"
+  const RED = "#D4001F"
+  const MUTED = "#888880"
+
+  // Background
+  ctx.fillStyle = BLACK
+  ctx.fillRect(0, 0, W, H)
+
+  // Subtle grid
+  ctx.strokeStyle = "#161616"
+  ctx.lineWidth = 1
+  const GRID = 80
+  for (let gx = 0; gx < W; gx += GRID) {
+    ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke()
+  }
+  for (let gy = 0; gy < H; gy += GRID) {
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke()
+  }
+
+  // Top red bar
+  ctx.fillStyle = RED
+  ctx.fillRect(PAD, 160, 64, 6)
+
+  // Brand
+  ctx.fillStyle = WHITE
+  ctx.font = `900 52px "Barlow Condensed", "Arial Narrow", Arial, sans-serif`
+  ctx.letterSpacing = "6px"
+  ctx.fillText("TMH", PAD, 260)
+
+  ctx.font = `600 18px "DM Sans", Arial, sans-serif`
+  ctx.letterSpacing = "4px"
+  ctx.fillStyle = MUTED
+  ctx.fillText("THE MIDDLE EAST HUSTLE", PAD, 296)
+
+  // Divider
+  ctx.fillStyle = "#2a2a2a"
+  ctx.fillRect(PAD, 330, W - PAD * 2, 1)
+
+  // Question
+  ctx.letterSpacing = "0px"
+  ctx.fillStyle = WHITE
+  ctx.font = `900 72px "Barlow Condensed", "Arial Narrow", Arial, sans-serif`
+  wrapText(ctx, opts.question.toUpperCase(), PAD, 460, W - PAD * 2, 82)
+
+  // Voted label
+  const voteY = 820
+  ctx.font = `700 18px "DM Sans", Arial, sans-serif`
+  ctx.letterSpacing = "4px"
+  ctx.fillStyle = MUTED
+  ctx.fillText("I VOTED:", PAD, voteY)
+
+  ctx.fillStyle = RED
+  ctx.font = `800 42px "Barlow Condensed", "Arial Narrow", Arial, sans-serif`
+  ctx.letterSpacing = "1px"
+  ctx.fillText(opts.votedOptionText.toUpperCase(), PAD, voteY + 52)
+
+  // Bar
+  const barY = voteY + 80
+  const BAR_H = 12
+  const barW = W - PAD * 2
+  ctx.fillStyle = "#2a2a2a"
+  ctx.fillRect(PAD, barY, barW, BAR_H)
+  ctx.fillStyle = RED
+  ctx.fillRect(PAD, barY, Math.round(barW * (opts.votedPct / 100)), BAR_H)
+
+  ctx.font = `700 20px "DM Sans", Arial, sans-serif`
+  ctx.letterSpacing = "0px"
+  ctx.fillStyle = MUTED
+  ctx.fillText(`${opts.votedPct}%  ·  ${opts.totalVotes.toLocaleString()} votes`, PAD, barY + BAR_H + 32)
+
+  // CTA block
+  const ctaY = H - 280
+  ctx.fillStyle = RED
+  ctx.fillRect(PAD, ctaY, W - PAD * 2, 100)
+  ctx.fillStyle = WHITE
+  ctx.font = `900 28px "Barlow Condensed", "Arial Narrow", Arial, sans-serif`
+  ctx.letterSpacing = "4px"
+  ctx.textAlign = "center"
+  ctx.fillText("CAST YOUR VOTE", W / 2, ctaY + 42)
+  ctx.font = `600 18px "DM Sans", Arial, sans-serif`
+  ctx.letterSpacing = "2px"
+  ctx.fillStyle = "rgba(255,255,255,0.7)"
+  ctx.fillText("THEMIDDLEEASTHUSTLE.COM", W / 2, ctaY + 70)
+  ctx.textAlign = "left"
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), "image/png", 0.95)
+  })
+}
+
 export function getPollUrl(pollId: number): string {
   return `${window.location.origin}/polls/${pollId}`
 }

@@ -247,33 +247,51 @@ router.post("/polls/:id/vote", async (req, res) => {
     const ip = getClientIp(req);
     const geoData = await getCountryFromIp(ip);
 
-    await db.insert(votesTable).values({
+    const inserted = await db.insert(votesTable).values({
       pollId,
       optionId,
       voterToken,
       countryCode: geoData?.code ?? null,
       countryName: geoData?.name ?? null,
-    });
+    }).onConflictDoNothing().returning({ id: votesTable.id });
+
+    const options = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
+    const total = options.reduce((s: number, o: any) => s + o.voteCount, 0);
+
+    // Race condition: another vote slipped in between our pre-check and insert
+    if (!inserted.length) {
+      return res.json({
+        success: false,
+        alreadyVoted: true,
+        options: options.map((o) => ({
+          id: o.id,
+          text: o.text,
+          voteCount: o.voteCount,
+          percentage: total > 0 ? Math.round((o.voteCount / total) * 1000) / 10 : 0,
+        })),
+        totalVotes: total,
+      });
+    }
 
     await db
       .update(pollOptionsTable)
       .set({ voteCount: sql`vote_count + 1` })
       .where(eq(pollOptionsTable.id, optionId));
 
-    const options = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
-    const total = options.reduce((s: number, o: any) => s + o.voteCount, 0);
+    const updatedOptions = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
+    const updatedTotal = updatedOptions.reduce((s: number, o: any) => s + o.voteCount, 0);
 
     res.json({
       success: true,
       alreadyVoted: false,
       country: geoData ?? null,
-      options: options.map((o) => ({
+      options: updatedOptions.map((o) => ({
         id: o.id,
         text: o.text,
         voteCount: o.voteCount,
-        percentage: total > 0 ? Math.round((o.voteCount / total) * 1000) / 10 : 0,
+        percentage: updatedTotal > 0 ? Math.round((o.voteCount / updatedTotal) * 1000) / 10 : 0,
       })),
-      totalVotes: total,
+      totalVotes: updatedTotal,
     });
   } catch (err) {
     console.error(err);
