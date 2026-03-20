@@ -9,17 +9,158 @@ import { ArrowRight, ChevronRight } from "lucide-react"
 import { useVoter } from "@/hooks/use-voter"
 import { useVotePoll } from "@workspace/api-client-react"
 
+const FLAG_MAP: Record<string, string> = {
+  AE: "🇦🇪", SA: "🇸🇦", EG: "🇪🇬", JO: "🇯🇴", LB: "🇱🇧", KW: "🇰🇼",
+  BH: "🇧🇭", QA: "🇶🇦", OM: "🇴🇲", MA: "🇲🇦", TN: "🇹🇳", IQ: "🇮🇶",
+  PS: "🇵🇸", TR: "🇹🇷", US: "🇺🇸", GB: "🇬🇧", DE: "🇩🇪", IN: "🇮🇳", AU: "🇦🇺",
+}
+
+interface PlatformStats {
+  livePolls: number
+  totalVotes: number
+  countries: number
+  activeThisWeek: number
+}
+
+interface ActivityItem {
+  countryCode: string | null
+  countryName: string | null
+  pollId: number
+  questionSnippet: string
+  secondsAgo: number
+}
+
+function formatSecondsAgo(s: number): string {
+  if (s < 60) return `${s}s ago`
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`
+  return `${Math.floor(s / 86400)}d ago`
+}
+
+function LiveActivity() {
+  const [items, setItems] = useState<ActivityItem[]>([])
+  const [activeIdx, setActiveIdx] = useState(0)
+  const [tick, setTick] = useState(0)
+
+  useEffect(() => {
+    const baseUrl = (import.meta as any).env?.VITE_API_BASE_URL ?? ""
+    const fetchActivity = () => {
+      fetch(`${baseUrl}/api/activity`)
+        .then(r => r.json())
+        .then(d => { if (d.activity?.length) setItems(d.activity) })
+        .catch(() => {})
+    }
+    fetchActivity()
+    const refresh = setInterval(fetchActivity, 30000)
+    return () => clearInterval(refresh)
+  }, [])
+
+  useEffect(() => {
+    if (items.length <= 1) return
+    const id = setInterval(() => {
+      setTick(t => t + 1)
+      setActiveIdx(i => (i + 1) % Math.min(items.length, 5))
+    }, 4000)
+    return () => clearInterval(id)
+  }, [items.length])
+
+  if (items.length === 0) return null
+
+  const item = items[activeIdx]
+
+  return (
+    <section className="py-10 bg-secondary/20 border-b border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse flex-shrink-0" />
+          <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-muted-foreground font-serif">
+            Live Activity
+          </p>
+        </div>
+        <div key={`${activeIdx}-${tick}`} className="animate-in fade-in duration-500">
+          <Link href={`/polls/${item.pollId}`} className="group block">
+            <p className="font-sans text-sm text-foreground/80 leading-relaxed group-hover:text-foreground transition-colors">
+              <span className="mr-2">{FLAG_MAP[item.countryCode ?? ""] ?? "🌍"}</span>
+              <span className="text-muted-foreground">Someone from </span>
+              <span className="font-bold text-foreground">{item.countryName ?? item.countryCode ?? "the region"}</span>
+              <span className="text-muted-foreground"> just voted on </span>
+              <span className="text-primary font-bold group-hover:underline">"{item.questionSnippet}"</span>
+              <span className="text-muted-foreground text-[11px] ml-2">· {formatSecondsAgo(item.secondsAgo)}</span>
+            </p>
+          </Link>
+        </div>
+        {items.length > 1 && (
+          <div className="flex gap-1.5 mt-4">
+            {Array.from({ length: Math.min(items.length, 5) }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveIdx(i)}
+                className={cn(
+                  "h-0.5 transition-all duration-300",
+                  i === activeIdx ? "w-6 bg-primary" : "w-3 bg-border hover:bg-foreground/40"
+                )}
+                aria-label={`Activity ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function PlatformStatsBar({ stats }: { stats: PlatformStats | null }) {
+  if (!stats) return null
+  const items = [
+    { label: "Total Votes", value: stats.totalVotes.toLocaleString() },
+    { label: "Live Debates", value: stats.livePolls.toLocaleString() },
+    { label: "Countries", value: `${stats.countries}+` },
+    { label: "Active This Week", value: stats.activeThisWeek.toLocaleString() },
+  ]
+  return (
+    <div className="border-t border-border py-3">
+      <div className="flex items-center justify-center gap-6 sm:gap-10 flex-wrap">
+        {items.map(({ label, value }) => (
+          <div key={label} className="flex items-center gap-2">
+            <span className="font-display font-black text-base text-foreground tabular-nums">{value}</span>
+            <span className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground font-serif">{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
   const { data: featuredPoll, isLoading: featuredLoading } = useGetFeaturedPoll()
   const { data: trendingPolls, isLoading: trendingLoading } = useListPolls({ filter: "trending", limit: 4 })
   const { data: stripPolls } = useListPolls({ filter: "trending", limit: 8 })
   const { data: featuredProfiles, isLoading: profilesLoading } = useListProfiles({ filter: "featured", limit: 8 })
   const { data: categories } = useListCategories()
+  const { profile, totalVotesAllTime, hasVoted } = useVoter()
 
   const [ctaEmail, setCtaEmail] = useState("")
   const [ctaJoined, setCtaJoined] = useState(() => !!localStorage.getItem("tmh_cta_joined"))
+  const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null)
 
-  const totalVotes = featuredPoll?.totalVotes ?? 0
+  useEffect(() => {
+    const baseUrl = (import.meta as any).env?.VITE_API_BASE_URL ?? ""
+    fetch(`${baseUrl}/api/stats`)
+      .then(r => r.json())
+      .then(d => setPlatformStats(d))
+      .catch(() => {})
+  }, [])
+
+  const totalVotes = platformStats?.totalVotes ?? featuredPoll?.totalVotes ?? 0
+
+  const heroSubhead = (() => {
+    if (totalVotesAllTime > 0 && profile) {
+      return `You've cast ${totalVotesAllTime} vote${totalVotesAllTime !== 1 ? "s" : ""}. ${totalVotes.toLocaleString()} total have been cast across the region.`
+    }
+    return totalVotes > 0
+      ? `${totalVotes.toLocaleString()} votes cast — and the region is divided.`
+      : "The digital town square the Middle East has never had."
+  })()
 
   const handleCtaSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,14 +189,12 @@ export default function Home() {
       {/* ── MASTHEAD ── */}
       <div className="bg-background border-b-2 border-foreground">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Top strip */}
           <div className="flex items-center justify-between py-2 text-[9px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border font-serif">
             <span>Est. 2026 · The Middle East · Issue No. 001</span>
             <span className="hidden sm:block">{issueDate}</span>
             <span className="text-primary font-bold">Opinion of Record</span>
           </div>
 
-          {/* Masthead title */}
           <div className="border-t-2 border-b-2 border-foreground py-5 my-3 text-center">
             <h1 className="font-display font-black text-5xl md:text-6xl lg:text-7xl uppercase tracking-tight text-foreground leading-none">
               The Middle East Hustle<span className="text-primary">.</span>
@@ -65,7 +204,6 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Nav strip */}
           <nav className="flex items-center justify-center gap-6 py-2 text-[10px] uppercase tracking-widest font-serif">
             {[
               { href: "/polls", label: "Polls" },
@@ -79,6 +217,8 @@ export default function Home() {
               </Link>
             ))}
           </nav>
+
+          <PlatformStatsBar stats={platformStats} />
         </div>
       </div>
 
@@ -103,9 +243,7 @@ export default function Home() {
               400 Million People.<br />One Question.
             </h2>
             <p className="text-lg md:text-xl text-muted-foreground font-sans">
-              {totalVotes > 0
-                ? `${totalVotes.toLocaleString()} votes cast this week — and the region is divided.`
-                : "The digital town square the Middle East has never had."}
+              {heroSubhead}
             </p>
           </div>
 
@@ -194,7 +332,7 @@ export default function Home() {
               <div className="h-1 w-full bg-primary mt-3" />
             </div>
             <Link href="/profiles" className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-widest text-background/50 hover:text-background font-serif">
-              View All 67 →
+              View All →
             </Link>
           </div>
           <p className="text-background/60 font-sans text-base mt-4 mb-10 max-w-xl">
@@ -217,7 +355,7 @@ export default function Home() {
 
           <div className="mt-8">
             <Link href="/profiles" className="inline-flex items-center gap-2 bg-primary text-white font-bold uppercase tracking-widest text-xs px-8 py-3 hover:bg-primary/90 transition-colors font-serif">
-              View All Hustlers (67) <ArrowRight className="w-3 h-3" />
+              View All Hustlers <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
         </div>
@@ -252,6 +390,9 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* ── LIVE ACTIVITY ── */}
+      <LiveActivity />
 
       {/* ── NEWSLETTER CTA ── */}
       <section className="bg-foreground text-background py-16 md:py-20">
@@ -297,12 +438,6 @@ export default function Home() {
       </section>
     </Layout>
   )
-}
-
-const FLAG_MAP: Record<string, string> = {
-  AE: "🇦🇪", SA: "🇸🇦", EG: "🇪🇬", JO: "🇯🇴", LB: "🇱🇧", KW: "🇰🇼",
-  BH: "🇧🇭", QA: "🇶🇦", OM: "🇴🇲", MA: "🇲🇦", TN: "🇹🇳", IQ: "🇮🇶",
-  PS: "🇵🇸", TR: "🇹🇷", US: "🇺🇸", GB: "🇬🇧", DE: "🇩🇪", IN: "🇮🇳", AU: "🇦🇺",
 }
 
 function CountryLeaderboard() {
@@ -375,7 +510,7 @@ function QuickVoteCard({ poll }: { poll: any }) {
 
   const handleVote = (optionId: number) => {
     if (isVoted) return
-    recordVote(poll.id, optionId)
+    recordVote(poll.id, optionId, poll.categorySlug)
     const newTotal = localTotal + 1
     const newOpts = localOptions.map((o: any) => ({
       ...o,
@@ -389,11 +524,16 @@ function QuickVoteCard({ poll }: { poll: any }) {
 
   return (
     <div className="flex-shrink-0 w-72 bg-card border border-border p-5 flex flex-col gap-3 hover:-translate-y-0.5 transition-transform duration-200">
-      <Link href={`/polls/${poll.id}`}>
-        <p className="font-serif font-black uppercase text-sm leading-tight text-foreground hover:text-primary transition-colors line-clamp-3 cursor-pointer">
-          {poll.question}
-        </p>
-      </Link>
+      <div className="flex items-start justify-between gap-2">
+        <Link href={`/polls/${poll.id}`}>
+          <p className="font-serif font-black uppercase text-sm leading-tight text-foreground hover:text-primary transition-colors line-clamp-3 cursor-pointer">
+            {poll.question}
+          </p>
+        </Link>
+        {!isVoted && (
+          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse mt-1" title="Not voted yet" />
+        )}
+      </div>
       <div className="space-y-1.5 mt-1">
         {localOptions.slice(0, 3).map((option: any) => (
           isVoted ? (

@@ -159,7 +159,25 @@ router.get("/polls/:id/breakdown", async (req, res) => {
       .where(and(eq(votesTable.pollId, pollId), sql`country_code IS NOT NULL`))
       .groupBy(votesTable.countryCode, votesTable.countryName)
       .orderBy(desc(sql`count(*)`))
-      .limit(10);
+      .limit(8);
+
+    if (rows.length === 0) {
+      return res.json({ countries: [], total: 0 });
+    }
+
+    const countryTopOptions: Record<string, string> = {};
+    for (const row of rows) {
+      if (!row.countryCode) continue;
+      const topOption = await db
+        .select({ text: pollOptionsTable.text })
+        .from(votesTable)
+        .innerJoin(pollOptionsTable, eq(votesTable.optionId, pollOptionsTable.id))
+        .where(and(eq(votesTable.pollId, pollId), eq(votesTable.countryCode, row.countryCode)))
+        .groupBy(pollOptionsTable.id, pollOptionsTable.text)
+        .orderBy(desc(sql`count(*)`))
+        .limit(1);
+      if (topOption.length > 0) countryTopOptions[row.countryCode] = topOption[0].text;
+    }
 
     const total = rows.reduce((s, r) => s + Number(r.count), 0);
     const countries = rows.map((r) => ({
@@ -167,6 +185,7 @@ router.get("/polls/:id/breakdown", async (req, res) => {
       name: r.countryName ?? r.countryCode!,
       count: Number(r.count),
       percentage: total > 0 ? Math.round((Number(r.count) / total) * 100) : 0,
+      topOptionText: r.countryCode ? (countryTopOptions[r.countryCode] ?? null) : null,
     }));
 
     res.json({ countries, total });
@@ -329,6 +348,56 @@ router.post("/polls/:id/email-unlock", async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.json({ success: true });
+  }
+});
+
+router.get("/stats", async (_req, res) => {
+  try {
+    const [[pollsRow], [votesRow], [countriesRow], [activeRow]] = await Promise.all([
+      db.select({ count: sql<number>`count(*)::int` }).from(pollsTable),
+      db.select({ total: sql<number>`COALESCE(SUM(vote_count)::int, 0)` }).from(pollOptionsTable),
+      db.select({ count: sql<number>`count(distinct country_code)::int` }).from(votesTable).where(sql`country_code IS NOT NULL`),
+      db.select({ count: sql<number>`count(distinct voter_token)::int` }).from(votesTable).where(sql`created_at > now() - interval '7 days'`),
+    ]);
+    res.json({
+      livePolls: Number(pollsRow.count),
+      totalVotes: Number(votesRow.total),
+      countries: Number(countriesRow.count),
+      activeThisWeek: Number(activeRow.count),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ livePolls: 0, totalVotes: 0, countries: 0, activeThisWeek: 0 });
+  }
+});
+
+router.get("/activity", async (_req, res) => {
+  try {
+    const rows = await db
+      .select({
+        countryCode: votesTable.countryCode,
+        countryName: votesTable.countryName,
+        createdAt: votesTable.createdAt,
+        question: pollsTable.question,
+        pollId: votesTable.pollId,
+      })
+      .from(votesTable)
+      .innerJoin(pollsTable, eq(votesTable.pollId, pollsTable.id))
+      .where(sql`${votesTable.countryCode} IS NOT NULL`)
+      .orderBy(desc(votesTable.createdAt))
+      .limit(10);
+    res.json({
+      activity: rows.map((r) => ({
+        countryCode: r.countryCode,
+        countryName: r.countryName,
+        pollId: r.pollId,
+        questionSnippet: r.question.length > 55 ? r.question.slice(0, 52) + "…" : r.question,
+        secondsAgo: Math.floor((Date.now() - new Date(r.createdAt).getTime()) / 1000),
+      })),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ activity: [] });
   }
 });
 

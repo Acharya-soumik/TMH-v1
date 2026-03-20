@@ -9,7 +9,7 @@ const FLAG_MAP: Record<string, string> = {
   IN: "🇮🇳", PK: "🇵🇰", AU: "🇦🇺", CA: "🇨🇦",
 }
 
-function seededPct(seed: number, idx: number, total: number): number {
+function seededPct(seed: number, idx: number): number {
   const x = Math.sin(seed * 9301 + idx * 49297 + 233) * 93942
   return x - Math.floor(x)
 }
@@ -23,12 +23,12 @@ function makeFallback(pollId: number) {
     { code: "LB", name: "Lebanon" },
     { code: "KW", name: "Kuwait" },
   ]
-  const raws = countries.map((_, i) => 0.05 + seededPct(pollId, i, countries.length) * 0.9)
+  const raws = countries.map((_, i) => 0.05 + seededPct(pollId, i) * 0.9)
   const total = raws.reduce((a, b) => a + b, 0)
   const pcts = raws.map(r => Math.round((r / total) * 100))
   const diff = 100 - pcts.reduce((a, b) => a + b, 0)
   pcts[0] += diff
-  return countries.map((c, i) => ({ ...c, percentage: pcts[i], count: 0, isFallback: true }))
+  return countries.map((c, i) => ({ ...c, percentage: pcts[i], count: 0, topOptionText: null, isFallback: true }))
 }
 
 interface CountryRow {
@@ -36,15 +36,17 @@ interface CountryRow {
   name: string
   percentage: number
   count: number
+  topOptionText: string | null
   isFallback?: boolean
 }
 
 interface ResultsBreakdownProps {
   pollId: number
   totalVotes: number
+  userCountry?: string | null
 }
 
-export function ResultsBreakdown({ pollId, totalVotes }: ResultsBreakdownProps) {
+export function ResultsBreakdown({ pollId, totalVotes, userCountry }: ResultsBreakdownProps) {
   const [countries, setCountries] = useState<CountryRow[]>([])
   const [isFallback, setIsFallback] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -55,7 +57,7 @@ export function ResultsBreakdown({ pollId, totalVotes }: ResultsBreakdownProps) 
       .then(r => r.json())
       .then(data => {
         if (data.countries && data.countries.length >= 2) {
-          setCountries(data.countries.slice(0, 8))
+          setCountries(data.countries.slice(0, 6))
           setIsFallback(false)
         } else {
           setCountries(makeFallback(pollId))
@@ -92,51 +94,65 @@ export function ResultsBreakdown({ pollId, totalVotes }: ResultsBreakdownProps) 
         )}
       </div>
 
-      <div className="space-y-2.5">
-        {countries.map((country, i) => (
-          <motion.div
-            key={country.code}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.75 + i * 0.06, duration: 0.3 }}
-            className="flex items-center gap-3"
-          >
-            <span className="text-base leading-none flex-shrink-0 w-5 text-center">
-              {FLAG_MAP[country.code] ?? "🌍"}
-            </span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-sans text-foreground/80 truncate">
-                  {country.name}
-                </span>
-                <span className={cn(
-                  "text-[10px] font-bold font-sans ml-2 flex-shrink-0",
-                  i === 0 ? "text-primary" : "text-foreground"
-                )}>
-                  {country.percentage}%
-                </span>
-              </div>
-              <div className="h-1 w-full bg-secondary overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${(country.percentage / topPct) * 100}%` }}
-                  transition={{ duration: 0.6, delay: 0.8 + i * 0.06, ease: [0.25, 1, 0.5, 1] }}
-                  className={cn("h-full", i === 0 ? "bg-primary" : "bg-foreground/30")}
-                />
-              </div>
-            </div>
-            {!isFallback && country.count > 0 && (
-              <span className="text-[9px] text-muted-foreground font-sans flex-shrink-0 w-10 text-right">
-                {country.count.toLocaleString()}
+      <div className="space-y-3">
+        {countries.map((country, i) => {
+          const isUserCountry = userCountry && country.code === userCountry
+          return (
+            <motion.div
+              key={country.code}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.75 + i * 0.06, duration: 0.3 }}
+              className={cn("flex items-start gap-3", isUserCountry && "bg-primary/5 -mx-2 px-2 py-1")}
+            >
+              <span className="text-base leading-none flex-shrink-0 w-5 text-center mt-0.5">
+                {FLAG_MAP[country.code] ?? "🌍"}
               </span>
-            )}
-          </motion.div>
-        ))}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={cn(
+                      "text-[10px] font-sans truncate",
+                      isUserCountry ? "text-primary font-bold" : "text-foreground/80"
+                    )}>
+                      {country.name}
+                      {isUserCountry && <span className="ml-1 text-[8px] text-primary/70">(you)</span>}
+                    </span>
+                  </div>
+                  <span className={cn(
+                    "text-[10px] font-bold font-sans ml-2 flex-shrink-0",
+                    i === 0 ? "text-primary" : "text-foreground"
+                  )}>
+                    {country.percentage}%
+                  </span>
+                </div>
+                <div className="h-1 w-full bg-secondary overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(country.percentage / topPct) * 100}%` }}
+                    transition={{ duration: 0.6, delay: 0.8 + i * 0.06, ease: [0.25, 1, 0.5, 1] }}
+                    className={cn("h-full", i === 0 ? "bg-primary" : "bg-foreground/30")}
+                  />
+                </div>
+                {!isFallback && country.topOptionText && (
+                  <p className="text-[9px] text-muted-foreground font-sans mt-1 truncate">
+                    Most voted: <span className="text-foreground/70 font-medium">"{country.topOptionText}"</span>
+                  </p>
+                )}
+              </div>
+              {!isFallback && country.count > 0 && (
+                <span className="text-[9px] text-muted-foreground font-sans flex-shrink-0 w-10 text-right mt-0.5">
+                  {country.count.toLocaleString()}
+                </span>
+              )}
+            </motion.div>
+          )
+        })}
       </div>
 
       <p className="text-[9px] text-muted-foreground mt-4 font-sans">
         {isFallback
-          ? `Based on ${totalVotes.toLocaleString()} votes · Country data accumulates as more votes are cast`
+          ? `Based on ${totalVotes.toLocaleString()} votes · Country breakdown unlocks as more votes arrive`
           : `Based on ${totalVotes.toLocaleString()} votes with location data`}
       </p>
     </motion.div>

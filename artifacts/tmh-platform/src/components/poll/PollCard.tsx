@@ -1,7 +1,7 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Link } from "wouter"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowRight, Share2, Linkedin, Lock, Mail, CheckCircle2 } from "lucide-react"
+import { ArrowRight, Share2, Linkedin, Lock, Mail, CheckCircle2, Flame } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { useVotePoll } from "@workspace/api-client-react"
 import type { Poll, PollOption } from "@workspace/api-client-react/src/generated/api.schemas"
@@ -18,7 +18,7 @@ interface PollCardProps {
 
 type Phase = "vote" | "gate" | "results"
 
-function getInitialPhase(pollId: string, hasVoted: (id: string) => boolean): Phase {
+function getInitialPhase(pollId: number, hasVoted: (id: number) => boolean): Phase {
   if (typeof window === "undefined") return "vote"
   if (!hasVoted(pollId)) return "vote"
   if (localStorage.getItem(`tmh_unlocked_${pollId}`)) return "results"
@@ -26,8 +26,43 @@ function getInitialPhase(pollId: string, hasVoted: (id: string) => boolean): Pha
   return "gate"
 }
 
+async function copyToClipboard(text: string): Promise<boolean> {
+  if (navigator.clipboard?.writeText) {
+    try { await navigator.clipboard.writeText(text); return true; } catch {}
+  }
+  try {
+    const textarea = document.createElement("textarea")
+    textarea.value = text
+    textarea.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0"
+    document.body.appendChild(textarea)
+    textarea.focus()
+    textarea.select()
+    const ok = document.execCommand("copy")
+    document.body.removeChild(textarea)
+    return ok
+  } catch {
+    return false
+  }
+}
+
+function generateInsight(
+  votedPct: number,
+  options: PollOption[]
+): string {
+  const maxPct = Math.max(...options.map(o => o.percentage ?? 0))
+  const isMostDivided = maxPct < 35
+  const isInMajority = votedPct >= 50
+  const isStrong = votedPct >= 65
+
+  if (isMostDivided) return "This is the most divided debate on TMH right now. No clear majority."
+  if (isStrong) return `${Math.round(votedPct)}% of the region voted the same way. You're with the majority.`
+  if (isInMajority) return `You voted with ${Math.round(votedPct)}% of voters — a slim majority.`
+  if (votedPct < 20) return `Only ${Math.round(votedPct)}% chose this. You might be onto something.`
+  return `${Math.round(votedPct)}% of voters agree with you on this one.`
+}
+
 export function PollCard({ poll, featured = false }: PollCardProps) {
-  const { hasVoted, getVotedOption, recordVote, token } = useVoter()
+  const { hasVoted, getVotedOption, recordVote, token, currentStreak, isFirstTimer, markWelcomed, totalVotesAllTime } = useVoter()
   const { toast } = useToast()
   const voteMutation = useVotePoll()
   const [localOptions, setLocalOptions] = useState<PollOption[]>(poll.options ?? [])
@@ -37,6 +72,9 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
   const [linkCopied, setLinkCopied] = useState(false)
   const [email, setEmail] = useState("")
   const [emailSubmitted, setEmailSubmitted] = useState(false)
+  const [wasFirstTimer, setWasFirstTimer] = useState(false)
+  const [showShareTooltip, setShowShareTooltip] = useState(false)
+  const shareTooltipRef = useRef<HTMLDivElement>(null)
 
   const isVoted = hasVoted(poll.id)
   const votedOptionId = getVotedOption(poll.id)
@@ -49,7 +87,10 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
   const handleVote = (optionId: number) => {
     if (isVoted) return
 
-    recordVote(poll.id, optionId)
+    const firstVote = isFirstTimer
+    setWasFirstTimer(firstVote)
+
+    recordVote(poll.id, optionId, poll.categorySlug)
     const newTotal = localTotal + 1
     const newOptions = localOptions.map(opt => {
       const newCount = opt.id === optionId ? opt.voteCount + 1 : opt.voteCount
@@ -123,7 +164,6 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
         await navigator.share({ files: [file], title: poll.question })
         setTimeout(unlock, 800)
       } else {
-        // Desktop fallback: download the image
         const url = URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
@@ -140,14 +180,25 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
     }
   }
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     const pollUrl = getPollUrl(poll.id)
     setLinkCopied(true)
     setTimeout(() => setLinkCopied(false), 2500)
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(pollUrl).catch(() => {})
-    }
+    await copyToClipboard(pollUrl)
     setTimeout(unlock, 500)
+  }
+
+  const handleCardShareIcon = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const url = getPollUrl(poll.id)
+    const ok = await copyToClipboard(url)
+    if (ok) {
+      toast({ title: "Link copied!" })
+    } else {
+      setShowShareTooltip(true)
+      setTimeout(() => setShowShareTooltip(false), 4000)
+    }
   }
 
   const handleEmailUnlock = (e: React.FormEvent) => {
@@ -169,7 +220,8 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
     const votedOption = localOptions.find(o => o.id === votedOptionId)
     if (!votedOption) return
     setIsSharing(true)
-    const shareText = `I voted "${votedOption.text}" on The Middle East Hustle 🔴\n\n"${poll.question}"\n\nWhere do you stand? 👇\n${pollUrl}`
+    const votedPct = Math.round(votedOption.percentage ?? 0)
+    const shareText = `I voted "${votedOption.text}" on The Middle East Hustle 🔴\n\n"${poll.question}"\n\n${votedPct}% of the region agrees. Where do you stand? 👇\n${pollUrl}`
     try {
       const blob = await generateShareCard({
         question: poll.question,
@@ -185,18 +237,25 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
       } else if (navigator.share) {
         await navigator.share({ title: poll.question, text: shareText, url: pollUrl })
       } else {
-        await navigator.clipboard.writeText(`${shareText}`)
-        toast({ title: "Copied — share your take!", description: "Paste it anywhere to spread the debate." })
+        const ok = await copyToClipboard(shareText)
+        toast({ title: ok ? "Copied — share your take!" : "Ready to share", description: "Paste it anywhere to spread the debate." })
       }
     } catch {
-      await navigator.clipboard.writeText(pollUrl).catch(() => {})
-      toast({ title: "Link copied!", description: "Share your stance." })
+      const ok = await copyToClipboard(pollUrl)
+      if (ok) toast({ title: "Link copied!", description: "Share your stance." })
     } finally {
       setIsSharing(false)
     }
   }
 
+  const handleWelcomeCTA = () => {
+    markWelcomed()
+    document.getElementById("cross-sell-polls")?.scrollIntoView({ behavior: "smooth" })
+  }
+
   const isLive = !poll.endsAt || new Date(poll.endsAt) > new Date()
+  const votedOption = localOptions.find(o => o.id === votedOptionId)
+
   return (
     <>
       <div className={cn(
@@ -217,13 +276,39 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                 </span>
               )}
             </div>
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); const url = getPollUrl(poll.id); navigator.clipboard?.writeText(url); toast({ title: "Link copied!" }) }}
-              className="text-muted-foreground hover:text-foreground transition-colors p-2"
-              aria-label="Share poll"
-            >
-              <Share2 className="w-4 h-4" />
-            </button>
+
+            <div className="relative flex items-center gap-2">
+              {/* "You haven't weighed in" subtle dot when not voted */}
+              {!isVoted && (
+                <span className="hidden sm:flex items-center gap-1 text-[9px] uppercase tracking-widest text-muted-foreground font-serif">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" />
+                  Weigh in
+                </span>
+              )}
+              {/* "You voted" when voted */}
+              {isVoted && (
+                <span className="hidden sm:flex items-center gap-1 text-[9px] uppercase tracking-widest text-primary font-serif font-bold">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Voted
+                </span>
+              )}
+              <button
+                onClick={handleCardShareIcon}
+                className="text-muted-foreground hover:text-foreground transition-colors p-2"
+                aria-label="Copy poll link"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+              {showShareTooltip && (
+                <div
+                  ref={shareTooltipRef}
+                  className="absolute right-0 top-full mt-1 z-50 bg-foreground text-background px-3 py-2 text-[10px] font-sans shadow-lg min-w-max max-w-[240px]"
+                >
+                  <p className="font-bold mb-1">Poll link:</p>
+                  <p className="text-background/70 break-all">{getPollUrl(poll.id)}</p>
+                </div>
+              )}
+            </div>
           </div>
 
           <Link href={`/polls/${poll.id}`}>
@@ -243,9 +328,17 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
 
           <div className="mt-auto pt-6 border-t border-border flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
             <div className="flex items-center gap-4">
-              <span>{localTotal.toLocaleString()} votes</span>
-              {poll.endsAt && (
-                <span>{isLive ? `Ends ${formatDistanceToNow(new Date(poll.endsAt))}` : "Ended"}</span>
+              {isVoted && votedOption ? (
+                <span className="text-primary font-bold">
+                  You voted: {votedOption.text.length > 20 ? votedOption.text.slice(0, 17) + "…" : votedOption.text} · {localTotal.toLocaleString()} total
+                </span>
+              ) : (
+                <>
+                  <span>{localTotal.toLocaleString()} votes</span>
+                  {poll.endsAt && (
+                    <span>{isLive ? `Ends ${formatDistanceToNow(new Date(poll.endsAt))}` : "Ended"}</span>
+                  )}
+                </>
               )}
             </div>
             {!featured && (
@@ -304,13 +397,11 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                 transition={{ duration: 0.3, ease: "easeOut" }}
                 className="space-y-5"
               >
-                {/* Voted confirmation */}
                 <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-primary">
                   <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
                   Vote Recorded
                 </div>
 
-                {/* Gate headline */}
                 <div className="border border-border p-4 bg-card">
                   <div className="flex items-start gap-3 mb-2">
                     <Lock className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
@@ -325,7 +416,6 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                   </div>
                 </div>
 
-                {/* WhatsApp — primary CTA */}
                 <button
                   onClick={handleShareWhatsApp}
                   className="w-full flex items-center justify-center gap-3 px-5 py-4 bg-[#25D366] text-white font-black uppercase tracking-[0.15em] text-[11px] hover:bg-[#20BA5A] transition-colors duration-150"
@@ -336,7 +426,6 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                   Share on WhatsApp
                 </button>
 
-                {/* Secondary share row */}
                 <div className="grid grid-cols-5 gap-2">
                   <button
                     onClick={handleShareLinkedIn}
@@ -366,7 +455,6 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                     <span className="text-[9px] uppercase tracking-[0.1em] font-bold text-muted-foreground group-hover:text-[#2AABEE] transition-colors">Telegram</span>
                   </button>
 
-                  {/* Instagram Story */}
                   <button
                     onClick={handleShareInstagramStory}
                     disabled={isSharing}
@@ -399,14 +487,12 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                   </button>
                 </div>
 
-                {/* OR divider */}
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-px bg-border" />
                   <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">or</span>
                   <div className="flex-1 h-px bg-border" />
                 </div>
 
-                {/* Email unlock */}
                 {emailSubmitted ? (
                   <div className="flex items-center gap-2 text-[11px] font-bold text-primary uppercase tracking-widest">
                     <CheckCircle2 className="w-4 h-4" />
@@ -443,34 +529,82 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                 key="results"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
+                className="space-y-5"
               >
-                {/* Personal stat */}
-                {votedOptionId && (() => {
-                  const voted = localOptions.find(o => o.id === votedOptionId)
-                  if (!voted) return null
-                  const pct = voted.percentage ?? 0
-                  const isMajority = pct >= 50
-                  const isStrong = pct >= 65
-                  const stat = isStrong
-                    ? `${pct}% of voters agree with you on this one.`
-                    : isMajority
-                    ? `You voted with the majority — ${pct}% picked the same answer.`
-                    : `Only ${pct}% voted like you. You're in the minority.`
+                {/* First-time welcome message */}
+                {wasFirstTimer && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-primary/10 border border-primary/30 p-4"
+                  >
+                    <p className="font-serif font-black uppercase text-sm text-primary tracking-tight mb-1">
+                      Welcome to The Middle East Hustle.
+                    </p>
+                    <p className="text-[11px] text-foreground/70 font-sans leading-relaxed">
+                      You just joined {localTotal.toLocaleString()} people shaping the region's most honest conversation.
+                    </p>
+                    <button
+                      onClick={handleWelcomeCTA}
+                      className="mt-3 text-[10px] font-black uppercase tracking-widest text-primary hover:text-foreground transition-colors border-b border-primary/40 hover:border-foreground pb-0.5"
+                    >
+                      Keep Voting →
+                    </button>
+                  </motion.div>
+                )}
+
+                {/* Streak badge */}
+                {currentStreak >= 2 && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex items-center gap-2"
+                  >
+                    <Flame className="w-4 h-4 text-primary" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary font-serif">
+                      {currentStreak}-day streak
+                    </span>
+                  </motion.div>
+                )}
+                {currentStreak === 1 && totalVotesAllTime === 1 && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground font-serif"
+                  >
+                    Day 1 — come back tomorrow.
+                  </motion.div>
+                )}
+
+                {/* Personal Insight Card */}
+                {votedOptionId && votedOption && (() => {
+                  const pct = votedOption.percentage ?? 0
+                  const insight = generateInsight(pct, localOptions)
                   return (
                     <motion.div
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4 }}
-                      className="border-l-4 border-primary pl-3 py-1"
+                      className="bg-secondary/60 border border-border p-4"
                     >
-                      <p className="text-[11px] font-bold text-primary uppercase tracking-[0.15em] font-serif">
-                        {stat}
+                      <p className="text-[9px] uppercase tracking-[0.2em] font-bold text-muted-foreground mb-2 font-serif">
+                        Your Result
                       </p>
+                      <p className="font-serif font-black uppercase text-sm text-foreground tracking-tight leading-snug">
+                        {insight}
+                      </p>
+                      <div className="mt-3 pt-3 border-t border-border/60 flex items-center gap-2">
+                        <span className="text-[10px] text-primary font-bold font-sans">"{votedOption.text}"</span>
+                        <span className="text-[10px] text-muted-foreground font-sans">— your vote</span>
+                      </div>
                     </motion.div>
                   )
                 })()}
 
+                {/* Results bars */}
                 {localOptions.map((option, i) => (
                   <div key={option.id} className="relative">
                     <div className="flex justify-between items-end mb-1">
@@ -500,7 +634,8 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                   </p>
                 </div>
 
-                <div className="pt-2 space-y-3">
+                {/* Share Your Stance */}
+                <div className="space-y-3">
                   <button
                     onClick={handleShareStance}
                     disabled={isSharing}
@@ -512,7 +647,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                     )}
                   >
                     <Share2 className="w-3.5 h-3.5 flex-shrink-0" />
-                    {isSharing ? "Generating…" : "Share Your Stance"}
+                    {isSharing ? "Generating…" : "Share Your Result"}
                   </button>
                 </div>
 

@@ -4,16 +4,17 @@ import { Layout } from "@/components/layout/Layout"
 import { PollCard } from "@/components/poll/PollCard"
 import { TrendChart } from "@/components/poll/TrendChart"
 import { ArrowLeft, AlertCircle } from "lucide-react"
+import { useVoter } from "@/hooks/use-voter"
 
 export default function PollDetail() {
   const [, params] = useRoute("/polls/:id")
   const id = params?.id ? parseInt(params.id) : 0
+  const { hasVoted, profile } = useVoter()
 
   const { data: poll, isLoading, error } = useGetPoll(id)
-  
-  // Fetch related automatically using the category of current poll
+
   const { data: relatedData } = useListPolls(
-    { category: poll?.categorySlug, limit: 2 },
+    { category: poll?.categorySlug, limit: 8 },
     { query: { enabled: !!poll?.categorySlug } }
   )
 
@@ -43,6 +44,16 @@ export default function PollDetail() {
     )
   }
 
+  const allRelated = (relatedData?.polls ?? []).filter(p => p.id !== poll.id)
+  const unvotedRelated = allRelated.filter(p => !hasVoted(p.id))
+  const relatedToShow = unvotedRelated.length >= 2
+    ? unvotedRelated.slice(0, 2)
+    : allRelated.slice(0, 2)
+
+  const categoryVoted = profile?.categories[poll.categorySlug ?? ""] ?? 0
+  const categoryTotal = relatedData?.total ?? 0
+  const categoryLeft = Math.max(0, categoryTotal - categoryVoted)
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 lg:py-16">
@@ -50,12 +61,10 @@ export default function PollDetail() {
           <ArrowLeft className="w-3 h-3" /> Back to all polls
         </Link>
 
-        {/* The featured poll card handles voting and result display perfectly */}
         <div className="mb-16">
           <PollCard poll={poll} featured />
         </div>
 
-        {/* Bloomberg-style opinion trend chart */}
         <div className="bg-card border border-border p-6 md:p-10 mb-16">
           <div className="h-px w-8 bg-primary mb-6" />
           <h3 className="font-serif font-black uppercase text-xl tracking-wider mb-6">
@@ -72,7 +81,7 @@ export default function PollDetail() {
             <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground font-sans">
               <p>{poll.context}</p>
             </div>
-            
+
             {poll.tags && poll.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-border">
                 {poll.tags.map(tag => (
@@ -85,14 +94,20 @@ export default function PollDetail() {
           </div>
         )}
 
-        {/* Related Polls */}
-        {relatedData?.polls && relatedData.polls.length > 0 && (
-          <div>
-            <div className="border-l-4 border-primary pl-4 mb-8">
-              <h3 className="font-serif font-black uppercase text-3xl tracking-tight">Related Debates</h3>
+        {/* Related Polls / Cross-sell */}
+        {relatedToShow.length > 0 && (
+          <div id="cross-sell-polls">
+            <div className="border-l-4 border-primary pl-4 mb-3">
+              <h3 className="font-serif font-black uppercase text-3xl tracking-tight">Keep Voting</h3>
             </div>
+            {categoryVoted > 0 && categoryTotal > 0 && (
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground font-serif mb-8">
+                You've voted on {categoryVoted} of {categoryTotal} debates in {poll.category}.
+                {categoryLeft > 0 && <span className="text-primary font-bold"> {categoryLeft} left.</span>}
+              </p>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {relatedData.polls.filter(p => p.id !== poll.id).map(p => (
+              {relatedToShow.map(p => (
                 <PollCard key={p.id} poll={p} />
               ))}
             </div>

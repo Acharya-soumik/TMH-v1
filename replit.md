@@ -36,6 +36,20 @@ artifacts-monorepo/
 
 ## Features
 
+### Insight & Engagement Layer
+- **Personal Insight Card** — after unlocking results, shows a contextual insight based on vote % and how divided the question is
+- **Enhanced Voter Profile** (`localStorage tmh_voter`) — tracks total votes, streak, categories, pollsVoted, firstVoteAt; updates on every vote
+- **Vote counter badge** — Navbar shows live vote count with streak flame icon; hover tooltip shows category breakdown
+- **"Weigh in" / "Voted" indicators** — poll card left panel shows voting status; bottom bar shows "You voted: [option] · X,XXX total"
+- **Share icon fix** — robust clipboard copy with `execCommand` fallback + URL tooltip if clipboard unavailable
+- **Weekly streak** — consecutive day voting tracked; "3-day streak 🔥" shown in results phase
+- **First-time welcome** — one-time message on first vote: "Welcome to TMH. You just joined X,XXX people…"
+- **Live activity feed** — homepage shows anonymized "Someone from UAE just voted on '…'" cycling every 4s from `/api/activity`
+- **Platform stats bar** — live homepage stats strip: total votes, live debates, countries, active this week
+- **Personalized hero subhead** — once user has voted, changes to "You've cast X votes. Y total across the region"
+- **Country breakdown enhanced** — shows top voted option per country ("Most voted: 'Option text'")
+- **Cross-sell filter** — related polls on `/polls/[id]` prioritize unvoted polls; shows "You've voted on X of Y in [Category]"
+
 ### Admin
 - **Admin page** (`/admin`) — password-gated (key: `tmh-admin-2026` / `ADMIN_KEY` env var); application queue with AI scores, editorial approval/decline, notes; create polls with featured toggle; live stats dashboard
 - **Admin API** (`/api/admin/*`) — requires `x-admin-key` header; endpoints: `GET /applications`, `PATCH /applications/:id`, `GET /stats`, `POST /polls`
