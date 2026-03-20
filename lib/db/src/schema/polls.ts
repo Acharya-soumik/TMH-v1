@@ -52,6 +52,29 @@ export const newsletterSubscribersTable = pgTable("newsletter_subscribers", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const hustlerApplicationsTable = pgTable("hustler_applications", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  title: text("title").notNull(),
+  company: text("company").notNull(),
+  city: text("city"),
+  country: text("country"),
+  sector: text("sector"),
+  bio: text("bio").notNull(),
+  linkedin: text("linkedin").notNull(),
+  quote: text("quote"),
+  impact: text("impact"),
+  aiScore: integer("ai_score"),
+  aiStatus: text("ai_status"),
+  aiReasoning: text("ai_reasoning"),
+  aiChecklist: jsonb("ai_checklist"),
+  editorialStatus: text("editorial_status").notNull().default("pending"),
+  editorNotes: text("editor_notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
 export const insertPollSchema = createInsertSchema(pollsTable).omit({ id: true });
 export const insertPollOptionSchema = createInsertSchema(pollOptionsTable).omit({ id: true });
 export const insertVoteSchema = createInsertSchema(votesTable).omit({ id: true });

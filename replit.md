@@ -36,6 +36,15 @@ artifacts-monorepo/
 
 ## Features
 
+### Admin
+- **Admin page** (`/admin`) — password-gated (key: `tmh-admin-2026` / `ADMIN_KEY` env var); application queue with AI scores, editorial approval/decline, notes; create polls with featured toggle; live stats dashboard
+- **Admin API** (`/api/admin/*`) — requires `x-admin-key` header; endpoints: `GET /applications`, `PATCH /applications/:id`, `GET /stats`, `POST /polls`
+
+### Integrations (env-variable gated)
+- **Resend** (`RESEND_API_KEY`) — sends confirmation email on Hustler application
+- **Beehiiv** (`BEEHIIV_API_KEY` + `BEEHIIV_PUBLICATION_ID`) — syncs newsletter subscribers on subscribe
+- **Admin key** (`ADMIN_KEY`) — defaults to `"tmh-admin-2026"` if not set
+
 ### Pages
 - **Home** (`/`) — Hero featured poll with voting, trending polls strip, featured voices, category browser, rankings snapshot, weekly pulse preview
 - **Polls** (`/polls`) — Full poll browser with filter tabs (Latest/Trending/Most Voted/Ending Soon/Editor's Picks) and category sidebar

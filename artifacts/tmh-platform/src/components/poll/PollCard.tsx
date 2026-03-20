@@ -396,6 +396,32 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-6"
               >
+                {/* Personal stat */}
+                {votedOptionId && (() => {
+                  const voted = localOptions.find(o => o.id === votedOptionId)
+                  if (!voted) return null
+                  const pct = voted.percentage ?? 0
+                  const isMajority = pct >= 50
+                  const isStrong = pct >= 65
+                  const stat = isStrong
+                    ? `${pct}% of voters agree with you on this one.`
+                    : isMajority
+                    ? `You voted with the majority — ${pct}% picked the same answer.`
+                    : `Only ${pct}% voted like you. You're in the minority.`
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="border-l-4 border-primary pl-3 py-1"
+                    >
+                      <p className="text-[11px] font-bold text-primary uppercase tracking-[0.15em] font-serif">
+                        {stat}
+                      </p>
+                    </motion.div>
+                  )
+                })()}
+
                 {localOptions.map((option, i) => (
                   <div key={option.id} className="relative">
                     <div className="flex justify-between items-end mb-1">

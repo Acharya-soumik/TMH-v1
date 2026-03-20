@@ -6,6 +6,7 @@ import rankingsRouter from "./rankings";
 import categoriesRouter from "./categories";
 import applyRouter from "./apply";
 import newsletterRouter from "./newsletter";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(rankingsRouter);
 router.use(categoriesRouter);
 router.use(applyRouter);
 router.use(newsletterRouter);
+router.use(adminRouter);
 
 export default router;

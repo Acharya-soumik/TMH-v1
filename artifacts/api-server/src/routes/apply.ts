@@ -1,4 +1,5 @@
 import { Router } from "express"
+import { db, hustlerApplicationsTable } from "@workspace/db"
 
 const router = Router()
 
@@ -104,6 +105,42 @@ function scoreApplication(data: any): { score: number; status: string; reasoning
   return { score, status, reasoning, checklist }
 }
 
+async function sendApplicationEmail(email: string, name: string, status: string, reasoning: string, score: number) {
+  const RESEND_API_KEY = process.env.RESEND_API_KEY
+  if (!RESEND_API_KEY) return
+
+  const subjects: Record<string, string> = {
+    passed: "Your TMH application is through.",
+    conditional: "Your TMH application — one more step.",
+    not_yet: "Your TMH application — keep building.",
+  }
+
+  const bodies: Record<string, string> = {
+    passed: `Hi ${name},\n\nYou've passed our AI review (score: ${score}/100).\n\nOur editorial team will review your application within 48 hours. You'll receive the final decision and your onboarding kit if approved.\n\nThe Middle East Hustle`,
+    conditional: `Hi ${name},\n\nYour profile shows real promise (score: ${score}/100).\n\n${reasoning}\n\nResubmit in 30 days with more specific outcomes.\n\nThe Middle East Hustle`,
+    not_yet: `Hi ${name},\n\nThe TMH bar is high because our audience is discerning (score: ${score}/100).\n\n${reasoning}\n\nYou're on our Rising Hustlers watchlist. Reapply in 90 days. In the meantime — go vote on something.\n\nthemiddleeasthustle.com\n\nThe Middle East Hustle`,
+  }
+
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "TMH <noreply@themiddleeasthustle.com>",
+        to: email,
+        subject: subjects[status] ?? "Your TMH Application",
+        text: bodies[status] ?? `Thank you for applying, ${name}. We'll be in touch.`,
+      }),
+    })
+    console.log(`[APPLY] Resend email sent to ${email} (${status})`)
+  } catch (err) {
+    console.error("[APPLY] Resend email failed:", err)
+  }
+}
+
 router.post("/apply", async (req, res) => {
   const { name, email, title, company, bio, linkedin, quote, impact, city, country, sector } = req.body
 
@@ -113,8 +150,30 @@ router.post("/apply", async (req, res) => {
 
   const aiResult = scoreApplication({ name, email, title, company, bio, linkedin, quote, impact, city, country })
 
-  console.log(`[APPLY] Application from: ${name} <${email}> | ${title} @ ${company} | Score: ${aiResult.score} | Status: ${aiResult.status}`)
-  console.log(`[APPLY] Reasoning: ${aiResult.reasoning}`)
+  try {
+    await db.insert(hustlerApplicationsTable).values({
+      name,
+      email: email.toLowerCase().trim(),
+      title,
+      company,
+      city: city ?? null,
+      country: country ?? null,
+      sector: sector ?? null,
+      bio,
+      linkedin,
+      quote: quote ?? null,
+      impact: impact ?? null,
+      aiScore: aiResult.score,
+      aiStatus: aiResult.status,
+      aiReasoning: aiResult.reasoning,
+      aiChecklist: aiResult.checklist,
+    })
+    console.log(`[APPLY] Stored application: ${name} <${email}> | Score: ${aiResult.score} | Status: ${aiResult.status}`)
+  } catch (err) {
+    console.error("[APPLY] DB save failed:", err)
+  }
+
+  sendApplicationEmail(email, name, aiResult.status, aiResult.reasoning, aiResult.score).catch(() => {})
 
   return res.json({
     success: true,

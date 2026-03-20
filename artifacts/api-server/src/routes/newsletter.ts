@@ -3,17 +3,51 @@ import { db, newsletterSubscribersTable } from "@workspace/db"
 
 const router = Router()
 
+async function syncToBeehiiv(email: string, source: string) {
+  const BEEHIIV_API_KEY = process.env.BEEHIIV_API_KEY
+  const BEEHIIV_PUB_ID = process.env.BEEHIIV_PUBLICATION_ID
+  if (!BEEHIIV_API_KEY || !BEEHIIV_PUB_ID) return
+
+  try {
+    const resp = await fetch(`https://api.beehiiv.com/v2/publications/${BEEHIIV_PUB_ID}/subscriptions`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${BEEHIIV_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        reactivate_existing: false,
+        send_welcome_email: true,
+        utm_source: source,
+        utm_medium: "platform",
+        utm_campaign: "tmh_capture",
+      }),
+    })
+    if (resp.ok) {
+      console.log(`[BEEHIIV] Synced: ${email}`)
+    } else {
+      const err = await resp.text()
+      console.error(`[BEEHIIV] Sync failed for ${email}: ${err}`)
+    }
+  } catch (err) {
+    console.error(`[BEEHIIV] Request error:`, err)
+  }
+}
+
 router.post("/newsletter/subscribe", async (req, res) => {
   try {
     const { email, source = "homepage" } = req.body
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: "Valid email required" })
     }
+    const clean = email.toLowerCase().trim()
     await db.insert(newsletterSubscribersTable).values({
-      email: email.toLowerCase().trim(),
+      email: clean,
       source,
     }).onConflictDoNothing()
-    console.log(`[NEWSLETTER] Subscriber added: ${email} (source: ${source})`)
+    console.log(`[NEWSLETTER] Subscriber added: ${clean} (source: ${source})`)
+    syncToBeehiiv(clean, source).catch(() => {})
     return res.json({ success: true })
   } catch (err) {
     console.error(err)

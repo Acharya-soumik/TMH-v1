@@ -1,6 +1,7 @@
 import { ReactNode } from "react"
 import { Navbar } from "./Navbar"
 import { Footer } from "./Footer"
+import { CookieConsent } from "@/components/ui/CookieConsent"
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
@@ -10,6 +11,7 @@ export function Layout({ children }: { children: ReactNode }) {
         {children}
       </main>
       <Footer />
+      <CookieConsent />
     </div>
   )
 }

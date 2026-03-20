@@ -110,16 +110,34 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
     return
   }
 
-  const profileMatch = req.path.match(/^\/profiles\/(.+)/)
+  const profileMatch = req.path.match(/^\/profiles\/(\d+)/)
   if (profileMatch) {
-    const html = buildHtml({
-      title: "A Hustler Profile | The Middle East Hustle",
-      description: "Meet the founders, operators, and change-makers shaping the Middle East's future.",
-      url: fullUrl,
-      image: DEFAULT_IMAGE,
-    })
-    res.setHeader("Content-Type", "text/html")
-    return res.send(html)
+    const profileId = profileMatch[1]
+    fetch(`http://localhost:${process.env.PORT ?? 8080}/api/profiles/${profileId}`)
+      .then(r => r.json())
+      .then(profile => {
+        const name = profile.name ?? "A Hustler"
+        const role = profile.role ? ` — ${profile.role}` : ""
+        const company = profile.company ? ` at ${profile.company}` : ""
+        const title = `${name}${role}${company}`
+        const quote = profile.quote ? `"${profile.quote.slice(0, 100)}"` : ""
+        const description = quote || `Meet ${name}, one of the founding Hustlers shaping the Middle East's future. ${profile.city ?? ""} ${profile.country ?? ""}`.trim()
+        const image = profile.photoUrl ?? DEFAULT_IMAGE
+        const html = buildHtml({ title, description, url: fullUrl, image })
+        res.setHeader("Content-Type", "text/html")
+        return res.send(html)
+      })
+      .catch(() => {
+        const html = buildHtml({
+          title: "A Hustler Profile | The Middle East Hustle",
+          description: "Meet the founders, operators, and change-makers shaping the Middle East's future.",
+          url: fullUrl,
+          image: DEFAULT_IMAGE,
+        })
+        res.setHeader("Content-Type", "text/html")
+        return res.send(html)
+      })
+    return
   }
 
   // Default OG for all other pages
