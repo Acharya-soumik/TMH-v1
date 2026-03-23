@@ -302,6 +302,19 @@
   color: rgba(26,26,26,0.65);
 }
 
+/* ── TMH scrolling ticker (predictions / debates / any strip) ── */
+@keyframes tmhTickerScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.tmh-ticker-scroll {
+  animation: tmhTickerScroll 38s linear infinite;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+.tmh-ticker-scroll:hover { animation-play-state: paused; }
+
 /* ── Share gate entrance ── */
 @keyframes gateSlideIn {
   from { opacity: 0; transform: translateY(16px); }
