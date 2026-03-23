@@ -110,14 +110,14 @@ function LiveActivity() {
 
 
 const OPINION_BUBBLES = [
-  { text: "I've been using AI to do my junior analyst's work for 6 months. They have no idea.", likes: "1.4k", pos: { left: "2%", top: "8%" }, rotate: "-2deg", duration: "7s", delay: "0s" },
-  { text: "My entire department could be replaced tomorrow. Nobody is talking about it.", likes: "2.3k", pos: { left: "4%", top: "52%" }, rotate: "1.5deg", duration: "8.5s", delay: "1s" },
-  { text: "I retrained twice in 10 years. I'll do it again.", likes: "876", pos: { left: "1%", top: "77%" }, rotate: "-1deg", duration: "6s", delay: "2s" },
-  { text: "The jobs that survive will require things AI can't fake: relationships, trust, presence.", likes: "1.1k", pos: { right: "2%", top: "6%" }, rotate: "2deg", duration: "9s", delay: "0.5s" },
-  { text: "We're not losing jobs. We're losing excuses.", likes: "654", pos: { right: "2%", top: "47%" }, rotate: "-2.5deg", duration: "7.5s", delay: "1.5s" },
-  { text: "My company hired 0 people this year. AI did the work. Nobody said it out loud.", likes: "3.2k", pos: { right: "3%", top: "74%" }, rotate: "1deg", duration: "8s", delay: "3s" },
-  { text: "The ones who aren't scared should be.", likes: "498", pos: { left: "22%", top: "2%" }, rotate: "0deg", duration: "10s", delay: "0.8s" },
-  { text: "In 5 years the question won't be your job. It'll be your entire industry.", likes: "742", pos: { right: "21%", top: "2%" }, rotate: "0deg", duration: "7s", delay: "2.2s" },
+  { text: "Dubai's success is 70% marketing. The other 30% is very, very real.", likes: "2.1k", pos: { left: "2%", top: "8%" }, rotate: "-2deg", duration: "7s", delay: "0s" },
+  { text: "Brain drain isn't a trend. It's a policy failure nobody admits out loud.", likes: "3.4k", pos: { left: "4%", top: "52%" }, rotate: "1.5deg", duration: "8.5s", delay: "1s" },
+  { text: "Everyone I know has an exit strategy. Nobody talks about it at dinner.", likes: "1.8k", pos: { left: "1%", top: "77%" }, rotate: "-1deg", duration: "6s", delay: "2s" },
+  { text: "Arab women run the actual business. Men sign the papers.", likes: "4.1k", pos: { right: "2%", top: "6%" }, rotate: "2deg", duration: "9s", delay: "0.5s" },
+  { text: "The next unicorn from this region is being built in a bedroom right now.", likes: "2.7k", pos: { right: "2%", top: "47%" }, rotate: "-2.5deg", duration: "7.5s", delay: "1.5s" },
+  { text: "We celebrate Vision 2030 publicly and question it privately.", likes: "5.3k", pos: { right: "3%", top: "74%" }, rotate: "1deg", duration: "8s", delay: "3s" },
+  { text: "I'd back a MENA founder over a Silicon Valley pitch any day of the week.", likes: "1.9k", pos: { left: "22%", top: "2%" }, rotate: "0deg", duration: "10s", delay: "0.8s" },
+  { text: "The opinions that matter most in this region are the ones nobody says out loud.", likes: "6.2k", pos: { right: "21%", top: "2%" }, rotate: "0deg", duration: "7s", delay: "2.2s" },
 ]
 
 const PREDICTIONS_DATA = [
@@ -243,7 +243,7 @@ export default function Home() {
       <div className="bg-background" style={{ background: "radial-gradient(ellipse at 50% -20%, rgba(220,20,60,0.07) 0%, transparent 65%)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-2 text-[9px] uppercase tracking-[0.18em] text-muted-foreground border-b border-border font-serif">
-            <span>EST. 2026 · DUBAI · ISSUE NO. 001</span>
+            <span>EST. 2026 · ISSUE NO. 001</span>
             <span className="hidden sm:block">{issueDate}</span>
             <span className="text-primary font-bold">Opinion of Record</span>
           </div>
@@ -256,20 +256,6 @@ export default function Home() {
               The voice of 400 million.
             </p>
           </div>
-
-          <nav className="flex items-center justify-center gap-6 py-2 text-[10px] uppercase tracking-widest font-serif">
-            {[
-              { href: "/polls", label: "Debates" },
-              { href: "/predictions", label: "Predictions" },
-              { href: "/profiles", label: "The Voices" },
-              { href: "/#sentiment-map", label: "Sentiment Map" },
-              { href: "/about", label: "About" },
-            ].map(l => (
-              <Link key={l.href} href={l.href} className="text-muted-foreground hover:text-foreground font-bold transition-colors">
-                {l.label}
-              </Link>
-            ))}
-          </nav>
 
         </div>
       </div>
@@ -292,7 +278,7 @@ export default function Home() {
           <div className="mb-10">
             <div className="h-1 w-16 bg-primary mb-6" />
             <h2 className="font-display font-black uppercase text-5xl md:text-7xl lg:text-8xl leading-none tracking-tight text-foreground mb-6">
-              400 Million People.<br />One Question.
+              What Does the<br />Middle East<br /><span style={{ color: "#DC143C" }}>Actually Think?</span>
             </h2>
             <p className="text-lg md:text-xl text-muted-foreground font-sans">
               {heroSubhead}

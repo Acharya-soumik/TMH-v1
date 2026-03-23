@@ -1,8 +1,7 @@
 import { Link, useLocation } from "wouter"
-import { Menu, X, Moon, Sun, Flame } from "lucide-react"
+import { Menu, X, Moon, Sun } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useTheme } from "@/hooks/use-theme"
-import { useVoter } from "@/hooks/use-voter"
 import { cn } from "@/lib/utils"
 
 export function Navbar() {
@@ -10,8 +9,6 @@ export function Navbar() {
   const { isDark, toggleTheme } = useTheme()
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [showTooltip, setShowTooltip] = useState(false)
-  const { totalVotesAllTime, currentStreak, profile } = useVoter()
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
@@ -26,8 +23,6 @@ export function Navbar() {
     { label: "Sentiment Map", href: "/#sentiment-map" },
     { label: "About", href: "/about" },
   ]
-
-  const categoryCount = profile ? Object.keys(profile.categories).length : 0
 
   return (
     <header
@@ -50,36 +45,6 @@ export function Navbar() {
               </span>
             </Link>
 
-            {totalVotesAllTime > 0 && (
-              <div className="relative">
-                <button
-                  onMouseEnter={() => setShowTooltip(true)}
-                  onMouseLeave={() => setShowTooltip(false)}
-                  onFocus={() => setShowTooltip(true)}
-                  onBlur={() => setShowTooltip(false)}
-                  className="flex items-center gap-1 px-2 py-1 border border-border bg-secondary/50 hover:bg-secondary transition-colors"
-                  aria-label={`You've cast ${totalVotesAllTime} votes`}
-                >
-                  {currentStreak >= 2 ? (
-                    <Flame className="w-3 h-3 text-primary flex-shrink-0" />
-                  ) : null}
-                  <span className="text-[10px] font-bold font-serif text-foreground tabular-nums">
-                    {totalVotesAllTime}
-                  </span>
-                </button>
-                {showTooltip && (
-                  <div className="absolute left-0 top-full mt-2 z-50 bg-foreground text-background px-3 py-2 text-[10px] font-sans whitespace-nowrap shadow-lg min-w-max">
-                    <p className="font-bold">
-                      {totalVotesAllTime} vote{totalVotesAllTime !== 1 ? "s" : ""} across{" "}
-                      {categoryCount > 0 ? `${categoryCount} topic${categoryCount !== 1 ? "s" : ""}` : "TMH"}
-                    </p>
-                    {currentStreak >= 2 && (
-                      <p className="text-primary font-bold mt-0.5">{currentStreak}-day streak 🔥</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
