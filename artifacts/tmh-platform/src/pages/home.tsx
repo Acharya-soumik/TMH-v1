@@ -250,7 +250,7 @@ export default function Home() {
 
           <div className="py-5 my-3 text-center" style={{ borderTop: "2px solid #DC143C", borderBottom: "2px solid #DC143C" }}>
             <h1 className="font-display font-black text-5xl md:text-6xl lg:text-7xl uppercase tracking-tight text-foreground leading-none" style={{ lineHeight: 0.95 }}>
-              The Middle East Hustle<span style={{ color: "#DC143C" }}>.</span>
+              The Middle East Hustle
             </h1>
             <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-serif mt-2">
               The voice of 400 million.
@@ -273,27 +273,16 @@ export default function Home() {
       </div>
 
       {/* ── HERO ── */}
-      <section className="bg-background border-b border-border section-fadein relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8">
-          <div className="mb-10">
-            <div className="h-1 w-16 bg-primary mb-6" />
-            <h2 className="font-display font-black uppercase text-5xl md:text-7xl lg:text-8xl leading-none tracking-tight text-foreground mb-6">
-              What Does the<br />Middle East<br /><span style={{ color: "#DC143C" }}>Actually Think?</span>
-            </h2>
-            <p className="text-lg md:text-xl text-muted-foreground font-sans">
-              {heroSubhead}
-            </p>
-          </div>
-        </div>
+      <section className="bg-background border-b border-border section-fadein">
 
-        {/* Opinion Bubbles + Featured Poll */}
-        <div className="relative pb-20">
-          {/* Floating opinion bubbles — desktop only */}
+        {/* Headline zone — bubbles float HERE only, never over the poll */}
+        <div className="relative" style={{ minHeight: "300px" }}>
+          {/* Floating opinion bubbles — large screens only, anchored to headline zone */}
           {OPINION_BUBBLES.map((b, i) => (
             <div
               key={i}
-              className="hidden md:block absolute z-20 pointer-events-none"
-              style={{ ...b.pos, "--r": b.rotate, "--d": b.duration, "--dl": b.delay } as React.CSSProperties}
+              className="hidden lg:block absolute z-10 pointer-events-none"
+              style={{ ...b.pos, "--r": b.rotate, "--d": b.duration, "--dl": b.delay, opacity: 0.55 } as React.CSSProperties}
             >
               <div className="tmh-bubble pointer-events-auto">
                 <p>{b.text}</p>
@@ -305,7 +294,23 @@ export default function Home() {
             </div>
           ))}
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Headline content — z-20 so it always sits above the bubbles */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 relative z-20">
+            <div className="mb-10">
+              <div className="h-1 w-16 bg-primary mb-6" />
+              <h2 className="font-display font-black uppercase text-5xl md:text-7xl lg:text-8xl leading-none tracking-tight text-foreground mb-6">
+                Opinions No One<br />Dares to Say.<br /><span style={{ color: "#DC143C" }}>Out Loud.</span>
+              </h2>
+              <p className="text-lg md:text-xl text-muted-foreground font-sans">
+                {heroSubhead}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Featured Poll — entirely outside the bubble zone */}
+        <div className="pb-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {featuredLoading ? (
               <div className="h-96 bg-secondary animate-pulse border border-border" />
             ) : featuredPoll ? (
