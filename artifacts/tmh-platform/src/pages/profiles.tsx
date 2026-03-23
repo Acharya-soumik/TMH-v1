@@ -37,10 +37,10 @@ export default function Profiles() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="h-1 w-12 bg-primary mb-6" />
           <h1 className="font-serif font-black uppercase text-5xl md:text-7xl text-foreground mb-6 leading-none tracking-tight">
-            The Hustlers
+            The Voices
           </h1>
           <p className="text-lg text-muted-foreground font-sans max-w-2xl mb-10">
-            The founders, operators, and builders redefining what's possible in the Middle East. No PR spin. No corporate bios. Just real people doing real work.
+            The founders, operators, and change-makers shaping the Middle East. Real People. Real Hustle. Real Change.
           </p>
 
           <div className="max-w-2xl relative group mb-4">

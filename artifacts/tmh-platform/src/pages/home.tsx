@@ -7,7 +7,6 @@ import { Link } from "wouter"
 import { cn } from "@/lib/utils"
 import { ArrowRight, ChevronRight } from "lucide-react"
 import { useVoter } from "@/hooks/use-voter"
-import { useVotePoll } from "@workspace/api-client-react"
 
 const FLAG_MAP: Record<string, string> = {
   AE: "🇦🇪", SA: "🇸🇦", EG: "🇪🇬", JO: "🇯🇴", LB: "🇱🇧", KW: "🇰🇼",
@@ -132,23 +131,87 @@ function PlatformStatsBar({ stats }: { stats: PlatformStats | null }) {
 }
 
 const OPINION_BUBBLES = [
-  { text: "The Middle East produces incredible talent. Then ships it straight to the West.", likes: "2.1k", pos: { left: "2%", top: "8%" }, rotate: "-2deg", duration: "7s", delay: "0s" },
-  { text: "I came out to my family. Only two of five are still speaking to me.", likes: "1.4k", pos: { left: "4%", top: "52%" }, rotate: "1.5deg", duration: "8.5s", delay: "1s" },
-  { text: "Wasta isn't corruption. It's relationship capital. We just call it wrong.", likes: "988", pos: { left: "1%", top: "77%" }, rotate: "-1deg", duration: "6s", delay: "2s" },
-  { text: "Gulf salaries are high because the government needs you to stay quiet.", likes: "3.2k", pos: { right: "2%", top: "6%" }, rotate: "2deg", duration: "9s", delay: "0.5s" },
-  { text: "Being queer in this region is exhausting. Necessary. And entirely worth it.", likes: "654", pos: { right: "2%", top: "47%" }, rotate: "-2.5deg", duration: "7.5s", delay: "1.5s" },
-  { text: "Saudi women can drive. They just can't always decide where they go.", likes: "1.1k", pos: { right: "3%", top: "74%" }, rotate: "1deg", duration: "8s", delay: "3s" },
-  { text: "Dubai is freedom — as long as you don't talk about certain things.", likes: "763", pos: { left: "22%", top: "2%" }, rotate: "0deg", duration: "10s", delay: "0.8s" },
-  { text: "Hustle culture is just wasta for people who don't have connections.", likes: "445", pos: { right: "21%", top: "2%" }, rotate: "0deg", duration: "7s", delay: "2.2s" },
+  { text: "I've been using AI to do my junior analyst's work for 6 months. They have no idea.", likes: "1.4k", pos: { left: "2%", top: "8%" }, rotate: "-2deg", duration: "7s", delay: "0s" },
+  { text: "My entire department could be replaced tomorrow. Nobody is talking about it.", likes: "2.3k", pos: { left: "4%", top: "52%" }, rotate: "1.5deg", duration: "8.5s", delay: "1s" },
+  { text: "I retrained twice in 10 years. I'll do it again.", likes: "876", pos: { left: "1%", top: "77%" }, rotate: "-1deg", duration: "6s", delay: "2s" },
+  { text: "The jobs that survive will require things AI can't fake: relationships, trust, presence.", likes: "1.1k", pos: { right: "2%", top: "6%" }, rotate: "2deg", duration: "9s", delay: "0.5s" },
+  { text: "We're not losing jobs. We're losing excuses.", likes: "654", pos: { right: "2%", top: "47%" }, rotate: "-2.5deg", duration: "7.5s", delay: "1.5s" },
+  { text: "My company hired 0 people this year. AI did the work. Nobody said it out loud.", likes: "3.2k", pos: { right: "3%", top: "74%" }, rotate: "1deg", duration: "8s", delay: "3s" },
+  { text: "The ones who aren't scared should be.", likes: "498", pos: { left: "22%", top: "2%" }, rotate: "0deg", duration: "10s", delay: "0.8s" },
+  { text: "In 5 years the question won't be your job. It'll be your entire industry.", likes: "742", pos: { right: "21%", top: "2%" }, rotate: "0deg", duration: "7s", delay: "2.2s" },
+]
+
+const PREDICTIONS_DATA = [
+  {
+    id: 1,
+    question: "Saudi Arabia Will Have a Fully Operating Cinema in Every Major City by End of 2026",
+    category: "Culture & Policy",
+    resolves: "December 2026",
+    yesPercent: 71,
+    noPercent: 29,
+    count: "14,220",
+  },
+  {
+    id: 2,
+    question: "A MENA-Founded Startup Will Reach $10B Valuation in 2026",
+    category: "Business",
+    resolves: "December 2026",
+    yesPercent: 44,
+    noPercent: 56,
+    count: "9,880",
+  },
+  {
+    id: 3,
+    question: "UAE Will Introduce Some Form of Personal Income Tax Within 3 Years",
+    category: "Economy",
+    resolves: "March 2029",
+    yesPercent: 38,
+    noPercent: 62,
+    count: "18,440",
+  },
+  {
+    id: 4,
+    question: "Arabic Will Become a Mandatory Subject in All Dubai Private Schools Within 2 Years",
+    category: "Education",
+    resolves: "September 2027",
+    yesPercent: 58,
+    noPercent: 42,
+    count: "7,610",
+  },
+]
+
+const STATIC_QUESTIONS = [
+  { category: "Society", question: "Should Transgender People Have Legal Recognition Across MENA?" },
+  { category: "Identity", question: "Is Islam Holding the Arab World Back — or Is That Question Itself the Problem?" },
+  { category: "Business", question: "Is Dubai's Success Real — or Just Very Good Marketing?" },
+  { category: "Politics", question: "Should the Arab League Be Disbanded?" },
+  { category: "Culture", question: "Is Arranged Marriage Still Relevant in 2026?" },
+  { category: "Economy", question: "Is the Gulf's Wealth Distributed Fairly?" },
+  { category: "Tech", question: "Should AI Tools Be Available in Arabic Before English in This Region?" },
+  { category: "Society", question: "Are Expats in the Gulf Treated as Second-Class?" },
+  { category: "Identity", question: "Is There Such a Thing as 'Arab Identity' Anymore?" },
+  { category: "Future", question: "Will Any MENA Country Legalise Cannabis Within 10 Years?" },
+]
+
+const SENTIMENT_COUNTRIES = [
+  { flag: "🇦🇪", name: "UAE", topAnswer: "Probably, but I'm adapting fast", pct: 61 },
+  { flag: "🇸🇦", name: "Saudi Arabia", topAnswer: "Absolutely — I'm irreplaceable", pct: 54 },
+  { flag: "🇪🇬", name: "Egypt", topAnswer: "Honestly? I'm not sure anymore", pct: 58 },
+  { flag: "🇯🇴", name: "Jordan", topAnswer: "Probably not — and I'm doing nothing about it", pct: 43 },
+  { flag: "🇱🇧", name: "Lebanon", topAnswer: "Honestly? I'm not sure anymore", pct: 67 },
+  { flag: "🇧🇭", name: "Bahrain", topAnswer: "Probably, but I'm adapting fast", pct: 55 },
+  { flag: "🇰🇼", name: "Kuwait", topAnswer: "Absolutely — I'm irreplaceable", pct: 62 },
+  { flag: "🇶🇦", name: "Qatar", topAnswer: "Absolutely — I'm irreplaceable", pct: 59 },
+  { flag: "🇮🇶", name: "Iraq", topAnswer: "Honestly? I'm not sure anymore", pct: 71 },
+  { flag: "🇴🇲", name: "Oman", topAnswer: "Probably, but I'm adapting fast", pct: 48 },
 ]
 
 export default function Home() {
   const { data: featuredPoll, isLoading: featuredLoading } = useGetFeaturedPoll()
   const { data: trendingPolls, isLoading: trendingLoading } = useListPolls({ filter: "trending", limit: 4 })
-  const { data: stripPolls } = useListPolls({ filter: "trending", limit: 8 })
   const { data: featuredProfiles, isLoading: profilesLoading } = useListProfiles({ filter: "featured", limit: 8 })
   const { data: categories } = useListCategories()
-  const { profile, totalVotesAllTime, hasVoted } = useVoter()
+  const { profile, totalVotesAllTime } = useVoter()
 
   const [ctaEmail, setCtaEmail] = useState("")
   const [ctaJoined, setCtaJoined] = useState(() => !!localStorage.getItem("tmh_cta_joined"))
@@ -217,10 +280,10 @@ export default function Home() {
 
           <nav className="flex items-center justify-center gap-6 py-2 text-[10px] uppercase tracking-widest font-serif">
             {[
-              { href: "/polls", label: "Polls" },
+              { href: "/polls", label: "Debates" },
+              { href: "/#predictions", label: "Predictions" },
               { href: "/profiles", label: "The Voices" },
-              { href: "/rankings", label: "Rankings" },
-              { href: "/weekly-pulse", label: "Weekly Pulse" },
+              { href: "/#sentiment-map", label: "Sentiment Map" },
               { href: "/about", label: "About" },
             ].map(l => (
               <Link key={l.href} href={l.href} className="text-muted-foreground hover:text-foreground font-bold transition-colors">
@@ -295,30 +358,39 @@ export default function Home() {
       </section>
 
       {/* ── QUESTION STRIP ── */}
-      {stripPolls?.polls && stripPolls.polls.length > 0 && (
-        <section className="py-12 bg-secondary/30 border-b border-border">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-end justify-between mb-6">
-              <div>
-                <h2 className="font-serif font-black uppercase text-[11px] tracking-[0.3em] text-primary mb-1">
-                  The Questions No One's Asking
-                </h2>
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-serif">
-                  Vote on any of them. Share the ones that matter.
-                </p>
-              </div>
-              <Link href="/polls" className="hidden sm:flex items-center gap-1 text-[10px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">
-                All Debates <ChevronRight className="w-3 h-3" />
-              </Link>
+      <section className="py-12 bg-secondary/30 border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-6">
+            <div>
+              <h2 className="font-serif font-black uppercase text-[11px] tracking-[0.3em] text-primary mb-1">
+                The Questions Everyone's Avoiding
+              </h2>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-serif">
+                Vote on any of them. Share the ones that make people uncomfortable.
+              </p>
             </div>
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
-              {stripPolls.polls.map(poll => (
-                <QuickVoteCard key={poll.id} poll={poll} />
-              ))}
-            </div>
+            <Link href="/polls" className="hidden sm:flex items-center gap-1 text-[10px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">
+              All Debates <ChevronRight className="w-3 h-3" />
+            </Link>
           </div>
-        </section>
-      )}
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+            {STATIC_QUESTIONS.map((q, i) => (
+              <Link key={i} href="/polls">
+                <div className="flex-shrink-0 w-72 bg-card border border-border p-5 flex flex-col gap-3 hover:-translate-y-0.5 hover:border-primary transition-all duration-200 cursor-pointer">
+                  <span className="text-[9px] uppercase tracking-[0.25em] font-bold text-primary font-serif">{q.category}</span>
+                  <p className="font-serif font-black uppercase text-sm leading-tight text-foreground line-clamp-4">
+                    {q.question}
+                  </p>
+                  <div className="mt-auto pt-2 border-t border-border flex items-center justify-between">
+                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-serif">Weigh in →</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ── THIS WEEK'S DEBATES ── */}
       <section className="py-20 bg-background border-b border-border">
@@ -350,6 +422,77 @@ export default function Home() {
             <Link href="/polls" className="block text-center text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground border border-border py-4 font-serif">
               View All Debates
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── PREDICTIONS ── */}
+      <section id="predictions" className="py-20 bg-background border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 border-l-4 border-primary pl-4">
+            <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-1 font-serif">Predictions</p>
+            <h2 className="font-serif font-black uppercase text-2xl text-foreground">
+              What Do You Think Actually Happens?
+            </h2>
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground mt-1 font-serif">
+              Not what should happen. What will.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-[900px]">
+            {PREDICTIONS_DATA.map(pred => (
+              <div
+                key={pred.id}
+                className="bg-card border border-border p-6 rounded-[10px] flex flex-col gap-4 transition-all duration-200 hover:-translate-y-1 cursor-pointer group"
+                style={{ borderWidth: "1.5px" }}
+              >
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2 py-0.5 bg-foreground text-background text-[9px] font-bold uppercase tracking-[0.2em] font-serif">
+                    {pred.category}
+                  </span>
+                  <span
+                    className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] font-serif rounded-sm"
+                    style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)", color: "#F59E0B" }}
+                  >
+                    Resolves: {pred.resolves}
+                  </span>
+                </div>
+                <p className="font-serif font-black uppercase text-sm leading-tight text-foreground tracking-tight" style={{ lineHeight: 1.2 }}>
+                  {pred.question}
+                </p>
+                <p className="text-[10px] text-muted-foreground font-serif">{pred.count} predictions locked in</p>
+                <div className="space-y-2">
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <p className="text-[10px] uppercase tracking-[0.15em] font-bold font-serif text-foreground mb-1">
+                        Yes {pred.yesPercent}%
+                      </p>
+                      <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pred.yesPercent}%`, background: "#DC143C" }} />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[10px] uppercase tracking-[0.15em] font-bold font-serif text-foreground mb-1">
+                        No {pred.noPercent}%
+                      </p>
+                      <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pred.noPercent}%`, background: "rgba(255,255,255,0.2)" }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-1">
+                  <button className="flex-1 py-2.5 border font-bold text-[11px] uppercase tracking-[0.12em] font-serif transition-all duration-150 hover:bg-primary hover:text-white hover:border-primary" style={{ borderColor: "#DC143C", color: "#DC143C" }}>
+                    Yes
+                  </button>
+                  <button className="flex-1 py-2.5 border border-border text-foreground/60 font-bold text-[11px] uppercase tracking-[0.12em] font-serif transition-all duration-150 hover:bg-secondary hover:text-foreground">
+                    No
+                  </button>
+                </div>
+                <p className="text-[10px] text-primary font-bold uppercase tracking-widest font-serif group-hover:underline">
+                  Lock In Your Prediction →
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -394,8 +537,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── COUNTRY LEADERBOARD ── */}
-      <CountryLeaderboard />
+      {/* ── SENTIMENT MAP ── */}
+      <SentimentMap />
 
       {/* ── EXPLORE TOPICS ── */}
       {categories?.categories && categories.categories.length > 0 && (
@@ -473,136 +616,43 @@ export default function Home() {
   )
 }
 
-function CountryLeaderboard() {
-  const [countries, setCountries] = useState<{ code: string; name: string; count: number; percentage: number }[]>([])
-
-  useEffect(() => {
-    fetch("/api/stats/countries")
-      .then(r => r.json())
-      .then(d => { if (d.countries?.length >= 2) setCountries(d.countries.slice(0, 8)) })
-      .catch(() => {})
-  }, [])
-
-  if (countries.length < 2) return null
-
-  const top = countries[0].count
-
+function SentimentMap() {
   return (
-    <section className="py-16 bg-secondary/20 border-b border-border">
+    <section id="sentiment-map" className="py-16 bg-secondary/20 border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between mb-10">
+        <div className="mb-10">
           <div className="border-l-4 border-primary pl-4">
+            <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-1 font-serif">Split by Country</p>
             <h2 className="font-serif font-black uppercase text-2xl text-foreground">
-              How Does Your Country Vote?
+              Same Question. Very Different Answers.
             </h2>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1 font-serif">
-              Live participation — updated with every vote
-            </p>
           </div>
-          <a href="/polls" className="hidden sm:inline-block text-[10px] uppercase tracking-widest font-bold text-primary font-serif hover:text-foreground transition-colors">
-            Represent Your Country →
-          </a>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {countries.map((country, i) => (
-            <div key={country.code} className="flex items-center gap-4">
-              <div className="flex items-center gap-3 w-44 flex-shrink-0">
-                <span className="text-xl">{FLAG_MAP[country.code] ?? "🌍"}</span>
-                <div>
-                  <div className={cn("font-serif font-bold text-sm uppercase tracking-wide", i === 0 ? "text-primary" : "text-foreground")}>
-                    {country.name}
-                  </div>
-                  <div className="text-[9px] text-muted-foreground font-sans">{country.count.toLocaleString()} votes</div>
-                </div>
+        <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
+          {SENTIMENT_COUNTRIES.map(c => (
+            <div
+              key={c.name}
+              className="p-4 rounded-lg border border-border hover:border-border/60 transition-colors flex flex-col gap-2"
+              style={{ background: "var(--bg2, hsl(var(--card)))" }}
+            >
+              <div className="flex items-center gap-2">
+                <span style={{ fontSize: "2rem" }}>{c.flag}</span>
+                <span className="font-bold uppercase tracking-wider text-sm text-foreground font-serif">{c.name}</span>
               </div>
-              <div className="flex-1 h-2 bg-secondary overflow-hidden">
-                <div
-                  className={cn("h-full transition-all duration-700", i === 0 ? "bg-primary" : "bg-foreground/25")}
-                  style={{ width: `${Math.round((country.count / top) * 100)}%` }}
-                />
+              <p className="text-[11px] text-muted-foreground font-sans leading-snug">
+                {c.pct}% say: "{c.topAnswer}"
+              </p>
+              <div className="h-[3px] w-full rounded overflow-hidden bg-border">
+                <div className="h-full rounded transition-all" style={{ width: `${c.pct}%`, background: "#DC143C" }} />
               </div>
-              <span className={cn("text-sm font-bold font-serif flex-shrink-0 w-10 text-right", i === 0 ? "text-primary" : "text-foreground")}>
-                {country.percentage}%
-              </span>
             </div>
           ))}
         </div>
+        <p className="mt-8 text-[12px] text-muted-foreground font-sans italic text-center">
+          The region agrees on the question. It rarely agrees on the answer.
+        </p>
       </div>
     </section>
   )
 }
 
-function QuickVoteCard({ poll }: { poll: any }) {
-  const { hasVoted, getVotedOption, recordVote, token } = useVoter()
-  const voteMutation = useVotePoll()
-  const [localOptions, setLocalOptions] = useState(poll.options ?? [])
-  const [localTotal, setLocalTotal] = useState(poll.totalVotes ?? 0)
-  const isVoted = hasVoted(poll.id)
-  const votedOptionId = getVotedOption(poll.id)
-
-  const handleVote = (optionId: number) => {
-    if (isVoted) return
-    recordVote(poll.id, optionId, poll.categorySlug)
-    const newTotal = localTotal + 1
-    const newOpts = localOptions.map((o: any) => ({
-      ...o,
-      voteCount: o.id === optionId ? o.voteCount + 1 : o.voteCount,
-      percentage: Math.round(((o.id === optionId ? o.voteCount + 1 : o.voteCount) / newTotal) * 100),
-    }))
-    setLocalOptions(newOpts)
-    setLocalTotal(newTotal)
-    voteMutation.mutate({ id: poll.id, data: { optionId, voterToken: token } })
-  }
-
-  return (
-    <div className="flex-shrink-0 w-72 bg-card border border-border p-5 flex flex-col gap-3 hover:-translate-y-0.5 transition-transform duration-200">
-      <div className="flex items-start justify-between gap-2">
-        <Link href={`/polls/${poll.id}`}>
-          <p className="font-serif font-black uppercase text-sm leading-tight text-foreground hover:text-primary transition-colors line-clamp-3 cursor-pointer">
-            {poll.question}
-          </p>
-        </Link>
-        {!isVoted && (
-          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse mt-1" title="Not voted yet" />
-        )}
-      </div>
-      <div className="space-y-1.5 mt-1">
-        {localOptions.slice(0, 3).map((option: any) => (
-          isVoted ? (
-            <div key={option.id} className="relative">
-              <div className="h-8 w-full bg-secondary overflow-hidden">
-                <div
-                  className={cn("h-full transition-all duration-500", option.id === votedOptionId ? "bg-primary" : "bg-foreground/15")}
-                  style={{ width: `${option.percentage ?? 0}%` }}
-                />
-              </div>
-              <div className="absolute inset-0 flex items-center justify-between px-2">
-                <span className={cn("text-[10px] font-bold font-sans truncate", option.id === votedOptionId ? "text-white" : "text-foreground")}>
-                  {option.text}
-                </span>
-                <span className={cn("text-[10px] font-bold font-sans flex-shrink-0", option.id === votedOptionId ? "text-white" : "text-foreground/60")}>
-                  {option.percentage ?? 0}%
-                </span>
-              </div>
-            </div>
-          ) : (
-            <button
-              key={option.id}
-              onClick={() => handleVote(option.id)}
-              className="w-full text-left text-[11px] font-sans px-3 py-2 border border-border hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-100 text-foreground/80 truncate"
-            >
-              {option.text}
-            </button>
-          )
-        ))}
-      </div>
-      <div className="flex items-center justify-between pt-1 border-t border-border">
-        <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-serif">{localTotal.toLocaleString()} votes</span>
-        <Link href={`/polls/${poll.id}`} className="text-[9px] uppercase tracking-widest text-primary font-bold font-serif">
-          View →
-        </Link>
-      </div>
-    </div>
-  )
-}

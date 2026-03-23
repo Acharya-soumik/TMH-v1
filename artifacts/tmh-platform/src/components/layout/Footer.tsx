@@ -1,12 +1,12 @@
 import { Link } from "wouter"
 
 const NAV = [
-  { label: "Polls", href: "/polls" },
-  { label: "The Hustlers", href: "/profiles" },
-  { label: "Rankings", href: "/rankings" },
-  { label: "Weekly Pulse", href: "/weekly-pulse" },
+  { label: "Debates", href: "/polls" },
+  { label: "The Voices", href: "/profiles" },
+  { label: "Sentiment Map", href: "/#sentiment-map" },
+  { label: "Predictions", href: "/#predictions" },
   { label: "About", href: "/about" },
-  { label: "Become a Hustler", href: "/apply" },
+  { label: "Join The Voices", href: "/apply" },
 ]
 
 const SOCIALS = [
@@ -19,9 +19,7 @@ export function Footer() {
   return (
     <footer className="bg-foreground text-background pt-16 pb-8 border-t-2 border-foreground">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Top section */}
         <div className="flex flex-col md:flex-row justify-between gap-12 mb-12 pb-12 border-b border-background/10">
-          {/* Brand */}
           <div className="flex-1">
             <Link href="/">
               <span className="font-display font-black text-4xl uppercase tracking-tight text-background leading-none block hover:text-primary transition-colors">
@@ -49,9 +47,8 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Navigate */}
           <div>
-            <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold text-background/30 mb-4 font-serif">Navigate</h4>
+            <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold text-background/30 mb-4 font-serif">The Voices</h4>
             <div className="flex flex-col gap-3">
               {NAV.map(link => (
                 <Link
@@ -65,11 +62,10 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Newsletter teaser */}
           <div className="max-w-xs">
             <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold text-background/30 mb-4 font-serif">Weekly Pulse</h4>
             <p className="text-sm text-background/50 font-sans leading-relaxed mb-4">
-              Every Tuesday: one question, one breakdown, one Hustler. Free.
+              Every Tuesday: one question, one breakdown, one voice. Free.
             </p>
             <Link
               href="/weekly-pulse"
@@ -80,7 +76,6 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[10px] uppercase tracking-widest text-background/30 font-serif">
             © {new Date().getFullYear()} The Middle East Hustle. Founded by Kareem Kaddoura.

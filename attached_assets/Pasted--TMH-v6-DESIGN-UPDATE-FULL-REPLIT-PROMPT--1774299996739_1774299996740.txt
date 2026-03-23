@@ -1,0 +1,271 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TMH v6 DESIGN UPDATE — FULL REPLIT PROMPT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This updates the existing React app. Do NOT rebuild from scratch.
+Apply the changes below on top of what is already live.
+
+─────────────────────────────────────────
+1. RENAME: "HUSTLERS" → "THE BUILDERS"
+─────────────────────────────────────────
+
+Replace every instance of the word "Hustler" / "Hustlers" across
+the entire codebase with "Builder" / "The Builders".
+
+This includes:
+- Navbar link: "The Builders"
+- Section heading: "The Builders"
+- CTA button: "Become a Builder"
+- Profile tag: "Featured Builder" etc.
+- Footer column: "The Builders"
+- /hustlers route → /builders
+- All copy, labels, toasts, email text
+
+The tagline stays: "Real People. Real Hustle. Real Change."
+The word "hustle" in the brand name is fine — it refers to the
+work ethic, not a person type. Only the profile directory label changes.
+
+─────────────────────────────────────────
+2. REPLACE: COUNTRY RANKINGS → SENTIMENT MAP
+─────────────────────────────────────────
+
+Remove the current "How Does Your Country Vote?" leaderboard
+(country sorted by vote volume). It is confusing and not useful.
+
+Replace with a SENTIMENT MAP section. This shows HOW DIFFERENTLY
+countries voted on the same question — not who voted most.
+
+Section eyebrow: "SPLIT BY COUNTRY"
+Section title: "Same Question. Very Different Answers."
+
+For each active hero poll, show a grid of country cards:
+
+Each country card:
+  - Flag emoji (large, 2rem)
+  - Country name (Barlow Condensed 700, uppercase)
+  - Top answer in that country (e.g. "62% say: Destroying meritocracy")
+  - A single thin bar showing majority % in crimson
+  - Subtle card: var(--bg2), border var(--border), border-radius 8px
+  - Hover: border-color var(--border2)
+
+Cards display in a 3-column auto-fit grid (minmax 220px, 1fr)
+
+Countries to show: UAE, Saudi Arabia, Egypt, Jordan, Lebanon,
+Bahrain, Kuwait, Qatar, Iraq, Oman
+
+Below the grid, one line of editorial copy in italic DM Sans:
+"The region agrees on the question. It rarely agrees on the answer."
+
+No leaderboard numbers. No voter counts in this section.
+This section is about DIFFERENCE not volume.
+
+─────────────────────────────────────────
+3. NEW SECTION: PREDICTIONS
+─────────────────────────────────────────
+
+Add a new section between the Debates section and the Questions
+strip. This is a distinct product mechanic from polls.
+
+Section eyebrow: "PREDICTIONS"
+Section title: "What Do You Think Actually Happens?"
+Section sub: "Not what should happen. What will."
+
+A Prediction is different from a Poll:
+  - A Poll asks for an OPINION (no right answer)
+  - A Prediction asks you to forecast a REAL FUTURE EVENT
+    (there will be a definitive answer when it happens)
+
+Prediction cards look similar to debate cards but with:
+  - A DEADLINE badge ("Resolves: Ramadan 2026" or "Resolves: Dec 2026")
+    Style: amber/gold background rgba(251,191,36,0.15),
+    border rgba(251,191,36,0.3), text #F59E0B
+    Barlow Condensed 700, 0.62rem, uppercase
+  - A PREDICTION RESULT badge when closed:
+    Green: "Called it" or Red: "Region was wrong"
+  - Instead of option buttons, TWO bold binary choices:
+    YES / NO or two specific outcomes
+    Each takes full width, large text
+  - A confidence meter below (% of people who said Yes vs No)
+    Two bars side by side, crimson vs white/grey
+  - CTA: "Lock In Your Prediction →"
+
+LAUNCH PREDICTION QUESTIONS (use these):
+
+  PREDICTION 1:
+  "Saudi Arabia Will Have a Fully Operating Cinema in Every
+   Major City by End of 2026"
+  Category: Culture & Policy
+  Resolves: December 2026
+  Current split: 71% Yes / 29% No
+
+  PREDICTION 2:
+  "A MENA-Founded Startup Will Reach $10B Valuation in 2026"
+  Category: Business
+  Resolves: December 2026
+  Current split: 44% Yes / 56% No
+
+  PREDICTION 3:
+  "UAE Will Introduce Some Form of Personal Income Tax
+   Within 3 Years"
+  Category: Economy
+  Resolves: March 2029
+  Current split: 38% Yes / 62% No
+
+  PREDICTION 4:
+  "Arabic Will Become a Mandatory Subject in All Dubai
+   Private Schools Within 2 Years"
+  Category: Education
+  Resolves: September 2027
+  Current split: 58% Yes / 42% No
+
+Prediction card layout:
+  Background: var(--bg2)
+  Border: 1.5px solid var(--border)
+  Border-radius: 10px
+  Padding: 1.6rem
+  Hover: border rgba(220,20,60,0.3), translateY(-4px)
+
+  Top row: [Category badge] [Deadline badge — amber]
+  Question: Barlow Condensed 900, 1.05rem, uppercase, line-height 1.2
+  Participation count: "[X,XXX] predictions locked in"
+
+  Confidence bars (two side by side):
+    Left: "YES [X]%" — bar in crimson
+    Right: "NO [X]%" — bar in rgba(255,255,255,0.2)
+    Each bar: flex 1, height 8px, border-radius 4px
+    Label above bar: Barlow Condensed 700, 0.7rem, uppercase
+
+  Binary vote buttons:
+    Two full-width buttons side by side
+    YES button: border crimson, text crimson, hover fill crimson
+    NO button: border var(--border), text --text2, hover fill bg3
+    On vote: show confidence bars update + trigger share gate
+
+  Deadline badge: below the question, above the bars
+  CTA: "Lock In Your Prediction →"
+
+Grid: 2 columns on desktop (repeat(2, 1fr)), 1 column mobile
+Max-width: 900px, margin: 0 auto
+
+─────────────────────────────────────────
+4. REPLACE ALL POLL QUESTIONS — REMOVE WASTA
+─────────────────────────────────────────
+
+Remove wasta from the hero poll, ticker, and debate cards.
+Replace with questions from this approved list.
+
+NEW HERO POLL:
+"Your Job Will Still Exist in 5 Years. Be Honest."
+Category: Technology & AI
+Framing: "AI isn't coming for jobs. It already has.
+          The question is whether you've admitted it yet."
+Options:
+  - Absolutely — I'm irreplaceable
+  - Probably, but I'm adapting fast
+  - Honestly? I'm not sure anymore
+  - Probably not — and I'm doing nothing about it
+
+NEW TICKER ITEMS:
+  "Your job will still exist in 5 years. Be honest. — 9,100 votes"
+  "Would you raise your kids in the Middle East? — 8,800 votes"
+  "Is Dubai too expensive now? — 7,200 votes"
+  "Should women have equal inheritance rights? — 7,200 votes"
+  "Are we building for ourselves or for Western validation? — 6,900 votes"
+  "Saudi Vision 2030 — ahead of schedule, on track, or behind? — 6,100 votes"
+  "Is the Arab diaspora more powerful inside the region or outside? — 5,400 votes"
+
+NEW DEBATE CARD 1 (replace wasta card with results):
+"Would You Raise Your Kids in the Middle East?"
+Category: Future & Identity
+Results:
+  Absolutely — nowhere else: 24%
+  Yes but only certain countries: 31%
+  I'm genuinely torn: 22%
+  Probably not: 15%
+  Already left or planning to: 8%
+
+NEW DEBATE CARD 2 (voteable):
+"Dubai, Riyadh, or Cairo — Where's the Real Future?"
+Category: Cities & Lifestyle
+Options: Dubai / Riyadh / Cairo / Amman / A city that doesn't exist yet
+
+NEW DEBATE CARD 3 (voteable):
+"Should Women Have Equal Inheritance Rights Across the Region?"
+Category: Society & Equality
+Options:
+  Yes — unequivocally
+  Yes but implementation must respect local customs
+  It's a religious matter, not a policy one
+  No
+  I don't have a strong view
+
+─────────────────────────────────────────
+5. UPDATED QUESTIONS STRIP — MORE INTENSE
+─────────────────────────────────────────
+
+Replace all current question strip cards with these.
+These are deliberately more provocative:
+
+  1. SOCIETY — "Should Transgender People Have Legal Recognition
+     Across MENA?"
+  2. IDENTITY — "Is Islam Holding the Arab World Back —
+     or Is That Question Itself the Problem?"
+  3. BUSINESS — "Is Dubai's Success Real — or Just Very Good Marketing?"
+  4. POLITICS — "Should the Arab League Be Disbanded?"
+  5. CULTURE — "Is Arranged Marriage Still Relevant in 2026?"
+  6. ECONOMY — "Is the Gulf's Wealth Distributed Fairly?"
+  7. TECH — "Should AI Tools Be Available in Arabic Before English
+     in This Region?"
+  8. SOCIETY — "Are Expats in the Gulf Treated as Second-Class?"
+  9. IDENTITY — "Is There Such a Thing as 'Arab Identity' Anymore?"
+  10. FUTURE — "Will Any MENA Country Legalise Cannabis
+      Within 10 Years?"
+
+Each card: same styling as before. These questions should feel
+like they could cause an argument at a dinner table. That is the point.
+
+─────────────────────────────────────────
+6. OPINION BUBBLES — UPDATE CONTENT
+─────────────────────────────────────────
+
+Match bubbles to the new hero poll (AI & jobs).
+Replace wasta bubble content with:
+
+  1. "I've been using AI to do my junior analyst's work for 6 months.
+     They have no idea." ♥ 1.4k
+  2. "My entire department could be replaced tomorrow.
+     Nobody is talking about it." ♥ 2.3k
+  3. "I retrained twice in 10 years. I'll do it again." ♥ 876
+  4. "The jobs that survive will require things AI can't fake:
+     relationships, trust, presence." ♥ 1.1k
+  5. "We're not losing jobs. We're losing excuses." ♥ 654
+  6. "My company hired 0 people this year. AI did the work.
+     Nobody said it out loud." ♥ 3.2k
+  7. "The ones who are scared aren't the problem.
+     The ones who aren't scared should be." ♥ 498
+  8. "In 5 years the question won't be your job.
+     It'll be your entire industry." ♥ 742
+
+─────────────────────────────────────────
+7. NAV UPDATE
+─────────────────────────────────────────
+
+Update navbar links to:
+  Debates | Predictions | The Builders | Sentiment Map | About
+  + "Become a Builder" CTA button (crimson)
+
+Remove: "The Hustlers", "Rankings", "Weekly Pulse" from nav
+Add: "Predictions" as second link (new section)
+Add: "Sentiment Map" replacing "Rankings"
+
+─────────────────────────────────────────
+NO OTHER CHANGES
+─────────────────────────────────────────
+
+Do not change: vote mechanic, share gate, results animation,
+profile card design, about section, newsletter, footer structure,
+dark/light mode, referral section, font imports, or CSS variables.
+
+All backend logic, routing, and data fetching stays unchanged.
+Only content, labels, one new section (Predictions), one replaced
+section (Sentiment Map), and the Hustler → Builder rename.
