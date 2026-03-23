@@ -1,0 +1,516 @@
+We are upgrading the existing TMH (The Middle East Hustle) React app 
+to v5. Do NOT rebuild from scratch — apply these changes on top of 
+what is already built. This is a design and UX upgrade only. 
+The backend logic, routing, and data fetching stay the same.
+
+Reference designs:
+1. TMH_v5.html — the complete upgraded prototype (attached / in repo)
+2. WSJ.com — specifically their opinion/comments visual treatment 
+   where reader quotes float around editorial headlines
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FONTS — update globals.css or index.css
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Import from Google Fonts:
+  Playfair Display: 700, 900, 700 italic
+  Barlow Condensed: 400, 700, 900
+  DM Sans: 400, 500, 700
+
+Usage rules:
+  - Playfair Display → masthead logo, hero section, pull quotes, About opening line
+  - Barlow Condensed → ALL headings, section titles, badges, labels, navbar links, 
+    poll questions, debate card questions, CTA buttons. Always uppercase, tracked.
+  - DM Sans → all body copy, poll option text, form inputs, meta info
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CSS VARIABLES — replace existing colour tokens
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+:root (dark mode default) {
+  --crimson: #DC143C;
+  --bg: #0A0A0A;
+  --bg2: #141414;
+  --bg3: #1E1E1E;
+  --text: #FAFAFA;
+  --text2: rgba(250,250,250,0.65);
+  --text3: rgba(250,250,250,0.35);
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(220,20,60,0.25);
+  --green: #10B981;
+}
+
+.light {
+  --bg: #F5F0EB;       /* warm parchment — aged newspaper */
+  --bg2: #EDE6DC;
+  --bg3: #E5DDD3;
+  --text: #1A1A1A;
+  --text2: rgba(26,26,26,0.65);
+  --text3: rgba(26,26,26,0.35);
+  --border: rgba(0,0,0,0.07);
+}
+
+Crimson (#DC143C) is the ONLY accent colour.
+It appears on: ticker bg, CTAs, share gate, result fill bars, 
+profile tags, border accents, logo period.
+Nowhere else. No purple. No blue. No orange.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT 1 — LIVE TICKER (already exists — upgrade it)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Full-width crimson background strip
+- White "LIVE" pill badge on the left (white bg, crimson text, 
+  border-radius 20px, font 0.6rem Barlow Condensed 900)
+- Content: poll question — vote count, separated by · dots
+- Animation: 40s linear infinite horizontal scroll (CSS only)
+- Pause on hover
+- Duplicate the content block inside the same div for seamless loop
+- Font: Barlow Condensed 700, 0.72rem, uppercase, letter-spacing 0.07em
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT 2 — NAVBAR (upgrade existing)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Sticky, position: sticky, top: 0, z-index 200
+- Background: rgba(10,10,10,0.96), backdrop-filter: blur(16px)
+- Border bottom: 1px solid rgba(220,20,60,0.12)
+- Logo: "TMH." in Playfair Display 900, 1.9rem
+  Period is --crimson coloured
+  Sub-label: "The Middle East Hustle" in Barlow Condensed, 
+  0.52rem, uppercase, letter-spacing 0.14em, --text3
+- Nav links: Barlow Condensed 700, 0.78rem, uppercase, --text2
+  Hover: --crimson
+- "Become a Hustler" link: background --crimson, white text, 
+  padding 0.4rem 1.1rem, border-radius 3px
+- Theme toggle: circular button, 38x38px, border 1.5px --border2
+  Hover: --crimson background
+- Hamburger menu on mobile (< 768px), full-width dropdown
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT 3 — MASTHEAD (upgrade existing)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This is the newspaper masthead. WSJ reference: think of the
+WSJ header — authoritative, dated, no decoration.
+
+- Border top AND bottom: 2px solid --crimson
+- Text centered
+- Issue line: "EST. 2026 · DUBAI · ISSUE NO. 001"
+  Barlow Condensed, 0.62rem, uppercase, letter-spacing 0.18em, --text3
+- Main title: "THE MIDDLE EAST HUSTLE." 
+  Playfair Display 900, clamp(2.6rem, 8vw, 6rem), line-height 0.95
+  The period is --crimson
+- Tagline: "The voice of 400 million"
+  Barlow Condensed, 0.68rem, uppercase, letter-spacing 0.22em, --text3
+- Subtle radial gradient background glow: 
+  radial-gradient(ellipse at 50% -20%, rgba(220,20,60,0.07) 0%, transparent 65%)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT 4 — OPINION BUBBLES HERO ZONE (new component)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+THIS IS THE KEY WSJ-INSPIRED ELEMENT.
+
+Reference: WSJ's "We Put 12 Strangers in a Group Chat" format —
+scattered reader opinion snippets floating around a central headline.
+Each bubble looks like a WhatsApp message or iMessage chat bubble.
+
+The hero section is a relative-positioned container, min-height 540px.
+The poll question card sits in the centre (z-index 10).
+Opinion bubbles are absolutely positioned around it.
+
+BUBBLE COMPONENT:
+  - Background: var(--bg2)
+  - Border: 1px solid var(--border)
+  - Border-radius: 14px (chat bubble feel)
+  - Padding: 0.65rem 0.9rem
+  - Font: DM Sans, 0.82rem, --text2
+  - Max-width: 210px
+  - Line-height: 1.42
+  - Hover: border-color rgba(220,20,60,0.3)
+  - Each bubble has a small reaction line below:
+    ♥ [count] in --crimson + --text3
+
+BUBBLE POSITIONS (absolutely positioned, desktop only):
+  Bubble 1: left: 2%, top: 8%, rotate -2deg, float duration 7s
+  Bubble 2: left: 4%, top: 52%, rotate 1.5deg, float duration 8.5s
+  Bubble 3: left: 1%, top: 77%, rotate -1deg, float duration 6s
+  Bubble 4: right: 2%, top: 6%, rotate 2deg, float duration 9s
+  Bubble 5: right: 2%, top: 47%, rotate -2.5deg, float duration 7.5s
+  Bubble 6: right: 3%, top: 74%, rotate 1deg, float duration 8s
+  Bubble 7: left: 22%, top: 2%, rotate 0deg, float duration 10s (shorter max-width)
+  Bubble 8: right: 21%, top: 2%, rotate 0deg, float duration 7s (shorter max-width)
+
+FLOAT ANIMATION (CSS keyframes):
+  @keyframes bblfloat {
+    0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+    50%       { transform: translateY(-9px) rotate(var(--r, 0deg)); }
+  }
+  Each bubble has its own --d (duration) and --dl (delay) custom property.
+
+On mobile (< 768px): hide all absolutely-positioned bubbles.
+
+LAUNCH BUBBLE CONTENT (use these exact strings):
+  1. "My father built his business on wasta. I refuse to." ♥ 847
+  2. "This is the question no one at work will say out loud" ♥ 312
+  3. "It's not wasta if everyone does it. It's just how things work here." ♥ 1.2k
+  4. "I lost a job to someone with zero qualifications. Just connections." ♥ 2.1k
+  5. "Networking exists everywhere. We just gave it an Arabic name." ♥ 654
+  6. "Without wasta I wouldn't have survived. With wasta I feel dirty." ♥ 988
+  7. "The meritocracy doesn't exist anywhere — stop pretending." ♥ 445
+  8. "Dubai is improving. Saudi is improving. The old way is dying." ♥ 763
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT 5 — HERO POLL QUESTION (upgrade existing)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Sits in the centre of the opinion bubbles zone.
+
+- Category badges row: 
+  "Culture & Society" pill (--crimson bg 12%, border 1px --border2)
+  "🔥 This Week's Debate" pill (same style)
+  Both: Barlow Condensed 700, 0.62rem, uppercase, letter-spacing 0.12em
+
+- Poll question headline:
+  Barlow Condensed 900, clamp(2rem, 5vw, 3.8rem), uppercase
+  letter-spacing 0.04em, line-height 1.05, --text
+
+- Framing line (editorial context, 1 sentence):
+  DM Sans 400, 0.95rem, italic, --text2
+
+- Vote count line:
+  Live green pulsing dot (6x6px, --green, scale animation)
+  + "9,741 votes cast" in Barlow Condensed, 0.7rem, uppercase, --text3
+
+- Poll option buttons:
+  Full width, transparent background
+  Border: 1.5px solid var(--border)
+  Border-radius: 5px
+  Padding: 0.9rem 1.3rem
+  Font: DM Sans 500, 0.95rem, --text
+  Hover: border-color --crimson + translateX(3px) + 
+         before pseudo-element fills with rgba(220,20,60,0.07)
+  Selected: border --crimson, background rgba(220,20,60,0.1)
+  Disabled (after vote): opacity 0.45, cursor not-allowed
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT 6 — SHARE GATE (upgrade — make it a full-screen overlay)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Remove the current inline dashed box. Replace with:
+
+- Fixed overlay: position fixed, inset 0, z-index 500
+- Background: rgba(10,10,10,0.88), backdrop-filter: blur(14px)
+- Centred modal card:
+    Background: var(--bg2)
+    Border: 1px solid rgba(220,20,60,0.22)
+    Border-radius: 14px
+    Padding: 2.5rem 2rem
+    Max-width: 500px
+
+INSIDE THE CARD:
+  Title: "UNLOCK FULL RESULTS" — Barlow Condensed 900, 2.1rem, uppercase
+  Sub: "Share this debate — or drop your email. Either unlocks the 
+        full regional breakdown." — DM Sans, 0.88rem, --text2
+
+  BLURRED PREVIEW:
+    Show the top 3 result bars with filter: blur(3.5px)
+    pointer-events: none, user-select: none
+    This creates desire — they can ALMOST see the answer
+
+  SHARE BUTTONS (grid, 3 columns):
+    WhatsApp: spans full width (grid-column: 1 / -1)
+      Background: rgba(37,211,102,0.1), border rgba(37,211,102,0.28)
+      Text colour: #25D366, larger padding
+    All others: transparent border, Barlow Condensed 700, uppercase
+
+  "OR" DIVIDER:
+    Barlow Condensed, 0.65rem, uppercase, letter-spacing 0.18em
+    Flanked by 1px lines (var(--border))
+
+  EMAIL ROW:
+    Input: flex 1, background rgba(255,255,255,0.04), border var(--border)
+    Button "UNLOCK RESULTS": --crimson background, white text,
+      Barlow Condensed 900, uppercase
+
+  Legal micro-copy: "No spam. Unsubscribe anytime." — 0.68rem, --text3
+
+ANIMATION:
+  Fade in + translateY(16px) → translateY(0), 0.3s ease-out
+  Click outside the card to dismiss
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT 7 — POLL RESULTS (upgrade existing)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+After share gate is dismissed, results animate in below the poll.
+
+- Result bars:
+  Track: height 9px, background rgba(255,255,255,0.06), border-radius 4px
+  Leader fill: --crimson
+  Other fills: rgba(255,255,255,0.18)
+  All bars start at width 0, transition to final value
+  Staggered: bar 1 at 0ms, bar 2 at 100ms, bar 3 at 200ms etc.
+  Easing: cubic-bezier(0.25, 1, 0.5, 1), duration 0.85s
+
+- Personal stat callout (below bars):
+  Background: rgba(220,20,60,0.07)
+  Border: 1px solid rgba(220,20,60,0.18)
+  Border-radius: 8px
+  Padding: 0.9rem 1.3rem
+  Font: DM Sans italic, 0.88rem, --text2
+  Text changes based on which option they voted for
+
+- Country breakdown section:
+  Section label: Barlow Condensed, 0.62rem, uppercase, --text3
+  Each row: flag + country name (130px min-width) + thin bar + percentage
+  Bar fill: rgba(220,20,60,0.45)
+  All bars animate in with same stagger as result bars
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT 8 — DEBATE CARDS (upgrade existing)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WSJ REFERENCE: WSJ debate/opinion cards have a strong category 
+label, bold question, and show real data — not placeholder.
+Every card must feel like it has real stakes.
+
+- Background: var(--bg2)
+- Border: 1.5px solid var(--border)
+- Border-radius: 10px
+- Hover: border-color rgba(220,20,60,0.35), translateY(-5px)
+
+Card layout:
+  Category label: Barlow Condensed 700, 0.6rem, uppercase, --crimson
+    Include a small green pulse dot (live indicator) on the left
+  Question: Barlow Condensed 900, 1.1rem, uppercase, letter-spacing 0.04em
+  Vote count: Barlow Condensed, 0.75rem, --text3
+
+DEBATE CARD 1 (results already visible):
+  Show 4-5 mini result rows:
+    Label (flex 1, truncate overflow) + thin bar (80px wide) + percentage
+    Bar fill: --crimson
+  Share buttons row: small circular buttons (30px), 
+    background rgba(220,20,60,0.1), hover --crimson
+  CTA text: "Voted — Results Live"
+
+DEBATE CARDS 2 & 3 (voteable):
+  Show 5 vote option buttons:
+    Full width, transparent border, DM Sans 0.82rem
+    Hover: border-color --crimson, slight crimson bg tint
+  On vote: disable all options, highlight selected, 
+    trigger share gate after 400ms delay
+  CTA text: "Cast your vote →" → "Voted — Unlock Results →"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT 9 — QUESTIONS STRIP (upgrade existing)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Horizontal scrollable strip. Background has a very subtle gradient:
+linear-gradient(135deg, rgba(220,20,60,0.04) 0%, rgba(16,185,129,0.025) 100%)
+
+Scrollbar: 4px height, --crimson thumb
+
+Each question card:
+  flex: 0 0 270px
+  Background: var(--bg2), border var(--border), border-radius 9px
+  Hover: border rgba(220,20,60,0.35), translateY(-4px)
+  Category: Barlow Condensed 700, 0.62rem, uppercase, --crimson
+  Question: Barlow Condensed 700, 1rem, uppercase, letter-spacing 0.04em
+  Vote count: Barlow Condensed, 0.7rem, --text3
+  CTA: "Vote now →" in Barlow Condensed 700, 0.68rem, --crimson
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT 10 — COUNTRY LEADERBOARD (upgrade existing)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WSJ reference: WSJ shows data with confident, ranked displays.
+No charts. Just bars and numbers.
+
+Add rank numbers (01, 02, 03...) to the left of each flag.
+Rank number: Barlow Condensed 700, 0.75rem, --text3, min-width 20px
+
+Each row:
+  Background: var(--bg2), border 1px var(--border), border-radius 7px
+  Padding: 1.1rem 1.3rem
+  Hover: background rgba(220,20,60,0.07), border --border2
+  Layout: rank | flag | country name (flex 0 0 110px) | bar | voter count
+
+Bar: height 7px, --crimson fill, same track style as results
+Voter count: DM Sans 700, 0.82rem, --text2, min-width 90px, text-right
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT 11 — HUSTLER PROFILE CARDS (upgrade existing)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Image area (280px height):
+  If real photo: grayscale(100%) at rest → grayscale(0%) on card hover
+  If no photo (initials avatar):
+    Dark background with subtle halftone dot pattern:
+    background-image: radial-gradient(circle, rgba(220,20,60,0.09) 1px, transparent 1px)
+    background-size: 11px 11px
+    Initials in Playfair Display 900, 5rem, rgba(220,20,60,0.45)
+    On card hover: initials become --crimson, scale(1.06)
+    Bottom gradient fade: linear-gradient(transparent, rgba(220,20,60,0.1))
+
+Profile tag badge (top-left of image):
+  --crimson background, white text
+  Barlow Condensed 700, 0.58rem, uppercase, letter-spacing 0.07em
+  border-radius 20px, padding 0.22rem 0.6rem
+
+Live pulse indicator (bottom-left of image):
+  Green dot (5px, --green, pulse animation) + "Their Network Is Voting"
+  Barlow Condensed 700, 0.65rem, uppercase
+  Background rgba(0,0,0,0.5), border-radius 20px
+
+Card body:
+  Name: Barlow Condensed 900, 1.05rem, uppercase, letter-spacing 0.04em
+  Title: DM Sans, 0.82rem, --text2
+  Location: emoji + text, 0.76rem, --text3
+  Quote: DM Sans italic, 0.86rem, --text2, line-height 1.45
+  CTA "Read Their Story →": Barlow Condensed 700, 0.75rem, --crimson, uppercase
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT 12 — ABOUT SECTION (upgrade existing)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Section background: 
+  linear-gradient(135deg, rgba(220,20,60,0.06) 0%, rgba(16,185,129,0.03) 100%)
+
+Opening line: Playfair Display 700, clamp(1.4rem, 4vw, 2rem), centered
+  "This isn't just a page. It's a purpose, a mission, a movement."
+
+Founder quote block:
+  Two-column layout (text left, founder avatar right)
+  Avatar: 260x260px, border-radius 8px, border 2px --crimson
+    Shows "KK" initials in Playfair Display if no photo
+  Quote text ends with: "— Kareem Kaddoura, Founder" in --crimson italic
+
+Beliefs grid:
+  auto-fit minmax(280px, 1fr)
+  Each belief card: var(--bg2), border var(--border), border-radius 8px
+  Hover: border --border2
+  Title: Barlow Condensed 900, 0.82rem, uppercase, --crimson
+  Text: DM Sans, 0.85rem, --text2
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION TRANSITIONS — between every major section
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WSJ reference: WSJ uses thin ruled lines between sections,
+with a small label above each section (like a newspaper column header).
+
+Pattern to apply everywhere:
+  <hr> — 1px solid var(--border), no margin
+  Eyebrow label — Barlow Condensed, 0.6rem, uppercase, 
+    letter-spacing 0.22em, --text3, centered
+    e.g. "This Week's Debates" / "The Questions No One's Asking" 
+         / "How Does Your Country Vote?" / "The Hustlers"
+  Section subtitle — DM Sans, 0.88rem, --text3, centered, below eyebrow
+
+This replaces large section title headings with newspaper-style 
+column headers. Quieter, more editorial, less app-like.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NEWSLETTER + FOOTER — upgrade styling
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Newsletter section:
+  Background gradient: linear-gradient(135deg, rgba(220,20,60,0.06) 0%, transparent 60%)
+  Border top: 1px solid rgba(220,20,60,0.12)
+  Title: Barlow Condensed 900, clamp(1.4rem, 4vw, 2.2rem), uppercase
+  Sub: DM Sans, 0.88rem, --text3
+  Input: background rgba(255,255,255,0.04), border var(--border)
+  Button: --crimson, Barlow Condensed 900, uppercase
+
+Footer:
+  4-column grid (2fr 1fr 1fr 1fr), gap 2rem
+  Logo: "TMH." Playfair Display 900, period in --crimson
+  Tagline: "The voice of 400 million." DM Sans, 0.78rem, --text3
+  Social icons: 32px circles, border var(--border), 
+    hover background --crimson
+  Column headings: Barlow Condensed 700, 0.62rem, uppercase, 
+    letter-spacing 0.16em, --text3
+  Links: DM Sans, 0.82rem, --text2, hover --crimson
+  Bottom rule: 1px var(--border), copyright in --text3
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TOAST NOTIFICATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  - Fixed bottom-right, z-index 999
+  - Background --crimson, white text
+  - Barlow Condensed 700, 0.82rem, letter-spacing 0.05em
+  - Border-radius 6px, padding 0.85rem 1.4rem
+  - Slide up + fade in on show, auto-dismiss after 3.2s
+  - Only one toast at a time
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LIVE PULSE DOT (reusable component)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  width/height: 6px, background --green, border-radius 50%
+  Animation:
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.6); opacity: 0.5; }
+    }
+    animation: pulse 2s ease-in-out infinite
+
+  Use everywhere: hero vote count, debate card category labels,
+  hustler card bottom-left indicator.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MOBILE RULES (< 768px)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  - Hide all absolutely-positioned opinion bubbles
+  - Hamburger menu replaces nav links, full-width dropdown
+  - All grids collapse to single column
+  - Share gate modal: padding 1.8rem 1.3rem
+  - Newsletter form: flex-direction column
+  - Footer grid: 2 columns (1fr 1fr)
+  - Hustler grid: single column
+  - Poll option min-height: 56px for thumb comfort
+  - WhatsApp share button: full row in share gate
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WSJ DESIGN TOUCHES — apply these everywhere
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WSJ.com is the tonal reference. Not the tech stack — the feel.
+Specifically:
+
+1. RULED LINES AS SECTION DIVIDERS
+   WSJ uses thin horizontal rules constantly. Use 1px var(--border) 
+   between every section. Never use padding/margin alone to separate.
+
+2. EYEBROW + TITLE PATTERN
+   WSJ labels every section with a small uppercase category label
+   above the main heading. We call these "eyebrows". Apply to 
+   every section on the page.
+
+3. VOTE COUNTS AS EDITORIAL STATS
+   WSJ presents data as assertions, not labels.
+   NOT "Votes: 9,741" → YES "9,741 people voted on this"
+   NOT "Results" → YES "How 9,742 people voted"
+   NOT "Countries" → YES "How Does Your Country Vote?"
+   Update all labels in the app to match this voice.
+
+4. CONFIDENT TYPOGRAPHY HIERARCHY
+   WSJ never uses more than 3 type sizes in a single section.
+   Hero question (large) → framing line (medium) → vote count (small)
+   No intermediate sizes. Clear jump between levels.
+
+5. OPINION FRAGMENTS AS SOCIAL PROOF
+   WSJ's group chat format puts reader quotes everywhere.
+   Our version: opinion bubbles floating in the hero zone.
+   These make the platform feel alive BEFORE the user votes.
+   They are not decorative — they are conversion elements.
+
+6. DATA FIRST, DECORATION NEVER
+   WSJ does not use background patterns, gradients, or 
+   illustration as decoration. Every visual element carries information.
+   Apply this to TMH: the halftone dot pattern on hustler avatars
+   is the only decorative exception, and it references newspaper print.

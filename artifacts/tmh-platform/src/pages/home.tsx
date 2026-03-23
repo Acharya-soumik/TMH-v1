@@ -131,6 +131,17 @@ function PlatformStatsBar({ stats }: { stats: PlatformStats | null }) {
   )
 }
 
+const OPINION_BUBBLES = [
+  { text: "The Middle East produces incredible talent. Then ships it straight to the West.", likes: "2.1k", pos: { left: "2%", top: "8%" }, rotate: "-2deg", duration: "7s", delay: "0s" },
+  { text: "I came out to my family. Only two of five are still speaking to me.", likes: "1.4k", pos: { left: "4%", top: "52%" }, rotate: "1.5deg", duration: "8.5s", delay: "1s" },
+  { text: "Wasta isn't corruption. It's relationship capital. We just call it wrong.", likes: "988", pos: { left: "1%", top: "77%" }, rotate: "-1deg", duration: "6s", delay: "2s" },
+  { text: "Gulf salaries are high because the government needs you to stay quiet.", likes: "3.2k", pos: { right: "2%", top: "6%" }, rotate: "2deg", duration: "9s", delay: "0.5s" },
+  { text: "Being queer in this region is exhausting. Necessary. And entirely worth it.", likes: "654", pos: { right: "2%", top: "47%" }, rotate: "-2.5deg", duration: "7.5s", delay: "1.5s" },
+  { text: "Saudi women can drive. They just can't always decide where they go.", likes: "1.1k", pos: { right: "3%", top: "74%" }, rotate: "1deg", duration: "8s", delay: "3s" },
+  { text: "Dubai is freedom — as long as you don't talk about certain things.", likes: "763", pos: { left: "22%", top: "2%" }, rotate: "0deg", duration: "10s", delay: "0.8s" },
+  { text: "Hustle culture is just wasta for people who don't have connections.", likes: "445", pos: { right: "21%", top: "2%" }, rotate: "0deg", duration: "7s", delay: "2.2s" },
+]
+
 export default function Home() {
   const { data: featuredPoll, isLoading: featuredLoading } = useGetFeaturedPoll()
   const { data: trendingPolls, isLoading: trendingLoading } = useListPolls({ filter: "trending", limit: 4 })
@@ -180,26 +191,26 @@ export default function Home() {
     <Layout>
       <style>{`
         @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .ticker-animate { animation: ticker 70s linear infinite; white-space: nowrap; }
+        .ticker-animate { animation: ticker 40s linear infinite; white-space: nowrap; }
         .ticker-animate:hover { animation-play-state: paused; }
         @keyframes fadein { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
         .section-fadein { animation: fadein 0.5s ease forwards; }
       `}</style>
 
       {/* ── MASTHEAD ── */}
-      <div className="bg-background border-b-2 border-foreground">
+      <div className="bg-background" style={{ background: "radial-gradient(ellipse at 50% -20%, rgba(220,20,60,0.07) 0%, transparent 65%)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-2 text-[9px] uppercase tracking-[0.2em] text-muted-foreground border-b border-border font-serif">
-            <span>Est. 2026 · The Middle East · Issue No. 001</span>
+          <div className="flex items-center justify-between py-2 text-[9px] uppercase tracking-[0.18em] text-muted-foreground border-b border-border font-serif">
+            <span>EST. 2026 · DUBAI · ISSUE NO. 001</span>
             <span className="hidden sm:block">{issueDate}</span>
             <span className="text-primary font-bold">Opinion of Record</span>
           </div>
 
-          <div className="border-t-2 border-b-2 border-foreground py-5 my-3 text-center">
-            <h1 className="font-display font-black text-5xl md:text-6xl lg:text-7xl uppercase tracking-tight text-foreground leading-none">
-              The Middle East Hustle<span className="text-primary">.</span>
+          <div className="py-5 my-3 text-center" style={{ borderTop: "2px solid #DC143C", borderBottom: "2px solid #DC143C" }}>
+            <h1 className="font-display font-black text-5xl md:text-6xl lg:text-7xl uppercase tracking-tight text-foreground leading-none" style={{ lineHeight: 0.95 }}>
+              The Middle East Hustle<span style={{ color: "#DC143C" }}>.</span>
             </h1>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-serif mt-2">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-serif mt-2">
               The voice of 400 million.
             </p>
           </div>
@@ -207,7 +218,7 @@ export default function Home() {
           <nav className="flex items-center justify-center gap-6 py-2 text-[10px] uppercase tracking-widest font-serif">
             {[
               { href: "/polls", label: "Polls" },
-              { href: "/profiles", label: "The Hustlers" },
+              { href: "/profiles", label: "The Voices" },
               { href: "/rankings", label: "Rankings" },
               { href: "/weekly-pulse", label: "Weekly Pulse" },
               { href: "/about", label: "About" },
@@ -223,21 +234,21 @@ export default function Home() {
       </div>
 
       {/* ── NEWS TICKER ── */}
-      <div className="bg-foreground text-background h-9 flex items-center overflow-hidden">
-        <span className="flex-shrink-0 bg-primary text-white px-3 h-full flex items-center font-bold text-[10px] uppercase tracking-widest font-serif z-10">
+      <div className="h-9 flex items-center overflow-hidden" style={{ background: "#DC143C" }}>
+        <span className="flex-shrink-0 bg-white px-3 py-0.5 mx-2 rounded-[20px] font-bold text-[11px] uppercase tracking-[0.07em] font-serif z-10" style={{ color: "#DC143C", fontWeight: 900 }}>
           LIVE
         </span>
         <div className="flex-1 overflow-hidden">
-          <span className="ticker-animate inline-block text-[11px] uppercase tracking-widest font-medium text-background/80 font-serif px-4">
+          <span className="ticker-animate inline-block text-[11px] uppercase tracking-[0.07em] font-bold text-white/90 font-serif px-2">
             {(tickerText + tickerText)}
           </span>
         </div>
       </div>
 
       {/* ── HERO ── */}
-      <section className="bg-background py-20 lg:py-32 border-b border-border section-fadein">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-16">
+      <section className="bg-background border-b border-border section-fadein relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8">
+          <div className="mb-10">
             <div className="h-1 w-16 bg-primary mb-6" />
             <h2 className="font-display font-black uppercase text-5xl md:text-7xl lg:text-8xl leading-none tracking-tight text-foreground mb-6">
               400 Million People.<br />One Question.
@@ -246,18 +257,40 @@ export default function Home() {
               {heroSubhead}
             </p>
           </div>
+        </div>
 
-          {featuredLoading ? (
-            <div className="h-96 bg-secondary animate-pulse border border-border" />
-          ) : featuredPoll ? (
-            <div className="w-full">
-              <div className="text-[10px] uppercase tracking-[0.25em] font-bold text-primary mb-4 flex items-center gap-2 font-serif">
-                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-                Today's Lead Debate
+        {/* Opinion Bubbles + Featured Poll */}
+        <div className="relative pb-20">
+          {/* Floating opinion bubbles — desktop only */}
+          {OPINION_BUBBLES.map((b, i) => (
+            <div
+              key={i}
+              className="hidden xl:block absolute z-20 pointer-events-none"
+              style={{ ...b.pos, "--r": b.rotate, "--d": b.duration, "--dl": b.delay } as React.CSSProperties}
+            >
+              <div className="tmh-bubble pointer-events-auto">
+                <p>{b.text}</p>
+                <div className="tmh-reaction">
+                  <span className="tmh-reaction-heart">♥</span>
+                  <span className="tmh-reaction-count">{b.likes}</span>
+                </div>
               </div>
-              <PollCard poll={featuredPoll} featured />
             </div>
-          ) : null}
+          ))}
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            {featuredLoading ? (
+              <div className="h-96 bg-secondary animate-pulse border border-border" />
+            ) : featuredPoll ? (
+              <div className="w-full">
+                <div className="text-[10px] uppercase tracking-[0.25em] font-bold text-primary mb-4 flex items-center gap-2 font-serif">
+                  <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+                  Today's Lead Debate
+                </div>
+                <PollCard poll={featuredPoll} featured />
+              </div>
+            ) : null}
+          </div>
         </div>
       </section>
 
@@ -321,13 +354,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── THE HUSTLERS ── */}
+      {/* ── THE VOICES ── */}
       <section className="bg-foreground text-background py-20 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-4">
             <div>
               <h2 className="font-display font-black text-4xl md:text-5xl uppercase tracking-tight text-background leading-none">
-                The Hustlers
+                The Voices
               </h2>
               <div className="h-1 w-full bg-primary mt-3" />
             </div>
@@ -355,7 +388,7 @@ export default function Home() {
 
           <div className="mt-8">
             <Link href="/profiles" className="inline-flex items-center gap-2 bg-primary text-white font-bold uppercase tracking-widest text-xs px-8 py-3 hover:bg-primary/90 transition-colors font-serif">
-              View All Hustlers <ArrowRight className="w-3 h-3" />
+              View All Voices <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
         </div>
@@ -404,7 +437,7 @@ export default function Home() {
                 The Region's Opinion.<br />Unfiltered.
               </h2>
               <p className="text-background/60 font-sans text-base leading-relaxed max-w-xl">
-                Every Tuesday: one question, one country breakdown, one Hustler. The pulse of 400 million people — straight to your inbox.
+                Every Tuesday: one question, one country breakdown, one voice. The pulse of 400 million people — straight to your inbox.
               </p>
             </div>
             <div className="w-full md:basis-1/3">

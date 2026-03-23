@@ -247,3 +247,66 @@
     display: none;
   }
 }
+
+/* ── TMH v5 Opinion Bubble Float ── */
+@keyframes bblfloat {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50%       { transform: translateY(-9px) rotate(var(--r, 0deg)); }
+}
+
+/* ── TMH v5 Live pulse dot ── */
+@keyframes tmhpulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.6); opacity: 0.5; }
+}
+.tmh-pulse {
+  animation: tmhpulse 2s ease-in-out infinite;
+}
+
+/* ── TMH opinion bubble base ── */
+.tmh-bubble {
+  background: var(--color-card, #141414);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 0.65rem 0.9rem;
+  font-family: var(--app-font-sans);
+  font-size: 0.82rem;
+  color: rgba(250,250,250,0.65);
+  max-width: 210px;
+  line-height: 1.42;
+  cursor: default;
+  transition: border-color 0.2s;
+  animation: bblfloat var(--d, 7s) var(--dl, 0s) ease-in-out infinite;
+}
+.tmh-bubble:hover {
+  border-color: rgba(220,20,60,0.3);
+}
+.tmh-bubble .tmh-reaction {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  font-size: 0.72rem;
+}
+.tmh-bubble .tmh-reaction-heart {
+  color: #DC143C;
+}
+.tmh-bubble .tmh-reaction-count {
+  color: rgba(250,250,250,0.35);
+}
+
+/* light mode bubble override */
+:root .tmh-bubble {
+  background: #EDE6DC;
+  border-color: rgba(0,0,0,0.07);
+  color: rgba(26,26,26,0.65);
+}
+
+/* ── Share gate entrance ── */
+@keyframes gateSlideIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tmh-gate-card {
+  animation: gateSlideIn 0.3s ease-out both;
+}

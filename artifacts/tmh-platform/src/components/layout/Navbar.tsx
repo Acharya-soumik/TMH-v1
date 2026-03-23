@@ -21,7 +21,7 @@ export function Navbar() {
 
   const navLinks = [
     { label: "Polls", href: "/polls" },
-    { label: "The Hustlers", href: "/profiles" },
+    { label: "The Voices", href: "/profiles" },
     { label: "Rankings", href: "/rankings" },
     { label: "About", href: "/about" },
   ]
@@ -103,7 +103,7 @@ export function Navbar() {
               href="/apply"
               className="hidden sm:flex items-center gap-2 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.15em] px-4 py-2 hover:bg-primary/90 transition-colors font-serif"
             >
-              Become a Hustler
+              Join The Hustle
             </Link>
 
             <button
