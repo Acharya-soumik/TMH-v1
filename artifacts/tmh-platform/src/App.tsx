@@ -19,6 +19,7 @@ import Join from "@/pages/join"
 import Terms from "@/pages/terms"
 import FAQ from "@/pages/faq"
 import Admin from "@/pages/admin"
+import MenaPulse from "@/pages/mena-pulse"
 import NotFound from "@/pages/not-found"
 
 const queryClient = new QueryClient({
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/join" component={Join} />
       <Route path="/terms" component={Terms} />
       <Route path="/faq" component={FAQ} />
+      <Route path="/mena-pulse" component={MenaPulse} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>

@@ -7,6 +7,8 @@ import { Link } from "wouter"
 import { cn } from "@/lib/utils"
 import { ArrowRight } from "lucide-react"
 
+import { LiveNumber } from "@/components/live-counter/FlipDigit"
+
 const MENA_POP_BASE = 525_000_000
 const MENA_POP_BASE_DATE = new Date("2026-01-01T00:00:00Z").getTime()
 const MENA_GROWTH_RATE = 0.0156
@@ -23,54 +25,6 @@ function usePopulationCounter() {
     return () => clearInterval(id)
   }, [calcPop])
   return pop
-}
-
-function FlipDigit({ char, prevChar }: { char: string; prevChar: string }) {
-  const isNumber = char >= "0" && char <= "9"
-  const changed = char !== prevChar && isNumber
-
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        position: "relative",
-        overflow: "hidden",
-        height: "1em",
-        lineHeight: 1,
-      }}
-      className="tabular-nums"
-    >
-      <span
-        key={char}
-        style={{
-          display: "inline-block",
-          animation: changed ? "digit-flip-in 0.5s cubic-bezier(0.23,1,0.32,1) forwards" : "none",
-          color: changed ? "#DC143C" : "inherit",
-          transition: "color 1.5s ease",
-        }}
-      >
-        {char}
-      </span>
-    </span>
-  )
-}
-
-function LivePopNumber({ value, className, style }: { value: number; className?: string; style?: React.CSSProperties }) {
-  const formatted = value.toLocaleString("en-US")
-  const prevRef = useRef(formatted)
-  const prevFormatted = prevRef.current
-
-  useEffect(() => {
-    prevRef.current = formatted
-  }, [formatted])
-
-  return (
-    <span className={className} style={style} aria-label={`${value} people`}>
-      {formatted.split("").map((d, i) => (
-        <FlipDigit key={i} char={d} prevChar={prevFormatted[i] || d} />
-      ))}
-    </span>
-  )
 }
 
 const FLAG_MAP: Record<string, string> = {
@@ -270,7 +224,7 @@ export default function Home() {
             </h1>
             <p className="uppercase tracking-[0.22em] text-muted-foreground font-serif mt-3 flex flex-col items-center gap-1">
               <span className="text-[10px]">The voice of</span>
-              <LivePopNumber
+              <LiveNumber
                 value={menaPop}
                 className="font-display font-black tracking-tight"
                 style={{ fontSize: "clamp(1.5rem, 3vw, 2.2rem)", color: "#DC143C", letterSpacing: "-0.02em" }}
@@ -572,7 +526,7 @@ export default function Home() {
                 The Region's Opinion.<br />Unfiltered.
               </h2>
               <p className="text-background/60 font-sans text-base leading-relaxed max-w-xl">
-                Every Tuesday: one question, one country breakdown, one voice. The pulse of <LivePopNumber value={menaPop} className="tabular-nums" /> people — straight to your inbox.
+                Every Tuesday: one question, one country breakdown, one voice. The pulse of <LiveNumber value={menaPop} className="tabular-nums" /> people — straight to your inbox.
               </p>
             </div>
             <div className="w-full md:basis-1/3">
