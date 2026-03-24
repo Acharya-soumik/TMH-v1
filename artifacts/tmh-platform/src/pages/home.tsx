@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useGetFeaturedPoll, useListPolls, useListProfiles, useListCategories } from "@workspace/api-client-react"
 import { Layout } from "@/components/layout/Layout"
 import { PollCard } from "@/components/poll/PollCard"
@@ -6,6 +6,56 @@ import { ProfileCard } from "@/components/profile/ProfileCard"
 import { Link } from "wouter"
 import { cn } from "@/lib/utils"
 import { ArrowRight } from "lucide-react"
+
+const MENA_POP_BASE = 525_000_000
+const MENA_POP_BASE_DATE = new Date("2026-01-01T00:00:00Z").getTime()
+const MENA_GROWTH_RATE = 0.0156
+const MENA_POP_PER_MS = (MENA_POP_BASE * MENA_GROWTH_RATE) / (365.25 * 24 * 60 * 60 * 1000)
+
+function usePopulationCounter() {
+  const calcPop = useCallback(() => {
+    const elapsed = Date.now() - MENA_POP_BASE_DATE
+    return Math.floor(MENA_POP_BASE + elapsed * MENA_POP_PER_MS)
+  }, [])
+  const [pop, setPop] = useState(calcPop)
+  useEffect(() => {
+    const id = setInterval(() => setPop(calcPop()), 3800)
+    return () => clearInterval(id)
+  }, [calcPop])
+  return pop
+}
+
+function LivePopNumber({ value, className }: { value: number; className?: string }) {
+  const formatted = value.toLocaleString("en-US")
+  const prevRef = useRef(formatted)
+  const [digits, setDigits] = useState(formatted.split(""))
+
+  useEffect(() => {
+    const prev = prevRef.current
+    const next = formatted
+    prevRef.current = next
+    if (prev === next) return
+    setDigits(next.split(""))
+  }, [formatted])
+
+  return (
+    <span className={className} aria-label={`${value} people`}>
+      {digits.map((d, i) => (
+        <span
+          key={`${i}-${d}`}
+          style={{
+            display: "inline-block",
+            transition: "transform 0.6s cubic-bezier(0.23,1,0.32,1), opacity 0.4s ease",
+            ...(d !== formatted[i] ? {} : {}),
+          }}
+          className={d >= "0" && d <= "9" ? "tabular-nums" : ""}
+        >
+          {d}
+        </span>
+      ))}
+    </span>
+  )
+}
 
 const FLAG_MAP: Record<string, string> = {
   AE: "🇦🇪", SA: "🇸🇦", EG: "🇪🇬", JO: "🇯🇴", LB: "🇱🇧", KW: "🇰🇼",
@@ -149,6 +199,7 @@ export default function Home() {
   const { data: categories } = useListCategories()
   const [ctaEmail, setCtaEmail] = useState("")
   const [ctaJoined, setCtaJoined] = useState(() => !!localStorage.getItem("tmh_cta_joined"))
+  const menaPop = usePopulationCounter()
 
   const handleCtaSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -160,7 +211,7 @@ export default function Home() {
   const tickerPolls = trendingPolls?.polls ?? []
   const tickerText = tickerPolls.length
     ? tickerPolls.map(p => `${p.question} — ${(p.totalVotes ?? 0).toLocaleString()} votes`).join("  ·  ") + "  ·  "
-    : "New debate every 24 hours  ·  400 million people, one voice  ·  The Middle East unfiltered  ·  "
+    : `New debate every 24 hours  ·  ${menaPop.toLocaleString()} people, one voice  ·  The Middle East unfiltered  ·  `
 
   const issueDate = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
 
@@ -197,7 +248,7 @@ export default function Home() {
               The Middle East Hustle
             </h1>
             <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-serif mt-2">
-              The voice of 400 million.
+              The voice of <LivePopNumber value={menaPop} className="tabular-nums" />.
             </p>
           </div>
 
@@ -492,7 +543,7 @@ export default function Home() {
                 The Region's Opinion.<br />Unfiltered.
               </h2>
               <p className="text-background/60 font-sans text-base leading-relaxed max-w-xl">
-                Every Tuesday: one question, one country breakdown, one voice. The pulse of 400 million people — straight to your inbox.
+                Every Tuesday: one question, one country breakdown, one voice. The pulse of <LivePopNumber value={menaPop} className="tabular-nums" /> people — straight to your inbox.
               </p>
             </div>
             <div className="w-full md:basis-1/3">
