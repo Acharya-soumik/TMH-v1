@@ -74,7 +74,7 @@ artifacts-monorepo/
 - **Rankings** (`/rankings`) — Top Voices, Top Founders, Women Leaders, Hottest Sectors, Rising Cities, Debated Topics
 - **Weekly Pulse** (`/weekly-pulse`) — Editorial digest of biggest votes, surprises, sector sentiment
 - **The Pulse** (`/mena-pulse`) — "Exploding Topics for MENA" style trend dashboard. Matching header branding (dark bg, crimson label, bold title, ticker, stats bar). Features: live population counter, 12 trend cards covering MENA Creator Economy, AI Adoption, Women in Workforce, Crypto Volume, Mental Health, Gaming, Expat/Nationalization, Food Security, Youth Bulge, Saudi Tourism, Brain Drain, Cannabis Reform. Each card has colored category tags, sparkline charts, expandable blurbs with sources. Scrolling LIVE ticker uses `tmh-ticker-scroll` CSS class. `useLiveCounter` hook for real-time ticking numbers.
-- **About** (`/about`) — Platform manifesto
+- **About** (`/about`) — Platform manifesto with founder statement, "Why This Exists", 6 beliefs, numbers bar (94 Founding Voices, 135+ Active Debates, 12 Topic Categories, 541M Potential Voices), 20 MENA countries grid, "Our Ethos" editorial section, and CTAs
 
 ### Database Schema
 - `polls` — Poll questions with category, type, editorialStatus, and metadata

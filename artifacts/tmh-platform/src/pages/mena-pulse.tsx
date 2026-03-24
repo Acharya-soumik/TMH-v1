@@ -29,7 +29,7 @@ const EXPLODING_TOPICS: TopicCard[] = [
     delta: "+42%",
     deltaUp: true,
     blurb: "Arabic is now the 4th most-used language on TikTok. Saudi Arabia alone has 28M+ active TikTok users. The average MENA influencer earns 3x more per post than their European counterpart.",
-    source: "Arab Social Media Report / TikTok 2025",
+    source: "Arab Social Media Report / TikTok 2026",
     sparkData: [0.3, 0.4, 0.5, 0.55, 0.6, 0.7, 0.78, 0.85, 0.92, 1.0, 1.1, 1.2],
   },
   {
@@ -53,7 +53,7 @@ const EXPLODING_TOPICS: TopicCard[] = [
     delta: "+9.2pp since 2019",
     deltaUp: true,
     blurb: "Saudi female workforce participation jumped from 17% to 33% in 6 years — the fastest rise in recorded history for any G20 nation. UAE boards now require 30% female representation.",
-    source: "GASTAT / ILO 2025",
+    source: "GASTAT / ILO 2026",
     sparkData: [17, 19, 21, 23, 25, 26, 28, 29, 30, 31, 32, 33.4],
   },
   {
@@ -64,8 +64,8 @@ const EXPLODING_TOPICS: TopicCard[] = [
     stat: "$338B",
     delta: "+74%",
     deltaUp: true,
-    blurb: "UAE is now the world's 3rd largest crypto market by volume. Dubai issued more crypto licenses in 2025 than the entire EU combined. Bahrain became the first MENA nation to regulate stablecoins.",
-    source: "Chainalysis MENA Report 2025",
+    blurb: "UAE is now the world's 3rd largest crypto market by volume. Dubai issued more crypto licenses in 2026 than the entire EU combined. Bahrain became the first MENA nation to regulate stablecoins.",
+    source: "Chainalysis MENA Report 2026",
     sparkData: [89, 110, 125, 145, 160, 180, 210, 240, 268, 295, 318, 338],
   },
   {
@@ -76,7 +76,7 @@ const EXPLODING_TOPICS: TopicCard[] = [
     stat: "312% increase",
     delta: "+312%",
     deltaUp: true,
-    blurb: "\"Anxiety\" in Arabic is now the most-searched health term in 14 MENA countries. Saudi Arabia launched 1,600 mental health clinics. UAE made therapy sessions tax-deductible in 2025. Still: 1 psychiatrist per 250,000 people in Egypt.",
+    blurb: "\"Anxiety\" in Arabic is now the most-searched health term in 14 MENA countries. Saudi Arabia launched 1,600 mental health clinics. UAE made therapy sessions tax-deductible in 2026. Still: 1 psychiatrist per 250,000 people in Egypt.",
     source: "Google Trends MENA / WHO EMRO",
     sparkData: [30, 42, 55, 68, 82, 95, 110, 135, 168, 210, 265, 312],
   },
@@ -161,7 +161,7 @@ const EXPLODING_TOPICS: TopicCard[] = [
     stat: "3 countries decriminalizing",
     delta: "Morocco, Lebanon, Tunisia",
     deltaUp: true,
-    blurb: "Morocco legalized medical cannabis and became Africa's largest legal exporter ($420M in 2025). Lebanon passed cultivation laws for export. Tunisia is debating personal use decriminalization. Still: UAE punishes possession with prison.",
+    blurb: "Morocco legalized medical cannabis and became Africa's largest legal exporter ($420M in 2026). Lebanon passed cultivation laws for export. Tunisia is debating personal use decriminalization. Still: UAE punishes possession with prison.",
     source: "INCB / Reuters / Morocco Ministry of Interior",
     sparkData: [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3],
   },
@@ -347,7 +347,7 @@ function PulseTicker() {
             fontWeight: 600,
             letterSpacing: "0.08em",
             textTransform: "uppercase",
-            color: "rgba(255,255,255,0.6)",
+            color: "color-mix(in srgb, var(--background) 60%, transparent)",
             paddingLeft: 8,
           }}
         >
@@ -408,7 +408,7 @@ export default function MenaPulse() {
           <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
             What's Actually<br />Happening in MENA.
           </h1>
-          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.45)" }}>
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "color-mix(in srgb, var(--background) 45%, transparent)" }}>
             The trends nobody's tracking. Until now.
           </p>
         </div>
@@ -430,7 +430,7 @@ export default function MenaPulse() {
         </div>
       </div>
 
-      <div style={{ minHeight: "100vh", background: "var(--background)", color: "var(--foreground)", position: "relative" }}>
+      <div style={{ minHeight: "100vh", background: "#0A0A0A", color: "#fff", position: "relative" }}>
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "radial-gradient(ellipse at 50% 0%, rgba(220,20,60,0.04) 0%, transparent 60%)", pointerEvents: "none" }} />
 
         <div style={{ position: "relative", zIndex: 1 }}>

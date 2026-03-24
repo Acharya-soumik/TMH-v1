@@ -78,7 +78,7 @@ function VoicesTicker({ profiles }: { profiles: Array<{ name: string; company?: 
             fontSize: 11,
             fontWeight: 500,
             letterSpacing: "0.03em",
-            color: "rgba(255,255,255,0.65)",
+            color: "color-mix(in srgb, var(--background) 65%, transparent)",
             paddingLeft: 8,
           }}
         >
@@ -126,7 +126,7 @@ export default function Profiles() {
           <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
             Meet the People<br />Moving This Region.
           </h1>
-          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.45)" }}>
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "color-mix(in srgb, var(--background) 45%, transparent)" }}>
             Founders. Operators. Changemakers. Finally counted.
           </p>
         </div>
@@ -134,15 +134,15 @@ export default function Profiles() {
         {data?.profiles && <VoicesTicker profiles={data.profiles} />}
 
         <div style={{ background: "#0D0D0D", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "0.65rem 0", display: "flex", alignItems: "center", gap: "2.5rem", justifyContent: "center", flexWrap: "wrap" }}>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(250,250,250,0.5)" }}>
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "color-mix(in srgb, var(--background) 50%, transparent)" }}>
             <span style={{ color: "#DC143C", fontWeight: 900, fontSize: "0.85rem", marginRight: 6 }}>{data?.profiles?.length ?? "—"}</span> Voices
           </span>
-          <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.1)" }} />
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(250,250,250,0.5)" }}>
+          <span style={{ width: 1, height: 14, background: "color-mix(in srgb, var(--background) 10%, transparent)" }} />
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "color-mix(in srgb, var(--background) 50%, transparent)" }}>
             <span style={{ color: "#DC143C", fontWeight: 900, fontSize: "0.85rem", marginRight: 6 }}>{countries.length || "—"}</span> Countries
           </span>
-          <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.1)" }} />
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(250,250,250,0.5)" }}>
+          <span style={{ width: 1, height: 14, background: "color-mix(in srgb, var(--background) 10%, transparent)" }} />
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "color-mix(in srgb, var(--background) 50%, transparent)" }}>
             <span style={{ color: "#DC143C", fontWeight: 900, fontSize: "0.85rem", marginRight: 6 }}>1</span> Region
           </span>
         </div>
