@@ -77,14 +77,14 @@ export default function Terms() {
           <h1 className="font-display font-black text-4xl md:text-6xl uppercase tracking-tight">
             Terms &amp; Conditions
           </h1>
-          <p className="text-background/60 font-sans text-sm mt-4">
+          <p className="text-background/75 font-sans text-sm mt-4">
             Last updated: March 2026 · Governed by UAE Law
           </p>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
-        <div className="bg-secondary/30 border border-border p-6 mb-12 font-sans text-sm text-foreground/70 leading-relaxed">
+        <div className="bg-secondary/30 border border-border p-6 mb-12 font-sans text-sm text-foreground/80 leading-relaxed">
           <strong className="text-foreground font-bold">Plain English Summary:</strong> Vote anonymously. We capture your country (not your IP). If you give us your email, we'll send you the Weekly Pulse — you can unsubscribe any time. Don't fake votes or impersonate people. Everything on this platform is opinion, not science. We're based in Dubai and UAE law applies.
         </div>
 
@@ -94,7 +94,7 @@ export default function Terms() {
               <h2 className="font-serif font-black text-xl uppercase tracking-wide text-foreground mb-4 pb-2 border-b-2 border-primary inline-block">
                 {s.title}
               </h2>
-              <p className="font-sans text-foreground/75 leading-relaxed text-[15px]">{s.content}</p>
+              <p className="font-sans text-foreground/80 leading-relaxed text-[15px]">{s.content}</p>
             </section>
           ))}
         </div>

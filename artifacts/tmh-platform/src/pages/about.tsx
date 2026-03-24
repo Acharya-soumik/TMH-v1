@@ -83,7 +83,7 @@ export default function About() {
               <>The Region's First<br />Collective Mirror<span style={{ color: "#DC143C" }}>.</span></>
             )}
           </h1>
-          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.45)" }}>
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>
             {t("541 million people. Zero platforms asking what they think. Until now.")}
           </p>
         </div>
@@ -148,7 +148,7 @@ export default function About() {
             ].map(stat => (
               <div key={stat.label}>
                 <div className="font-display font-black text-4xl md:text-5xl text-primary leading-none mb-2">{stat.num}</div>
-                <div className="text-[10px] uppercase tracking-[0.2em] text-background/50 font-serif">{t(stat.label)}</div>
+                <div className="text-[10px] uppercase tracking-[0.2em] text-background/70 font-serif">{t(stat.label)}</div>
               </div>
             ))}
           </div>
@@ -213,7 +213,7 @@ export default function About() {
           <h2 className="font-serif font-black uppercase text-2xl text-foreground mb-2 border-l-4 border-primary pl-4">
             {t("The Region We Cover")}
           </h2>
-          <p className="text-sm text-foreground/60 font-sans mb-8 pl-5">
+          <p className="text-sm text-foreground/75 font-sans mb-8 pl-5">
             {t("19 countries. 541 million people. One platform.")}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
@@ -254,7 +254,7 @@ export default function About() {
           <h2 className="font-serif font-black uppercase text-2xl text-foreground mb-8 border-l-4 border-primary pl-4">
             {t("Our Ethos")}
           </h2>
-          <div className="space-y-6 text-base text-foreground/70 font-sans leading-relaxed">
+          <div className="space-y-6 text-base text-foreground/80 font-sans leading-relaxed">
             <p>
               {t("The Tribunal exists because the Middle East and North Africa is the most opinionated, least surveyed region on earth. There are 541 million people here — builders, dreamers, troublemakers — and no one has ever given them a single platform to say what they really think.")}
             </p>

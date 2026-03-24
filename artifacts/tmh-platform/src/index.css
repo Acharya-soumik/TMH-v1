@@ -106,7 +106,7 @@
   --secondary-foreground: 0 0% 20%;
 
   --muted: 30 10% 90%;
-  --muted-foreground: 0 0% 40%;
+  --muted-foreground: 0 0% 36%;
 
   --accent: 0 0% 10%;
   --accent-foreground: 0 0% 100%;
@@ -185,7 +185,7 @@
   --secondary-foreground: 30 10% 80%;
 
   --muted: 0 0% 10%;
-  --muted-foreground: 0 0% 48%;
+  --muted-foreground: 0 0% 63%;
 
   --accent: 30 10% 94%;
   --accent-foreground: 0 0% 6%;
@@ -292,7 +292,7 @@
   color: #DC143C;
 }
 .tmh-bubble .tmh-reaction-count {
-  color: rgba(250,250,250,0.35);
+  color: rgba(250,250,250,0.6);
 }
 
 /* light mode bubble override */

@@ -235,7 +235,7 @@ export default function Home() {
                 className="font-display font-black tracking-tight"
                 style={{ fontSize: "clamp(1.5rem, 3vw, 2.2rem)", color: "#DC143C", letterSpacing: "-0.02em" }}
               />
-              <span className="text-[8px] normal-case tracking-[0.08em] text-foreground/60 font-sans mt-0.5">
+              <span className="text-[8px] normal-case tracking-[0.08em] text-foreground/75 font-sans mt-0.5">
                 {t("(MENA population growing at ~8.2 million per year — roughly 1 new person every 4 seconds)")}
               </span>
             </p>
@@ -475,11 +475,11 @@ export default function Home() {
               </h2>
               <div className="h-1 w-full bg-primary mt-3" />
             </div>
-            <Link href="/profiles" className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-widest text-background/50 hover:text-background font-serif">
+            <Link href="/profiles" className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-widest text-background/70 hover:text-background font-serif">
               {t("View All →")}
             </Link>
           </div>
-          <p className="text-background/60 font-sans text-base mt-4 mb-10 max-w-xl">
+          <p className="text-background/75 font-sans text-base mt-4 mb-10 max-w-xl">
             {t("The founders, operators, and change-makers shaping the Middle East. Real people. Real stories.")}
           </p>
 
@@ -545,7 +545,7 @@ export default function Home() {
               <h2 className="font-display font-black text-4xl md:text-5xl uppercase leading-none tracking-tight text-background mb-4">
                 {t("The Region's Opinion.")}<br />{t("Unfiltered.")}
               </h2>
-              <p className="text-background/60 font-sans text-base leading-relaxed max-w-xl">
+              <p className="text-background/75 font-sans text-base leading-relaxed max-w-xl">
                 The questions no one else asks. The data no one else collects. The pulse of <LiveNumber value={menaPop} className="tabular-nums" /> people — straight to your inbox.
               </p>
             </div>
@@ -553,7 +553,7 @@ export default function Home() {
               {ctaJoined ? (
                 <div className="border-2 border-primary p-8 text-center">
                   <p className="font-display font-black text-3xl uppercase text-background tracking-tight">{t("You're In")}<span className="text-primary">.</span></p>
-                  <p className="text-[10px] uppercase tracking-widest text-background/50 mt-2 font-serif">{t("Welcome to the conversation.")}</p>
+                  <p className="text-[10px] uppercase tracking-widest text-background/70 mt-2 font-serif">{t("Welcome to the conversation.")}</p>
                 </div>
               ) : (
                 <form onSubmit={handleCtaSubmit} className="flex flex-col gap-3">
@@ -571,7 +571,7 @@ export default function Home() {
                   >
                     {t("Join The Hustle")}
                   </button>
-                  <p className="text-[9px] text-background/40 font-sans">{t("No spam. Unsubscribe anytime.")}</p>
+                  <p className="text-[9px] text-background/60 font-sans">{t("No spam. Unsubscribe anytime.")}</p>
                 </form>
               )}
             </div>

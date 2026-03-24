@@ -62,7 +62,7 @@ export default function Apply() {
           <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
             Think You Belong<br />In The Voices?
           </h1>
-          <p className="text-background/60 font-sans text-base mt-4 max-w-xl">
+          <p className="text-background/75 font-sans text-base mt-4 max-w-xl">
             We're building the most credible founder directory in the Middle East. Not everyone makes the cut. The bar is high — because our audience is discerning.
           </p>
         </div>

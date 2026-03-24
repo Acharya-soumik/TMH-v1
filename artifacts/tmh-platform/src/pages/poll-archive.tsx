@@ -39,7 +39,7 @@ export default function PollArchive() {
           <h1 className="font-display font-black text-5xl md:text-6xl uppercase tracking-tight text-background leading-none">
             Every Question<br />We've Ever Asked.
           </h1>
-          <p className="text-background/50 font-sans text-base mt-4">
+          <p className="text-background/70 font-sans text-base mt-4">
             {total > 0 ? `${total} debates. ${(polls.reduce((a, p) => a + (p.totalVotes ?? 0), 0)).toLocaleString()}+ votes. Browse them all.` : "Browse the full debate archive."}
           </p>
         </div>

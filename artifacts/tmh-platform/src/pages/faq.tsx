@@ -129,7 +129,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
         <ChevronDown className={cn("w-4 h-4 flex-shrink-0 mt-0.5 text-muted-foreground transition-transform duration-200", open && "rotate-180 text-primary")} />
       </button>
       {open && (
-        <p className="font-sans text-sm text-foreground/70 leading-relaxed pr-8">
+        <p className="font-sans text-sm text-foreground/80 leading-relaxed pr-8">
           {a}
         </p>
       )}
@@ -149,7 +149,7 @@ export default function FAQ() {
           <h1 style={{ fontFamily: isAr ? "'IBM Plex Sans Arabic', sans-serif" : "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
             {t("Frequently Asked Questions")}
           </h1>
-          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.45)" }}>
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>
             {t("Everything you need to know about The Tribunal.")}
           </p>
         </div>

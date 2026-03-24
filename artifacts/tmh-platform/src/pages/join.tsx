@@ -57,7 +57,7 @@ export default function Join() {
         <h1 className="font-display font-black text-4xl md:text-6xl uppercase tracking-tight leading-none mb-4">
           Welcome to<br />The Tribunal<span className="text-primary">.</span>
         </h1>
-        <p className="text-background/60 font-sans text-base max-w-md mx-auto">
+        <p className="text-background/75 font-sans text-base max-w-md mx-auto">
           The most honest conversation in the Middle East. Join the founders, operators, and change-makers already voting.
         </p>
       </div>

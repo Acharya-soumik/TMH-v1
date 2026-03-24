@@ -373,21 +373,21 @@ export default function Admin() {
               TMH<span className="text-primary">.</span>
             </span>
           </Link>
-          <span className="text-[10px] uppercase tracking-[0.3em] text-background/50 font-serif hidden sm:block">Admin</span>
+          <span className="text-[10px] uppercase tracking-[0.3em] text-background/70 font-serif hidden sm:block">Admin</span>
         </div>
         {stats && (
           <div className="flex items-center gap-6">
             <div className="text-center hidden sm:block">
               <div className="font-black text-lg text-primary leading-none">{stats.pendingApplications}</div>
-              <div className="text-[9px] uppercase tracking-widest text-background/50 font-serif">Pending</div>
+              <div className="text-[9px] uppercase tracking-widest text-background/70 font-serif">Pending</div>
             </div>
             <div className="text-center hidden sm:block">
               <div className="font-black text-lg text-background leading-none">{stats.totalVotes?.toLocaleString()}</div>
-              <div className="text-[9px] uppercase tracking-widest text-background/50 font-serif">Total Votes</div>
+              <div className="text-[9px] uppercase tracking-widest text-background/70 font-serif">Total Votes</div>
             </div>
             <div className="text-center hidden sm:block">
               <div className="font-black text-lg text-background leading-none">{stats.subscribers}</div>
-              <div className="text-[9px] uppercase tracking-widest text-background/50 font-serif">Subscribers</div>
+              <div className="text-[9px] uppercase tracking-widest text-background/70 font-serif">Subscribers</div>
             </div>
           </div>
         )}

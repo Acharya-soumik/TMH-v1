@@ -617,7 +617,7 @@ function TopicCardComponent({ topic, index }: { topic: TopicCard; index: number 
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.2)" }}>
+        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.45)" }}>
           {topic.live ? `${(liveValue / 1_000_000).toFixed(1)}M people` : topic.stat}
         </span>
         <MiniSparkline data={topic.sparkData} color={topic.tagColor} id={topic.id} />
@@ -628,7 +628,7 @@ function TopicCardComponent({ topic, index }: { topic: TopicCard; index: number 
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, marginBottom: 8 }}>
             {topic.blurb}
           </p>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 8, color: "rgba(255,255,255,0.15)", textTransform: "uppercase", letterSpacing: "0.15em" }}>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 8, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.15em" }}>
             {t("Source:")} {topic.source}
           </p>
         </div>
@@ -693,7 +693,7 @@ function BigNumber() {
           />
         </span>
       </div>
-      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 8, lineHeight: 1.5 }}>
+      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.55)", marginTop: 8, lineHeight: 1.5 }}>
         {t("Growing by ~8.2 million per year — roughly 1 new person every 4 seconds. 60% are under 30.")}
       </p>
     </div>
@@ -766,7 +766,7 @@ export default function MenaPulse() {
               <>What's Actually<br />Happening in MENA<span style={{ color: "#DC143C" }}>.</span></>
             )}
           </h1>
-          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.45)" }}>
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>
             {EXPLODING_TOPICS.length} {t("trends the region needs to confront. Updated quarterly.")}
           </p>
         </div>
@@ -806,14 +806,14 @@ export default function MenaPulse() {
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.5)" }}>
                 {t("Exploding Trends")}
               </span>
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, color: "rgba(255,255,255,0.2)", marginLeft: 8, letterSpacing: "0.05em" }}>
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, color: "rgba(255,255,255,0.5)", marginLeft: 8, letterSpacing: "0.05em" }}>
                 {t("Click any card for the full story")}
               </span>
             </div>
 
             <CategoryFilter active={activeCategory} onSelect={setActiveCategory} />
 
-            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.2)", marginBottom: 16, letterSpacing: "0.05em" }}>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 16, letterSpacing: "0.05em" }}>
               {t("Showing")} {filtered.length} {t("of")} {EXPLODING_TOPICS.length} {t("trends")}
               {activeCategory !== "ALL" && (
                 <button
@@ -833,7 +833,7 @@ export default function MenaPulse() {
           </div>
 
           <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 16px 48px", textAlign: "center" }}>
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, color: "rgba(255,255,255,0.12)", textTransform: "uppercase", letterSpacing: "0.12em", maxWidth: 640, margin: "0 auto", lineHeight: 1.8 }}>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.12em", maxWidth: 640, margin: "0 auto", lineHeight: 1.8 }}>
               Data compiled from Freedom House, World Bank, IMF, ILO, UNHCR, HRW, Amnesty International, WHO, Chainalysis, Citizen Lab, Arab Barometer, WEF, FAO, UNICEF & UN Population Division. Click any card for source attribution.
             </p>
           </div>

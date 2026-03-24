@@ -60,7 +60,7 @@ export default function WeeklyPulse() {
         {/* The Biggest Surprise */}
         <div className="bg-foreground text-background p-8 md:p-12 border-l-4 border-primary">
           <h2 className="font-serif font-black uppercase text-3xl mb-4 text-background tracking-wider">The Biggest Surprise</h2>
-          <p className="text-xl md:text-2xl text-background/80 font-serif italic leading-relaxed">
+          <p className="text-xl md:text-2xl text-background/85 font-serif italic leading-relaxed">
             "{data.biggestSurprise}"
           </p>
         </div>

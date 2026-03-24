@@ -55,7 +55,7 @@ export default function Rankings() {
         <div className="bg-background border border-border">
           <div className="p-6 border-b border-border bg-foreground text-background flex items-center justify-between">
             <h2 className="font-serif font-black uppercase text-2xl tracking-wide">{data?.title || 'Rankings'}</h2>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-background/50">Updated Weekly</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-background/70">Updated Weekly</span>
           </div>
 
           {isLoading ? (
