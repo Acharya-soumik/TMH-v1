@@ -38,16 +38,16 @@ export default function About() {
   return (
     <Layout>
       {/* Hero */}
-      <div className="bg-foreground text-background py-20 lg:py-32 border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-8 font-serif">
+      <div className="bg-foreground text-background border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-10">
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.28em", color: "#DC143C", marginBottom: "0.5rem" }}>
             Est. 2026 · Founded by Kareem Kaddoura
-          </div>
-          <h1 className="font-display font-black text-5xl md:text-7xl lg:text-8xl leading-none tracking-tight mb-8">
-            About TMH<span className="text-primary">.</span>
+          </p>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
+            About TMH
           </h1>
-          <p className="text-xl text-background/60 font-sans max-w-2xl leading-relaxed italic font-display" style={{ maxWidth: "760px" }}>
-            "The more I know, the more I don't. But at least now we're asking out loud."
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.45)" }}>
+            The more I know, the more I don't. But at least now we're asking out loud.
           </p>
         </div>
       </div>

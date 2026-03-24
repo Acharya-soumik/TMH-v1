@@ -251,42 +251,10 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Data Insight Box */}
-              <div className="mt-6 p-5 bg-foreground text-background">
-                <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-background/40 mb-3 font-serif">The Brief</p>
-                <div className="font-display font-black text-primary leading-none mb-2" style={{ fontSize: "2.5rem" }}>64%</div>
-                <p className="text-background/55 font-sans text-xs leading-relaxed">say their exit strategy is a real plan — not a backup option.</p>
-                <Link href="/sentiment-map" className="text-[9px] uppercase tracking-widest font-bold text-primary hover:text-background mt-3 inline-block font-serif">
-                  Read The Brief →
-                </Link>
-              </div>
             </div>
           </div>
         </div>
       </section>
-
-      {/* ── STAT STRIP ── */}
-      <div className="bg-foreground text-background border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-[9px] uppercase tracking-[0.35em] font-bold text-background/40 font-serif">The Region Has Spoken</p>
-          <div className="flex items-center gap-8 sm:gap-12">
-            <div className="text-center">
-              <span className="font-display font-black text-primary text-2xl leading-none">64%</span>
-              <p className="text-[9px] text-background/50 font-sans mt-1">say exit is a real plan</p>
-            </div>
-            <div className="w-px h-8 bg-background/10 hidden sm:block" />
-            <div className="text-center">
-              <span className="font-display font-black text-primary text-2xl leading-none">1 in 3</span>
-              <p className="text-[9px] text-background/50 font-sans mt-1">considered leaving</p>
-            </div>
-            <div className="w-px h-8 bg-background/10 hidden sm:block" />
-            <div className="text-center">
-              <span className="font-display font-black text-primary text-2xl leading-none">9 in 10</span>
-              <p className="text-[9px] text-background/50 font-sans mt-1">talk honestly in private</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* ── THIS WEEK'S DEBATES ── */}
       <section className="py-16 bg-background border-b border-border">
