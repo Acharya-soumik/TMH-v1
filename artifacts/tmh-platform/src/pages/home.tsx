@@ -542,14 +542,14 @@ export default function Home() {
                 The Region's Opinion.<br />Unfiltered.
               </h2>
               <p className="text-background/60 font-sans text-base leading-relaxed max-w-xl">
-                Every Tuesday: one question, one country breakdown, one voice. The pulse of <LiveNumber value={menaPop} className="tabular-nums" /> people — straight to your inbox.
+                The questions no one else asks. The data no one else collects. The pulse of <LiveNumber value={menaPop} className="tabular-nums" /> people — straight to your inbox.
               </p>
             </div>
             <div className="w-full md:basis-1/3">
               {ctaJoined ? (
                 <div className="border-2 border-primary p-8 text-center">
                   <p className="font-display font-black text-3xl uppercase text-primary tracking-tight">You're In.</p>
-                  <p className="text-[10px] uppercase tracking-widest text-background/50 mt-2 font-serif">Watch your inbox Tuesday.</p>
+                  <p className="text-[10px] uppercase tracking-widest text-background/50 mt-2 font-serif">Welcome to the conversation.</p>
                 </div>
               ) : (
                 <form onSubmit={handleCtaSubmit} className="flex flex-col gap-3">
