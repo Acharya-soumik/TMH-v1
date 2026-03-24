@@ -212,31 +212,36 @@ export default function Home() {
         {/* Opinion Bubbles — desktop only */}
         <div className="hidden lg:block pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           {[
-            { text: "The Gulf is ready.", top: "8%", left: "2%", size: 72, opacity: 0.07, delay: "0s" },
-            { text: "Not yet.", top: "25%", right: "1%", size: 56, opacity: 0.05, delay: "1s" },
-            { text: "We need more data.", bottom: "30%", left: "1%", size: 64, opacity: 0.06, delay: "2s" },
-            { text: "Disagree.", top: "60%", right: "3%", size: 48, opacity: 0.05, delay: "3s" },
-            { text: "100%", top: "15%", right: "5%", size: 44, opacity: 0.04, delay: "0.5s" },
-            { text: "Finally.", bottom: "15%", left: "3%", size: 52, opacity: 0.05, delay: "1.5s" },
-            { text: "About time.", bottom: "8%", right: "2%", size: 60, opacity: 0.06, delay: "2.5s" },
-            { text: "Bold take.", top: "45%", left: "0.5%", size: 50, opacity: 0.04, delay: "3.5s" },
+            { text: "71% say Saudi cinemas in every city by Dec", stat: "71%", top: "5%", left: "0.3%", w: 110, h: 50, delay: "0s" },
+            { text: "62% say UAE income tax will never happen", stat: "62%", top: "42%", left: "0.3%", w: 108, h: 50, delay: "1.2s" },
+            { text: "9 in 10 Gulf founders would start again in Dubai", stat: "89%", bottom: "28%", left: "0.5%", w: 112, h: 50, delay: "2s" },
+            { text: "3 in 4 say Arabic schools mandate is overdue", stat: "75%", bottom: "5%", left: "1%", w: 110, h: 50, delay: "1.8s" },
+            { text: "Only 44% think a $10B MENA startup is coming", stat: "44%", top: "75%", left: "0.3%", w: 110, h: 50, delay: "0.6s" },
+            { text: "18K predictions locked — jobs won't survive AI", stat: "18K", bottom: "8%", right: "0.3%", w: 110, h: 48, delay: "2.6s" },
+            { text: "Lebanon leads contrarian votes on every topic", stat: "LB", top: "50%", right: "0.3%", w: 108, h: 48, delay: "3.4s" },
+            { text: "Egyptians & Saudis split 50/50 on remote work", stat: "50%", top: "8%", right: "0.3%", w: 110, h: 48, delay: "3s" },
           ].map((bubble, i) => (
             <div
               key={i}
-              className="absolute rounded-full border border-primary/20 flex items-center justify-center animate-pulse"
+              className="absolute flex flex-col items-center justify-center text-center"
               style={{
-                width: bubble.size,
-                height: bubble.size,
-                top: bubble.top,
+                width: bubble.w,
+                height: bubble.h,
+                top: (bubble as any).top,
                 bottom: (bubble as any).bottom,
-                left: bubble.left,
+                left: (bubble as any).left,
                 right: (bubble as any).right,
-                opacity: bubble.opacity,
+                background: "rgba(220,20,60,0.06)",
+                border: "1px solid rgba(220,20,60,0.15)",
+                borderRadius: 8,
                 animationDelay: bubble.delay,
-                animationDuration: "4s",
+                animationDuration: "5s",
               }}
             >
-              <span className="text-[8px] font-serif font-bold uppercase text-primary text-center leading-tight px-1">
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 14, color: "#DC143C", opacity: 0.4, lineHeight: 1 }}>
+                {bubble.stat}
+              </span>
+              <span style={{ fontFamily: "DM Sans, sans-serif", fontSize: 7.5, color: "var(--muted-foreground)", opacity: 0.45, lineHeight: 1.25, marginTop: 3, padding: "0 6px" }}>
                 {bubble.text}
               </span>
             </div>
