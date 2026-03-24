@@ -72,7 +72,7 @@ export default function About() {
       <div className="bg-foreground text-background border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-10">
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.28em", color: "#DC143C", marginBottom: "0.5rem" }}>
-            Est. 2026 · Dubai · Founded by Kareem Kaddoura
+            Est. 2026 · Founded by Kareem Kaddoura
           </p>
           <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
             The Region's First<br />Collective Mirror.
@@ -275,7 +275,7 @@ export default function About() {
             "Bringing the voices of the Middle East<br />into one room. Finally."
           </p>
           <p className="text-sm text-muted-foreground font-sans mb-12">
-            — Kareem Kaddoura, Founder · The Middle East Hustle · Dubai, 2026
+            — Kareem Kaddoura, Founder · The Middle East Hustle · 2026
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
