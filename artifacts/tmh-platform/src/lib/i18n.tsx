@@ -260,18 +260,18 @@ const AR: Record<string, string> = {
   "Est. 2026 · Founded by Kareem Kaddoura": "تأسست ٢٠٢٦ · أسسها كريم قدورة",
   "The Region's First Collective Mirror": "أول مرآة جماعية في المنطقة",
   "541 million people. Zero platforms asking what they think. Until now.": "٥٤١ مليون شخص. ولا منصة سألتهم رأيهم. لحد هلق.",
-  "What Is The Tribunal?": "شو هو ذا تريبيونال؟",
+  "What Is The Tribunal?": "شو هي المحكمة؟",
 
   "Frequently Asked Questions": "الأسئلة الشائعة",
-  "Everything you need to know about The Tribunal.": "كل شي لازم تعرفه عن ذا تريبيونال.",
+  "Everything you need to know about The Tribunal.": "كل شي لازم تعرفه عن المحكمة.",
   "Help": "مساعدة",
 
   "The Platform": "المنصة",
 
-  "The Tribunal is MENA's first opinion intelligence platform — part editorial, part data engine, part social experiment. A product by The Middle East Hustle.": "ذا تريبيونال هي أول منصة ذكاء رأي بالمنطقة — جزء تحريري، جزء محرك بيانات، جزء تجربة اجتماعية. منتج من ذا ميدل إيست هاسل.",
+  "The Tribunal is MENA's first opinion intelligence platform — part editorial, part data engine, part social experiment. A product by The Middle East Hustle.": "المحكمة هي أول منصة ذكاء رأي بالمنطقة — جزء تحريري، جزء محرك بيانات، جزء تجربة اجتماعية. منتج من ذا ميدل إيست هاسل.",
   "We ask the questions nobody else asks. We collect anonymous votes from across 19 countries. We track predictions over time. We surface the trends reshaping the region. And we profile the people building it.": "نسأل الأسئلة اللي ما حدا بيسألها. نجمع أصوات مجهولة من ١٩ دولة. نتتبع التوقعات عبر الوقت. نظهر الترندات اللي عم تغيّر المنطقة. ونعرّف بالناس اللي عم يبنوها.",
   "Think of it as the WSJ of MENA opinion — editorial in presentation, ruthlessly neutral in methodology, and built for the 541 million people who live, work, and build in the Middle East and North Africa.": "فكّر فيها كـ WSJ لرأي المنطقة — تحريرية بالعرض، محايدة بالمنهجية، ومبنية لـ ٥٤١ مليون شخص اللي عايشين وشغالين وبانين بالشرق الأوسط وشمال أفريقيا.",
-  "Everything on The Tribunal — every debate, every prediction, every trend, every Voice — adds to a living dataset of what the region actually thinks. Not what governments report. Not what Western media assumes. What real people vote for when nobody's watching.": "كل شي على ذا تريبيونال — كل مناظرة، كل توقع، كل ترند، كل صوت — بيضيف لداتاسيت حيّة عن شو المنطقة فعلاً بتفكر. مش شو الحكومات بتقول. مش شو الإعلام الغربي بيفترض. شو الناس الحقيقيين بيصوتوا لما ما حدا عم يراقبهم.",
+  "Everything on The Tribunal — every debate, every prediction, every trend, every Voice — adds to a living dataset of what the region actually thinks. Not what governments report. Not what Western media assumes. What real people vote for when nobody's watching.": "كل شي على المحكمة — كل مناظرة، كل توقع، كل ترند، كل صوت — بيضيف لداتاسيت حيّة عن شو المنطقة فعلاً بتفكر. مش شو الحكومات بتقول. مش شو الإعلام الغربي بيفترض. شو الناس الحقيقيين بيصوتوا لما ما حدا عم يراقبهم.",
 
   "Enter the Debates": "ادخل المناظرات",
   "Make a Prediction": "سجّل توقع",
@@ -292,7 +292,7 @@ const AR: Record<string, string> = {
   "This started as a question I kept asking at dinner tables, in taxis, in boardrooms, and in WhatsApp groups at midnight: what does the Middle East actually think?": "بدأت كسؤال كنت دايماً أسأله على طاولات العشا، بالتاكسيات، بغرف الاجتماعات، وبمجموعات الواتساب بنص الليل: شو الشرق الأوسط فعلاً بيفكر؟",
   "Not what we're told it thinks. Not what leaders say it thinks. Not what Western media assumes it thinks. What the 541 million people who live here, work here, raise children here, and build things here — actually think.": "مش شو بيقولولنا إنه بيفكر. مش شو القادة بيقولوا. مش شو الإعلام الغربي بيفترض. شو الـ ٥٤١ مليون شخص اللي عايشين هون، شغالين هون، عم يربوا ولادهم هون، وبانين أشياء هون — فعلاً بيفكروا.",
   "There was no single place to find out. So I built one.": "ما كان في مكان واحد لنعرف. فبنيت واحد.",
-  "\"The Tribunal is a social experiment disguised as a platform. Every debate is a room I'm placing the region inside. Every vote is a voice that would otherwise never be counted. Every prediction is a bet on where we're headed.\"": "\"ذا تريبيونال تجربة اجتماعية متخفية كمنصة. كل مناظرة غرفة عم حط المنطقة جواها. كل صوت رأي ما كان ليُحسب أبداً. كل توقع رهان على وين رايحين.\"",
+  "\"The Tribunal is a social experiment disguised as a platform. Every debate is a room I'm placing the region inside. Every vote is a voice that would otherwise never be counted. Every prediction is a bet on where we're headed.\"": "\"المحكمة تجربة اجتماعية متخفية كمنصة. كل مناظرة غرفة عم حط المنطقة جواها. كل صوت رأي ما كان ليُحسب أبداً. كل توقع رهان على وين رايحين.\"",
   "I don't have the answers. Nobody does. But for the first time, we're collecting them — honestly, anonymously, at scale. Every vote, every prediction, every profile adds to a picture of the region that has never existed before.": "ما عندي الأجوبة. ما حدا عنده. بس لأول مرة، عم نجمعهم — بصدق، بسرية، وعلى نطاق واسع. كل صوت، كل توقع، كل بروفايل بيضيف لصورة عن المنطقة ما كانت موجودة قبل.",
   "— Kareem Kaddoura, Founder": "— كريم قدورة، المؤسس",
 
@@ -334,19 +334,19 @@ const AR: Record<string, string> = {
   "Bahrain": "البحرين",
 
   "Our Ethos": "رؤيتنا",
-  "The Tribunal exists because the Middle East and North Africa is the most opinionated, least surveyed region on earth. There are 541 million people here — builders, dreamers, troublemakers — and no one has ever given them a single platform to say what they really think.": "ذا تريبيونال موجودة لأنه الشرق الأوسط وشمال أفريقيا هي أكتر منطقة عندها آراء وأقل منطقة تُستطلع على الأرض. في ٥٤١ مليون شخص هون — بنّائين، حالمين، مشاغبين — وما حدا أعطاهم منصة وحدة ليقولوا شو فعلاً بيفكروا.",
+  "The Tribunal exists because the Middle East and North Africa is the most opinionated, least surveyed region on earth. There are 541 million people here — builders, dreamers, troublemakers — and no one has ever given them a single platform to say what they really think.": "المحكمة موجودة لأنه الشرق الأوسط وشمال أفريقيا هي أكتر منطقة عندها آراء وأقل منطقة تُستطلع على الأرض. في ٥٤١ مليون شخص هون — بنّائين، حالمين، مشاغبين — وما حدا أعطاهم منصة وحدة ليقولوا شو فعلاً بيفكروا.",
   "We are not a news outlet. We are not a think tank. We do not do sponsored polls or PR research. Every question on this platform is designed to surface the truth — not a narrative.": "نحنا مش وسيلة إعلامية. مش مركز أبحاث. ما منعمل استطلاعات ممولة أو أبحاث علاقات عامة. كل سؤال على المنصة مصمم ليطلّع الحقيقة — مش رواية.",
   "We believe that anonymous, honest data from real people is more valuable than any op-ed, any government report, any think-tank white paper. We believe the region knows itself better than anyone watching from the outside.": "منؤمن إنه البيانات المجهولة والصادقة من ناس حقيقيين أقيم من أي مقال رأي، أي تقرير حكومي، أي ورقة بيضاء من مركز أبحاث. منؤمن إنه المنطقة بتعرف حالها أحسن من أي حدا عم يراقب من برا.",
   "The questions are provocative because the region deserves provocative questions. The data is honest because anything less is a waste of everyone's time.": "الأسئلة استفزازية لأنه المنطقة تستاهل أسئلة استفزازية. البيانات صادقة لأنه أي شي أقل هو إضاعة وقت الكل.",
   "This is MENA's living dataset — and it grows with every vote.": "هاي الداتاسيت الحيّة للمنطقة — وبتكبر مع كل صوت.",
 
   "\"Bringing the voices of the Middle East into one room. Finally.\"": "\"جمع أصوات الشرق الأوسط بغرفة وحدة. أخيراً.\"",
-  "— Kareem Kaddoura, Founder · The Tribunal, by The Middle East Hustle · 2026": "— كريم قدورة، المؤسس · ذا تريبيونال، من ذا ميدل إيست هاسل · ٢٠٢٦",
+  "— Kareem Kaddoura, Founder · The Tribunal, by The Middle East Hustle · 2026": "— كريم قدورة، المؤسس · المحكمة، من ذا ميدل إيست هاسل · ٢٠٢٦",
   "Cast Your Vote": "صوّت الآن",
 
-  "What is The Tribunal?": "شو هو ذا تريبيونال؟",
-  "Is The Tribunal free to use?": "هل ذا تريبيونال مجاني؟",
-  "Who is behind The Tribunal?": "مين ورا ذا تريبيونال؟",
+  "What is The Tribunal?": "شو هي المحكمة؟",
+  "Is The Tribunal free to use?": "هل المحكمة مجانية؟",
+  "Who is behind The Tribunal?": "مين ورا المحكمة؟",
   "Are the polls scientific?": "هل الاستطلاعات علمية؟",
 
   "How do the debates work?": "كيف تشتغل المناظرات؟",
@@ -369,7 +369,7 @@ const AR: Record<string, string> = {
   "Do you track my IP address?": "بتتبعوا عنوان الـIP تبعي؟",
   "Where does the country data in results come from?": "من وين بتيجي بيانات الدول بالنتائج؟",
   "Still have questions?": "عندك أسئلة تانية؟",
-  "About The Tribunal →": "← عن ذا تريبيونال",
+  "About The Tribunal →": "← عن المحكمة",
   "Apply to be a Voice →": "← قدّم طلب لتصير صوت",
   "Terms & Conditions →": "← الشروط والأحكام",
 
@@ -386,7 +386,7 @@ const AR: Record<string, string> = {
   "Think You Belong In The Voices?": "بتحس إنك لازم تكون من الأصوات؟",
   "Apply Now →": "← قدّم الآن",
 
-  "Welcome to The Tribunal": "أهلاً بذا تريبيونال",
+  "Welcome to The Tribunal": "أهلاً بالمحكمة",
   "The most honest conversation in the Middle East. Join the founders, operators, and change-makers already voting.": "أصدق محادثة بالشرق الأوسط. انضم للمؤسسين والمشغلين وصنّاع التغيير اللي عم يصوتوا.",
   "You've just unlocked something real.": "فتحت شي حقيقي.",
 
