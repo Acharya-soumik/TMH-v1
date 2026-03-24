@@ -179,18 +179,20 @@ export default function Home() {
   }
 
   const tickerPolls = trendingPolls?.polls ?? []
-  const tickerText = tickerPolls.length
-    ? tickerPolls.map(p => `${p.question} — ${(p.totalVotes ?? 0).toLocaleString()} votes`).join("  ·  ") + "  ·  "
-    : `New debate every 24 hours  ·  ${menaPop.toLocaleString()} people, one voice  ·  The Middle East unfiltered  ·  `
+  const tickerItems = tickerPolls.length
+    ? tickerPolls.map(p => ({ topic: p.question?.length > 40 ? p.question.substring(0, 38) + "…" : p.question ?? "Debate", votes: (p.totalVotes ?? 0).toLocaleString() }))
+    : [
+        { topic: "New Debate Every 24 Hours", votes: "—" },
+        { topic: "The Middle East Unfiltered", votes: "—" },
+        { topic: `${menaPop.toLocaleString()} People, One Voice`, votes: "—" },
+      ]
+  const tickerDoubled = [...tickerItems, ...tickerItems]
 
   const issueDate = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
 
   return (
     <Layout>
       <style>{`
-        @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .ticker-animate { animation: ticker 40s linear infinite; white-space: nowrap; }
-        .ticker-animate:hover { animation-play-state: paused; }
         @keyframes fadein { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
         .section-fadein { animation: fadein 0.5s ease forwards; }
         @keyframes bubble-float-1 { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
@@ -239,14 +241,28 @@ export default function Home() {
       </div>
 
       {/* ── NEWS TICKER ── */}
-      <div className="h-9 flex items-center overflow-hidden" style={{ background: "#DC143C" }}>
-        <span className="flex-shrink-0 bg-white px-3 py-0.5 mx-2 rounded-[20px] font-bold text-[11px] uppercase tracking-[0.07em] font-serif z-10" style={{ color: "#DC143C", fontWeight: 900 }}>
-          LIVE
-        </span>
-        <div className="flex-1 overflow-hidden">
-          <span className="ticker-animate inline-block text-[11px] uppercase tracking-[0.07em] font-bold text-white/90 font-serif px-2">
-            {(tickerText + tickerText)}
-          </span>
+      <div style={{ background: "#0D0D0D", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
+        <div className="tmh-ticker-scroll">
+          {tickerDoubled.map((item, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex", alignItems: "center", gap: "0.6rem",
+                padding: "0.7rem 2rem",
+                borderRight: "1px solid rgba(255,255,255,0.1)",
+              }}
+            >
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(250,250,250,0.5)", whiteSpace: "nowrap" }}>
+                {item.topic}
+              </span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.85rem", color: "#fff" }}>
+                {item.votes}
+              </span>
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", color: "#DC143C" }}>
+                VOTES
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 

@@ -31,60 +31,39 @@ function VoicesTicker({ profiles }: { profiles: Array<{ name: string; company?: 
     .filter(p => p.company && p.name)
     .map(p => {
       const impact = IMPACT_STATEMENTS[p.company || ""]
-      if (impact) return `${p.name.split(" ")[0].toUpperCase()}, ${p.company} · ${impact}`
-      if (p.quote && p.quote.length > 10 && p.quote.length < 100) {
-        return `${p.name.split(" ")[0].toUpperCase()}, ${p.company} · "${p.quote.replace(/^["']|["']$/g, "")}"`
-      }
-      return null
+      const statement = impact || (p.quote && p.quote.length > 10 && p.quote.length < 80 ? `"${p.quote.replace(/^["']|["']$/g, "")}"` : null)
+      if (!statement) return null
+      return { name: p.name.split(" ")[0].toUpperCase(), company: p.company!, statement }
     })
-    .filter(Boolean)
+    .filter((x): x is { name: string; company: string; statement: string } => x !== null)
 
   if (items.length === 0) return null
 
-  const tickerText = items.join("    ·    ")
+  const doubled = [...items, ...items]
 
   return (
-    <div style={{
-      background: "rgba(220,20,60,0.06)",
-      borderTop: "1px solid rgba(220,20,60,0.12)",
-      borderBottom: "1px solid rgba(220,20,60,0.12)",
-      height: 38,
-      display: "flex",
-      alignItems: "center",
-      overflow: "hidden",
-      position: "relative",
-    }}>
-      <div style={{
-        flexShrink: 0,
-        background: "#DC143C",
-        padding: "3px 10px",
-        marginLeft: 8,
-        marginRight: 12,
-        fontFamily: "'Barlow Condensed', sans-serif",
-        fontSize: 9,
-        fontWeight: 900,
-        letterSpacing: "0.12em",
-        textTransform: "uppercase",
-        color: "#fff",
-        zIndex: 2,
-      }}>
-        IMPACT
-      </div>
-      <div style={{ flex: 1, overflow: "hidden" }}>
-        <span
-          className="tmh-ticker-scroll"
-          style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 11,
-            fontWeight: 500,
-            letterSpacing: "0.03em",
-            color: "color-mix(in srgb, var(--background) 65%, transparent)",
-            paddingLeft: 8,
-          }}
-        >
-          <span>{tickerText}</span>
-          <span style={{ marginLeft: 40 }}>{tickerText}</span>
-        </span>
+    <div style={{ background: "#0D0D0D", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
+      <div className="tmh-ticker-scroll">
+        {doubled.map((item, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex", alignItems: "center", gap: "0.6rem",
+              padding: "0.7rem 2rem",
+              borderRight: "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(250,250,250,0.5)" }}>
+              {item.name}
+            </span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.85rem", color: "#fff", whiteSpace: "nowrap" }}>
+              {item.company}
+            </span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", color: "#DC143C", whiteSpace: "nowrap" }}>
+              {item.statement}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   )

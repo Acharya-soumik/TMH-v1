@@ -331,29 +331,31 @@ function TopicCardComponent({ topic, index }: { topic: TopicCard; index: number 
 }
 
 function PulseTicker() {
-  const text = TICKER_ITEMS.map(t => `${t.label}  ${t.value}  ${t.up ? "\u25B2" : "\u25BC"} ${t.delta}`).join("    \u00B7    ")
+  const doubled = [...TICKER_ITEMS, ...TICKER_ITEMS]
 
   return (
-    <div style={{ background: "rgba(220,20,60,0.06)", borderTop: "1px solid rgba(220,20,60,0.12)", borderBottom: "1px solid rgba(220,20,60,0.12)", height: 38, display: "flex", alignItems: "center", overflow: "hidden", position: "relative" }}>
-      <div style={{ flexShrink: 0, background: "#DC143C", padding: "3px 10px", marginLeft: 8, marginRight: 12, fontFamily: "'Barlow Condensed', sans-serif", fontSize: 9, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", color: "#fff", zIndex: 2 }}>
-        LIVE
-      </div>
-      <div style={{ flex: 1, overflow: "hidden" }}>
-        <span
-          className="tmh-ticker-scroll"
-          style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: "color-mix(in srgb, var(--background) 60%, transparent)",
-            paddingLeft: 8,
-          }}
-        >
-          <span>{text}</span>
-          <span style={{ marginLeft: 60 }}>{text}</span>
-        </span>
+    <div style={{ background: "#0D0D0D", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
+      <div className="tmh-ticker-scroll">
+        {doubled.map((item, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex", alignItems: "center", gap: "0.6rem",
+              padding: "0.7rem 2rem",
+              borderRight: "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(250,250,250,0.5)" }}>
+              {item.label}
+            </span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.85rem", color: "#fff" }}>
+              {item.value}
+            </span>
+            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", color: item.up ? "#10B981" : "#DC143C" }}>
+              {item.up ? "▲" : "▼"} {item.delta}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   )

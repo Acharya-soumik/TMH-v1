@@ -52,7 +52,7 @@ export default function Polls() {
           </p>
         </div>
 
-        <div style={{ background: "#0D0D0D", borderTop: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
+        <div style={{ background: "#0D0D0D", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
           <div className="tmh-ticker-scroll">
             {doubled.map((item, i) => (
               <div
@@ -66,10 +66,10 @@ export default function Polls() {
                 <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(250,250,250,0.5)" }}>
                   {item.topic}
                 </span>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.82rem", color: "#fff" }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.85rem", color: "#fff" }}>
                   {item.votes}
                 </span>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.68rem", color: "#DC143C" }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", color: "#DC143C" }}>
                   VOTES
                 </span>
               </div>
