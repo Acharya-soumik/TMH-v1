@@ -229,6 +229,36 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ── SECTION HOOKS ── */}
+      <section className="bg-background border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="grid grid-cols-4 gap-0 divide-x divide-border">
+            {[
+              { href: "/polls", label: t("Debates"), desc: "Vote on the questions shaping MENA", count: "422", accent: "#DC143C" },
+              { href: "/predictions", label: t("Predictions"), desc: "Bet on what actually happens next", count: "230", accent: "#3B82F6" },
+              { href: "/mena-pulse", label: t("The Pulse"), desc: "Real trends backed by real data", count: "78", accent: "#10B981" },
+              { href: "/profiles", label: t("Voices"), desc: "The people shaping the region", count: "103", accent: "#A855F7" },
+            ].map(item => (
+              <Link key={item.href} href={item.href} className="group flex flex-col items-center justify-center gap-1 py-3 px-4 hover:bg-secondary/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <span style={{ width: 3, height: 20, background: item.accent, flexShrink: 0 }} />
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--foreground)" }}>
+                    {item.label}
+                  </span>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "0.85rem", color: item.accent }}>
+                    {item.count}
+                  </span>
+                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
+                </div>
+                <span style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.6rem", color: "var(--muted-foreground)", letterSpacing: "0.02em" }}>
+                  {item.desc}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── MIXED TICKER ── */}
       <div style={{ background: "#0D0D0D", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
         <div className="tmh-ticker-scroll">
@@ -261,35 +291,6 @@ export default function Home() {
           ))}
         </div>
       </div>
-
-      {/* ── SECTION HOOKS ── */}
-      <section className="bg-background border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="grid grid-cols-3 gap-0 divide-x divide-border">
-            {[
-              { href: "/polls", label: t("Debates"), desc: "Vote on the questions shaping MENA", count: "422", accent: "#DC143C" },
-              { href: "/predictions", label: t("Predictions"), desc: "Bet on what actually happens next", count: "230", accent: "#3B82F6" },
-              { href: "/mena-pulse", label: t("The Pulse"), desc: "Real trends backed by real data", count: "78", accent: "#10B981" },
-            ].map(item => (
-              <Link key={item.href} href={item.href} className="group flex flex-col items-center justify-center gap-1 py-3 px-4 hover:bg-secondary/30 transition-colors">
-                <div className="flex items-center gap-3">
-                  <span style={{ width: 3, height: 20, background: item.accent, flexShrink: 0 }} />
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--foreground)" }}>
-                    {item.label}
-                  </span>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "0.85rem", color: item.accent }}>
-                    {item.count}
-                  </span>
-                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
-                </div>
-                <span style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.6rem", color: "var(--muted-foreground)", letterSpacing: "0.02em" }}>
-                  {item.desc}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ── FRONT PAGE: Lead Debate + Sidebar ── */}
       <section className="py-8 bg-background border-b border-border section-fadein relative">
