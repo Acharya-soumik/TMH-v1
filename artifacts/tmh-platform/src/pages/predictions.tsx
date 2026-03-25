@@ -14,7 +14,7 @@ import {
   LineChart,
 } from "recharts"
 
-// ─── DATA ───────────────────────────────────────────────────────────────────
+import { PREDICTIONS, PREDICTION_CATEGORIES, PREDICTIONS_TICKER, type PredictionCard } from "@/data/predictions-data"
 
 const FEATURED_RAW = [58, 59, 60, 61, 62, 63, 64, 62, 65, 67, 69, 71]
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -25,57 +25,7 @@ const FEATURED_DATA = FEATURED_RAW.map((yes, i) => {
   return { month: MONTHS[i], yes, ma: Math.round(ma * 10) / 10 }
 })
 
-const TICKER_DATA = [
-  { label: "CINEMA SAUDI", yes: 71, delta: 2.1, up: true },
-  { label: "$10B STARTUP", yes: 44, delta: 1.3, up: false },
-  { label: "UAE INCOME TAX", yes: 38, delta: 0.8, up: true },
-  { label: "ARABIC SCHOOLS", yes: 58, delta: 1.4, up: true },
-  { label: "MENA CANNABIS", yes: 29, delta: 0.6, up: false },
-  { label: "JOB SURVIVAL", yes: 71, delta: 2.1, up: true },
-]
-
-const GRID_CARDS = [
-  {
-    id: 1,
-    category: "Culture & Policy",
-    resolves: "Dec 2026",
-    question: "Saudi Arabia Will Have a Fully Operating Cinema in Every Major City by End of 2026",
-    count: "12,847",
-    yes: 71, no: 29,
-    momentum: 2.1, up: true,
-    data: [62, 63, 65, 64, 66, 68, 70, 71],
-  },
-  {
-    id: 2,
-    category: "Business",
-    resolves: "Dec 2026",
-    question: "A MENA-Founded Startup Will Reach $10B Valuation in 2026",
-    count: "9,231",
-    yes: 44, no: 56,
-    momentum: 1.3, up: false,
-    data: [48, 47, 46, 48, 46, 45, 44, 44],
-  },
-  {
-    id: 3,
-    category: "Economy",
-    resolves: "Mar 2029",
-    question: "UAE Will Introduce Some Form of Personal Income Tax Within 3 Years",
-    count: "15,603",
-    yes: 38, no: 62,
-    momentum: 0.8, up: true,
-    data: [35, 35, 36, 36, 37, 37, 38, 38],
-  },
-  {
-    id: 4,
-    category: "Education",
-    resolves: "Sep 2027",
-    question: "Arabic Will Become a Mandatory Subject in All Dubai Private Schools Within 2 Years",
-    count: "8,094",
-    yes: 58, no: 42,
-    momentum: 1.4, up: true,
-    data: [51, 52, 53, 54, 55, 56, 57, 58],
-  },
-]
+const TICKER_DATA = PREDICTIONS_TICKER
 
 const CLOSED_RAW = [55, 58, 60, 62, 63, 65, 67, 67, 67, 80]
 const CLOSED_DATA = CLOSED_RAW.map((yes, i) => ({ week: i + 1, yes }))
@@ -363,7 +313,7 @@ function FeaturedPrediction() {
 
 // ─── PREDICTION GRID CARD ────────────────────────────────────────────────────
 
-function PredictionGridCard({ card }: { card: typeof GRID_CARDS[0] }) {
+function PredictionGridCard({ card }: { card: PredictionCard }) {
   return (
     <div
       style={{
@@ -498,15 +448,26 @@ function ClosedPredictionCard() {
 
 export default function Predictions() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [activeCategory, setActiveCategory] = useState("ALL")
+  const [visibleCount, setVisibleCount] = useState(20)
 
   const filteredCards = useMemo(() => {
-    if (!searchQuery.trim()) return GRID_CARDS
-    const q = searchQuery.toLowerCase()
-    return GRID_CARDS.filter(c =>
-      c.question.toLowerCase().includes(q) ||
-      c.category.toLowerCase().includes(q)
-    )
-  }, [searchQuery])
+    let result = PREDICTIONS
+    if (activeCategory !== "ALL") {
+      result = result.filter(c => c.category === activeCategory)
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter(c =>
+        c.question.toLowerCase().includes(q) ||
+        c.category.toLowerCase().includes(q) ||
+        c.resolves.toLowerCase().includes(q)
+      )
+    }
+    return result
+  }, [searchQuery, activeCategory])
+
+  const isFiltering = searchQuery || activeCategory !== "ALL"
 
   return (
     <Layout>
@@ -520,7 +481,7 @@ export default function Predictions() {
             What Do You Think<br />Actually Happens?
           </h1>
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>
-            Not what should happen. What will.
+            {PREDICTIONS.length} predictions across {PREDICTION_CATEGORIES.length} categories. Not what should happen. What will.
           </p>
           <div className="mt-6 max-w-md relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(250,250,250,0.4)" }} />
@@ -528,7 +489,7 @@ export default function Predictions() {
               type="text"
               placeholder="Search predictions..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={e => { setSearchQuery(e.target.value); setVisibleCount(20) }}
               style={{
                 width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
                 padding: "10px 36px 10px 36px", fontSize: "0.8rem", fontFamily: "DM Sans, sans-serif",
@@ -544,15 +505,72 @@ export default function Predictions() {
         </div>
       </div>
 
+      {/* Stats bar */}
+      <div style={{ background: "#0D0D0D", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0.65rem 0", display: "flex", alignItems: "center", gap: "2.5rem", justifyContent: "center", flexWrap: "wrap" }}>
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(250,250,250,0.5)" }}>
+          <span style={{ color: "#DC143C", fontWeight: 900, fontSize: "0.85rem", marginRight: 6 }}>{PREDICTIONS.length}</span> Predictions
+        </span>
+        <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.1)" }} />
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(250,250,250,0.5)" }}>
+          <span style={{ color: "#DC143C", fontWeight: 900, fontSize: "0.85rem", marginRight: 6 }}>{PREDICTION_CATEGORIES.length}</span> Categories
+        </span>
+        <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.1)" }} />
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(250,250,250,0.5)" }}>
+          <span style={{ color: "#DC143C", fontWeight: 900, fontSize: "0.85rem", marginRight: 6 }}>19</span> Countries
+        </span>
+      </div>
+
       {/* Momentum ticker */}
       <MomentumTicker />
+
+      {/* Category filter */}
+      <div style={{ background: "var(--background)", borderBottom: "1px solid var(--border)", padding: "1rem 0" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+            <button
+              onClick={() => { setActiveCategory("ALL"); setVisibleCount(20) }}
+              style={{
+                padding: "5px 14px",
+                fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.7rem",
+                textTransform: "uppercase", letterSpacing: "0.1em",
+                background: activeCategory === "ALL" ? "#DC143C" : "transparent",
+                color: activeCategory === "ALL" ? "#fff" : "var(--muted-foreground)",
+                border: activeCategory === "ALL" ? "1px solid #DC143C" : "1px solid var(--border)",
+                cursor: "pointer", transition: "all 0.2s",
+              }}
+            >
+              All ({PREDICTIONS.length})
+            </button>
+            {PREDICTION_CATEGORIES.map(cat => {
+              const count = PREDICTIONS.filter(p => p.category === cat).length
+              return (
+                <button
+                  key={cat}
+                  onClick={() => { setActiveCategory(cat); setVisibleCount(20) }}
+                  style={{
+                    padding: "5px 14px",
+                    fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.7rem",
+                    textTransform: "uppercase", letterSpacing: "0.1em",
+                    background: activeCategory === cat ? "#DC143C" : "transparent",
+                    color: activeCategory === cat ? "#fff" : "var(--muted-foreground)",
+                    border: activeCategory === cat ? "1px solid #DC143C" : "1px solid var(--border)",
+                    cursor: "pointer", transition: "all 0.2s",
+                  }}
+                >
+                  {cat} ({count})
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
 
       {/* Content */}
       <div className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Featured prediction */}
-          {!searchQuery && (
+          {!isFiltering && (
             <>
               <div className="mb-4">
                 <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.22em", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
@@ -566,16 +584,50 @@ export default function Predictions() {
           {/* Grid */}
           <div className="mb-4 mt-12">
             <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.22em", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-              {searchQuery ? `${filteredCards.length} result${filteredCards.length !== 1 ? 's' : ''} for "${searchQuery}"` : "Active Predictions"}
+              {isFiltering
+                ? `${filteredCards.length} prediction${filteredCards.length !== 1 ? 's' : ''}${searchQuery ? ` for "${searchQuery}"` : ''}${activeCategory !== "ALL" ? ` in ${activeCategory}` : ''}`
+                : `Active Predictions (${PREDICTIONS.length})`}
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-16">
-            {filteredCards.map(card => (
-              <PredictionGridCard key={card.id} card={card} />
-            ))}
-          </div>
+          {filteredCards.length === 0 ? (
+            <div className="text-center py-16 border border-border border-dashed" style={{ background: "rgba(255,255,255,0.02)" }}>
+              <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "1.2rem", textTransform: "uppercase", color: "var(--foreground)", marginBottom: 8 }}>No predictions found</p>
+              <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.85rem", color: "var(--muted-foreground)", marginBottom: 16 }}>
+                Try a different search or category.
+              </p>
+              <button
+                onClick={() => { setSearchQuery(""); setActiveCategory("ALL") }}
+                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "#DC143C", background: "none", border: "none", cursor: "pointer" }}
+              >
+                Clear all filters
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                {filteredCards.slice(0, visibleCount).map(card => (
+                  <PredictionGridCard key={card.id} card={card} />
+                ))}
+              </div>
+              {visibleCount < filteredCards.length && (
+                <div className="text-center mb-16">
+                  <button
+                    onClick={() => setVisibleCount(v => v + 20)}
+                    style={{
+                      fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "0.78rem",
+                      textTransform: "uppercase", letterSpacing: "0.15em", color: "#DC143C",
+                      background: "none", border: "1px solid rgba(220,20,60,0.3)", padding: "12px 32px",
+                      cursor: "pointer", transition: "all 0.2s",
+                    }}
+                  >
+                    Load More ({filteredCards.length - visibleCount} remaining)
+                  </button>
+                </div>
+              )}
+            </>
+          )}
 
-          {!searchQuery && (
+          {!isFiltering && (
             <div className="border-t border-border pt-12">
               <div className="mb-6">
                 <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.22em", color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>

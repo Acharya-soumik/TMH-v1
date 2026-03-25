@@ -182,27 +182,39 @@ export default function Home() {
   }
 
   const tickerPolls = trendingPolls?.polls ?? []
-  const debateTickerItems = tickerPolls.slice(0, 6).map(p => ({
-    topic: p.question?.length > 40 ? p.question.substring(0, 38) + "…" : p.question ?? "Debate",
-    badge: "DEBATE",
+  const debateItems = tickerPolls.slice(0, 8).map(p => ({
+    topic: p.question?.length > 38 ? p.question.substring(0, 36) + "…" : p.question ?? "Debate",
+    badge: "DEBATE" as const,
     stat: `${(p.totalVotes ?? 0).toLocaleString()} votes`,
   }))
-  const predictionTickerItems = [
-    { topic: "Will Saudi Arabia's NEOM open by 2030?", badge: "PREDICTION", stat: "72% say yes" },
-    { topic: "UAE GDP growth to exceed 5% in 2027?", badge: "PREDICTION", stat: "64% say yes" },
-    { topic: "Egypt pound to stabilize below 50 EGP/$?", badge: "PREDICTION", stat: "41% say yes" },
-    { topic: "Qatar to host another mega sporting event?", badge: "PREDICTION", stat: "88% say yes" },
+  const predictionItems = [
+    { topic: "NEOM's Line will have residents by 2030?", badge: "PREDICTION" as const, stat: "36% yes" },
+    { topic: "Saudi non-oil GDP to exceed 50%?", badge: "PREDICTION" as const, stat: "62% yes" },
+    { topic: "UAE income tax within 3 years?", badge: "PREDICTION" as const, stat: "38% yes" },
+    { topic: "$10B MENA startup in 2026?", badge: "PREDICTION" as const, stat: "44% yes" },
+    { topic: "Arabic mandatory in Dubai schools?", badge: "PREDICTION" as const, stat: "58% yes" },
+    { topic: "Riyadh Metro fully operational?", badge: "PREDICTION" as const, stat: "64% yes" },
+    { topic: "Saudi 2034 World Cup confirmed?", badge: "PREDICTION" as const, stat: "91% yes" },
+    { topic: "Oil above $85 all of 2026?", badge: "PREDICTION" as const, stat: "52% yes" },
   ]
-  const pulseTickerItems = [
-    { topic: "Youth unemployment across MENA", badge: "PULSE", stat: "↑ 23%" },
-    { topic: "Fintech adoption in GCC", badge: "PULSE", stat: "↑ 340%" },
-    { topic: "Renewable energy investment", badge: "PULSE", stat: "$15.2B" },
-    { topic: "Golden visa applications surge", badge: "PULSE", stat: "↑ 67%" },
-    { topic: "Arabic content digital deficit", badge: "PULSE", stat: "4% of web" },
-    { topic: "MENA cinema box office boom", badge: "PULSE", stat: "↑ 54%" },
+  const pulseItems = [
+    { topic: "Youth unemployment across MENA", badge: "PULSE" as const, stat: "↑ 23%" },
+    { topic: "Fintech adoption in GCC", badge: "PULSE" as const, stat: "↑ 340%" },
+    { topic: "Renewable energy investment", badge: "PULSE" as const, stat: "$15.2B" },
+    { topic: "Golden visa applications surge", badge: "PULSE" as const, stat: "↑ 67%" },
+    { topic: "Arabic content digital deficit", badge: "PULSE" as const, stat: "4% of web" },
+    { topic: "MENA cinema box office boom", badge: "PULSE" as const, stat: "↑ 54%" },
+    { topic: "Diabetes crisis in the Gulf", badge: "PULSE" as const, stat: "↑ 17%" },
+    { topic: "GCC military spending", badge: "PULSE" as const, stat: "$105B" },
   ]
-  const mixedTicker = [...debateTickerItems, ...predictionTickerItems, ...pulseTickerItems]
-  const tickerDoubled = [...mixedTicker, ...mixedTicker]
+  const maxLen = Math.max(debateItems.length, predictionItems.length, pulseItems.length)
+  const interleaved: typeof debateItems = []
+  for (let i = 0; i < maxLen; i++) {
+    if (debateItems[i]) interleaved.push(debateItems[i])
+    if (predictionItems[i]) interleaved.push(predictionItems[i])
+    if (pulseItems[i]) interleaved.push(pulseItems[i])
+  }
+  const tickerDoubled = [...interleaved, ...interleaved]
 
   const issueDate = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
 
@@ -292,50 +304,24 @@ export default function Home() {
 
       {/* ── SECTION HOOKS ── */}
       <section className="bg-background border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Link href="/polls" className="group flex items-center gap-4 p-4 border border-border bg-card hover:border-primary/40 transition-all">
-              <div className="w-10 h-10 flex items-center justify-center bg-primary/10 text-primary flex-shrink-0" style={{ borderRadius: 2 }}>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "1rem" }}>D</span>
-              </div>
-              <div>
-                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--foreground)" }}>
-                  {t("Debates")}
-                </p>
-                <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
-                  {t("Cast your vote on what matters")}
-                </p>
-              </div>
-              <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground group-hover:text-primary transition-colors" />
-            </Link>
-            <Link href="/predictions" className="group flex items-center gap-4 p-4 border border-border bg-card hover:border-blue-500/40 transition-all">
-              <div className="w-10 h-10 flex items-center justify-center bg-blue-500/10 text-blue-500 flex-shrink-0" style={{ borderRadius: 2 }}>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "1rem" }}>P</span>
-              </div>
-              <div>
-                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--foreground)" }}>
-                  {t("Predictions")}
-                </p>
-                <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
-                  {t("What will actually happen next?")}
-                </p>
-              </div>
-              <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground group-hover:text-blue-500 transition-colors" />
-            </Link>
-            <Link href="/mena-pulse" className="group flex items-center gap-4 p-4 border border-border bg-card hover:border-green-500/40 transition-all">
-              <div className="w-10 h-10 flex items-center justify-center bg-green-500/10 text-green-500 flex-shrink-0" style={{ borderRadius: 2 }}>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "1rem" }}>T</span>
-              </div>
-              <div>
-                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--foreground)" }}>
-                  {t("The Pulse")}
-                </p>
-                <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
-                  {t("60 trends shaping the region")}
-                </p>
-              </div>
-              <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground group-hover:text-green-500 transition-colors" />
-            </Link>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="grid grid-cols-3 gap-0 divide-x divide-border">
+            {[
+              { href: "/polls", label: t("Debates"), count: `${trendingPolls?.polls?.length ?? 0}+`, accent: "#DC143C" },
+              { href: "/predictions", label: t("Predictions"), count: "115", accent: "#3B82F6" },
+              { href: "/mena-pulse", label: t("The Pulse"), count: "60", accent: "#10B981" },
+            ].map(item => (
+              <Link key={item.href} href={item.href} className="group flex items-center justify-center gap-3 py-3 px-4 hover:bg-secondary/30 transition-colors">
+                <span style={{ width: 3, height: 20, background: item.accent, flexShrink: 0 }} />
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--foreground)" }}>
+                  {item.label}
+                </span>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "0.85rem", color: item.accent }}>
+                  {item.count}
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
+              </Link>
+            ))}
           </div>
         </div>
       </section>
