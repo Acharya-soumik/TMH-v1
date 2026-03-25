@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useLocation } from "wouter"
 import { useListPolls, useListCategories } from "@workspace/api-client-react"
 import { Layout } from "@/components/layout/Layout"
 import { PollCard } from "@/components/poll/PollCard"
 import { cn } from "@/lib/utils"
+import { Search, X } from "lucide-react"
 
 const DEBATE_TICKER = [
   { topic: "Brain Drain", votes: "18,421" },
@@ -25,9 +26,21 @@ export default function Polls() {
   
   const [filter, setFilter] = useState<'latest' | 'trending' | 'most_voted'>('latest')
   const [category, setCategory] = useState<string | undefined>(initialCategory)
+  const [searchQuery, setSearchQuery] = useState("")
 
-  const { data: pollsData, isLoading } = useListPolls({ filter, category, limit: 20 })
+  const { data: pollsData, isLoading } = useListPolls({ filter, category, limit: 50 })
   const { data: categoriesData } = useListCategories()
+
+  const filteredPolls = useMemo(() => {
+    if (!pollsData?.polls) return []
+    if (!searchQuery.trim()) return pollsData.polls
+    const q = searchQuery.toLowerCase()
+    return pollsData.polls.filter(p =>
+      p.question?.toLowerCase().includes(q) ||
+      p.categoryName?.toLowerCase().includes(q) ||
+      (p.tags as string[])?.some((t: string) => t.toLowerCase().includes(q))
+    )
+  }, [pollsData?.polls, searchQuery])
 
   const tabs = [
     { id: 'latest', label: 'Latest' },
@@ -80,6 +93,26 @@ export default function Polls() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col lg:flex-row gap-12">
         <div className="lg:w-64 flex-shrink-0 space-y-12">
+          <div>
+            <h3 className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-4 border-b border-border pb-2">
+              Search
+            </h3>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Topic, keyword, country..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-secondary border border-border pl-9 pr-8 py-2.5 text-xs font-sans text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
           <div>
             <h3 className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-4 border-b border-border pb-2">
               Sort By
@@ -141,23 +174,32 @@ export default function Polls() {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               {[1,2,3,4].map(i => <div key={i} className="h-80 bg-secondary animate-pulse border border-border" />)}
             </div>
-          ) : pollsData?.polls.length === 0 ? (
+          ) : filteredPolls.length === 0 ? (
             <div className="text-center py-20 border border-border border-dashed bg-secondary/30">
               <h3 className="font-serif font-bold text-2xl uppercase tracking-wider text-foreground mb-2">No polls found</h3>
-              <p className="text-sm text-muted-foreground mb-6 font-sans">Try adjusting your filters to find more discussions.</p>
+              <p className="text-sm text-muted-foreground mb-6 font-sans">
+                {searchQuery ? `No results for "${searchQuery}". Try a different search.` : "Try adjusting your filters to find more discussions."}
+              </p>
               <button 
-                onClick={() => { setFilter('latest'); setCategory(undefined); }}
+                onClick={() => { setFilter('latest'); setCategory(undefined); setSearchQuery(""); }}
                 className="text-xs font-bold uppercase tracking-widest text-primary hover:text-foreground transition-colors"
               >
                 Clear all filters
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-              {pollsData?.polls.map(poll => (
-                <PollCard key={poll.id} poll={poll} />
-              ))}
-            </div>
+            <>
+              {searchQuery && (
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-4 font-serif">
+                  {filteredPolls.length} result{filteredPolls.length !== 1 ? 's' : ''} for "{searchQuery}"
+                </p>
+              )}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                {filteredPolls.map(poll => (
+                  <PollCard key={poll.id} poll={poll} />
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>

@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { Layout } from "@/components/layout/Layout"
+import { Search, X } from "lucide-react"
 import {
   ComposedChart,
   Area,
@@ -496,6 +497,17 @@ function ClosedPredictionCard() {
 // ─── PAGE ────────────────────────────────────────────────────────────────────
 
 export default function Predictions() {
+  const [searchQuery, setSearchQuery] = useState("")
+
+  const filteredCards = useMemo(() => {
+    if (!searchQuery.trim()) return GRID_CARDS
+    const q = searchQuery.toLowerCase()
+    return GRID_CARDS.filter(c =>
+      c.question.toLowerCase().includes(q) ||
+      c.category.toLowerCase().includes(q)
+    )
+  }, [searchQuery])
+
   return (
     <Layout>
       {/* Section header */}
@@ -510,6 +522,25 @@ export default function Predictions() {
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>
             Not what should happen. What will.
           </p>
+          <div className="mt-6 max-w-md relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(250,250,250,0.4)" }} />
+            <input
+              type="text"
+              placeholder="Search predictions..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{
+                width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+                padding: "10px 36px 10px 36px", fontSize: "0.8rem", fontFamily: "DM Sans, sans-serif",
+                color: "#fff", outline: "none",
+              }}
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(250,250,250,0.5)" }}>
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -521,37 +552,42 @@ export default function Predictions() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Featured prediction */}
-          <div className="mb-4">
-            <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.22em", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-              Featured Prediction
-            </p>
-          </div>
-          <FeaturedPrediction />
+          {!searchQuery && (
+            <>
+              <div className="mb-4">
+                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.22em", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
+                  Featured Prediction
+                </p>
+              </div>
+              <FeaturedPrediction />
+            </>
+          )}
 
           {/* Grid */}
           <div className="mb-4 mt-12">
             <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.22em", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-              Active Predictions
+              {searchQuery ? `${filteredCards.length} result${filteredCards.length !== 1 ? 's' : ''} for "${searchQuery}"` : "Active Predictions"}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-16">
-            {GRID_CARDS.map(card => (
+            {filteredCards.map(card => (
               <PredictionGridCard key={card.id} card={card} />
             ))}
           </div>
 
-          {/* Closed predictions */}
-          <div className="border-t border-border pt-12">
-            <div className="mb-6">
-              <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.22em", color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>
-                Closed Predictions
-              </p>
-              <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
-                The region made its call. Here's what happened.
-              </p>
+          {!searchQuery && (
+            <div className="border-t border-border pt-12">
+              <div className="mb-6">
+                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.22em", color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>
+                  Closed Predictions
+                </p>
+                <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
+                  The region made its call. Here's what happened.
+                </p>
+              </div>
+              <ClosedPredictionCard />
             </div>
-            <ClosedPredictionCard />
-          </div>
+          )}
 
         </div>
       </div>

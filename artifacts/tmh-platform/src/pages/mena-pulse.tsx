@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Layout } from "@/components/layout/Layout"
+import { Search, X } from "lucide-react"
 import { LiveNumber } from "@/components/live-counter/FlipDigit"
 import { useI18n } from "@/lib/i18n"
 
@@ -1035,11 +1036,25 @@ function CategoryFilter({ active, onSelect }: { active: string; onSelect: (key: 
 
 export default function MenaPulse() {
   const [activeCategory, setActiveCategory] = useState("ALL")
+  const [searchQuery, setSearchQuery] = useState("")
   const { t, isAr } = useI18n()
 
-  const filtered = activeCategory === "ALL"
-    ? EXPLODING_TOPICS
-    : EXPLODING_TOPICS.filter(tp => tp.tag === activeCategory)
+  const filtered = useMemo(() => {
+    let result = activeCategory === "ALL"
+      ? EXPLODING_TOPICS
+      : EXPLODING_TOPICS.filter(tp => tp.tag === activeCategory)
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter(tp =>
+        tp.title.toLowerCase().includes(q) ||
+        tp.blurb.toLowerCase().includes(q) ||
+        tp.stat.toLowerCase().includes(q) ||
+        tp.source.toLowerCase().includes(q) ||
+        tp.tag.toLowerCase().includes(q)
+      )
+    }
+    return result
+  }, [activeCategory, searchQuery])
 
   return (
     <Layout>
@@ -1065,6 +1080,25 @@ export default function MenaPulse() {
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>
             {EXPLODING_TOPICS.length} {t("trends the region needs to confront. Updated quarterly.")}
           </p>
+          <div className="mt-6 max-w-md relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(250,250,250,0.4)" }} />
+            <input
+              type="text"
+              placeholder={t("Search trends...")}
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{
+                width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+                padding: "10px 36px 10px 36px", fontSize: "0.8rem", fontFamily: "DM Sans, sans-serif",
+                color: "#fff", outline: "none",
+              }}
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(250,250,250,0.5)" }}>
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         <PulseTicker />

@@ -89,14 +89,13 @@ artifacts-monorepo/
 - **Admin key** (`ADMIN_KEY`) — defaults to `"tmh-admin-2026"` if not set
 
 ### Pages
-- **Home** (`/`) — WSJ-style editorial front page: masthead → crimson live ticker → lead debate column (with floating opinion bubbles, desktop only) + latest debates sidebar → debates grid → predictions → voices → topics → newsletter CTA
-- **Polls** (`/polls`) — Full poll browser with filter tabs (Latest/Trending/Most Voted/Ending Soon/Editor's Picks) and category sidebar
+- **Home** (`/`) — WSJ-style editorial front page: masthead → mixed ticker (debates+predictions+pulse with colored badges) → section hooks (Debates/Predictions/The Pulse cards) → lead debate column (with floating opinion bubbles, desktop only) + latest debates sidebar → debates grid → predictions → voices → topics → newsletter CTA
+- **Polls** (`/polls`) — Full poll browser with search bar (sidebar), filter tabs (Latest/Trending/Most Voted) and category sidebar; client-side search filters by question, category, and tags
 - **Poll Detail** (`/polls/:id`) — Full poll with context, voting UI, animated result reveal, share CTA, related polls
 - **Profiles** (`/profiles`) — Searchable directory with country/sector/role filters
 - **Profile Detail** (`/profiles/:id`) — Portrait, headline, story, lessons, quote, associated polls, similar voices
-- **Rankings** (`/rankings`) — Top Voices, Top Founders, Women Leaders, Hottest Sectors, Rising Cities, Debated Topics
-- **Weekly Pulse** (`/weekly-pulse`) — Editorial digest of biggest votes, surprises, sector sentiment
-- **The Pulse** (`/mena-pulse`) — "Exploding Topics for MENA" style trend dashboard. Matching header branding (dark bg, crimson label, bold title, ticker, stats bar). Features: live population counter, 12 trend cards covering MENA Creator Economy, AI Adoption, Women in Workforce, Crypto Volume, Mental Health, Gaming, Expat/Nationalization, Food Security, Youth Bulge, Saudi Tourism, Brain Drain, Cannabis Reform. Each card has colored category tags, sparkline charts, expandable blurbs with sources. Scrolling LIVE ticker uses `tmh-ticker-scroll` CSS class. `useLiveCounter` hook for real-time ticking numbers.
+- **The Pulse** (`/mena-pulse`) — "Exploding Topics for MENA" style trend dashboard with search bar. Matching header branding (dark bg, crimson label, bold title, ticker, stats bar). Features: live population counter, 60 trend cards across 8 categories. Each card has colored category tags, sparkline charts, expandable blurbs with sources. Scrolling LIVE ticker uses `tmh-ticker-scroll` CSS class. `useLiveCounter` hook for real-time ticking numbers. Search filters by title, blurb, stat, source, and tag.
+- **Predictions** (`/predictions`) — Prediction market-style page with search bar in header, featured prediction with confidence chart, active prediction grid, and closed predictions section. Search hides featured/closed sections to focus on results.
 - **About** (`/about`) — Platform manifesto with founder statement, "Why This Exists", 6 beliefs, numbers bar (94 Founding Voices, 135+ Active Debates, 12 Topic Categories, 541M Potential Voices), 20 MENA countries grid, "Our Ethos" editorial section, and CTAs
 
 ### Database Schema
@@ -117,13 +116,13 @@ artifacts-monorepo/
 - `GET /api/weekly-pulse` — Weekly editorial digest
 
 ## Database State (as of March 2026)
-- **219 polls** total (135 original + 84 roast_series batch)
-- **785 poll options** total
-- **94 profiles** total (67 original + 27 new Voices)
-- 5 unsafe AI-generated polls deleted (IDs 520, 530, 531, 535, 536)
-- Profile photos use CamelCase filenames in `/profiles/` public dir (e.g., `Abe_Seksek.jpg`)
-- Roast polls tagged `["roast_series"]` with `poll_type: 'card'`, `is_featured: false`
-- New profiles (28) inserted with `is_featured: false` — appear under "Newly Added" tab
+- **327 polls** total across 15 categories
+- **1,217 poll options** total
+- **103 profiles** total
+- **77 votes** recorded
+- **15 categories**: Arts & Expression, Business, Cities & Lifestyle, Consumer Trends, Culture & Society, Economy & Finance, Education & Learning, Future of the Region, Leadership, Media & Influence, Sports & Events, Startups & Venture, Technology & AI, Women & Equality, Work & Careers
+- Profile photos use CamelCase filenames in `/profiles/` public dir
+- Predictions still use in-memory mock data (no predictions table in DB)
 
 **⚠️ WARNING:** Running `pnpm --filter @workspace/scripts run seed` will WIPE all DB data (polls, options, profiles). seed.ts needs updating to include the 28 new profiles and 84 roast polls before safe re-seeding.
 

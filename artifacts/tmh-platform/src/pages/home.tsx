@@ -182,14 +182,27 @@ export default function Home() {
   }
 
   const tickerPolls = trendingPolls?.polls ?? []
-  const tickerItems = tickerPolls.length
-    ? tickerPolls.map(p => ({ topic: p.question?.length > 40 ? p.question.substring(0, 38) + "…" : p.question ?? "Debate", votes: (p.totalVotes ?? 0).toLocaleString() }))
-    : [
-        { topic: "New Debate Every 24 Hours", votes: "—" },
-        { topic: "The Middle East Unfiltered", votes: "—" },
-        { topic: `${menaPop.toLocaleString()} People, One Voice`, votes: "—" },
-      ]
-  const tickerDoubled = [...tickerItems, ...tickerItems]
+  const debateTickerItems = tickerPolls.slice(0, 6).map(p => ({
+    topic: p.question?.length > 40 ? p.question.substring(0, 38) + "…" : p.question ?? "Debate",
+    badge: "DEBATE",
+    stat: `${(p.totalVotes ?? 0).toLocaleString()} votes`,
+  }))
+  const predictionTickerItems = [
+    { topic: "Will Saudi Arabia's NEOM open by 2030?", badge: "PREDICTION", stat: "72% say yes" },
+    { topic: "UAE GDP growth to exceed 5% in 2027?", badge: "PREDICTION", stat: "64% say yes" },
+    { topic: "Egypt pound to stabilize below 50 EGP/$?", badge: "PREDICTION", stat: "41% say yes" },
+    { topic: "Qatar to host another mega sporting event?", badge: "PREDICTION", stat: "88% say yes" },
+  ]
+  const pulseTickerItems = [
+    { topic: "Youth unemployment across MENA", badge: "PULSE", stat: "↑ 23%" },
+    { topic: "Fintech adoption in GCC", badge: "PULSE", stat: "↑ 340%" },
+    { topic: "Renewable energy investment", badge: "PULSE", stat: "$15.2B" },
+    { topic: "Golden visa applications surge", badge: "PULSE", stat: "↑ 67%" },
+    { topic: "Arabic content digital deficit", badge: "PULSE", stat: "4% of web" },
+    { topic: "MENA cinema box office boom", badge: "PULSE", stat: "↑ 54%" },
+  ]
+  const mixedTicker = [...debateTickerItems, ...predictionTickerItems, ...pulseTickerItems]
+  const tickerDoubled = [...mixedTicker, ...mixedTicker]
 
   const issueDate = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
 
@@ -244,7 +257,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── NEWS TICKER ── */}
+      {/* ── MIXED TICKER ── */}
       <div style={{ background: "#0D0D0D", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
         <div className="tmh-ticker-scroll">
           {tickerDoubled.map((item, i) => (
@@ -256,19 +269,76 @@ export default function Home() {
                 borderRight: "1px solid rgba(255,255,255,0.1)",
               }}
             >
+              <span style={{
+                fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "0.55rem",
+                textTransform: "uppercase", letterSpacing: "0.12em", whiteSpace: "nowrap",
+                padding: "2px 6px",
+                background: item.badge === "DEBATE" ? "rgba(220,20,60,0.15)" : item.badge === "PREDICTION" ? "rgba(59,130,246,0.15)" : "rgba(34,197,94,0.15)",
+                color: item.badge === "DEBATE" ? "#DC143C" : item.badge === "PREDICTION" ? "#3B82F6" : "#22C55E",
+                border: `1px solid ${item.badge === "DEBATE" ? "rgba(220,20,60,0.25)" : item.badge === "PREDICTION" ? "rgba(59,130,246,0.25)" : "rgba(34,197,94,0.25)"}`,
+              }}>
+                {item.badge}
+              </span>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(250,250,250,0.5)", whiteSpace: "nowrap" }}>
                 {item.topic}
               </span>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.85rem", color: "#fff" }}>
-                {item.votes}
-              </span>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", color: "#DC143C" }}>
-                VOTES
+              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", color: "#fff", whiteSpace: "nowrap" }}>
+                {item.stat}
               </span>
             </div>
           ))}
         </div>
       </div>
+
+      {/* ── SECTION HOOKS ── */}
+      <section className="bg-background border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Link href="/polls" className="group flex items-center gap-4 p-4 border border-border bg-card hover:border-primary/40 transition-all">
+              <div className="w-10 h-10 flex items-center justify-center bg-primary/10 text-primary flex-shrink-0" style={{ borderRadius: 2 }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "1rem" }}>D</span>
+              </div>
+              <div>
+                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--foreground)" }}>
+                  {t("Debates")}
+                </p>
+                <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
+                  {t("Cast your vote on what matters")}
+                </p>
+              </div>
+              <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground group-hover:text-primary transition-colors" />
+            </Link>
+            <Link href="/predictions" className="group flex items-center gap-4 p-4 border border-border bg-card hover:border-blue-500/40 transition-all">
+              <div className="w-10 h-10 flex items-center justify-center bg-blue-500/10 text-blue-500 flex-shrink-0" style={{ borderRadius: 2 }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "1rem" }}>P</span>
+              </div>
+              <div>
+                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--foreground)" }}>
+                  {t("Predictions")}
+                </p>
+                <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
+                  {t("What will actually happen next?")}
+                </p>
+              </div>
+              <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground group-hover:text-blue-500 transition-colors" />
+            </Link>
+            <Link href="/mena-pulse" className="group flex items-center gap-4 p-4 border border-border bg-card hover:border-green-500/40 transition-all">
+              <div className="w-10 h-10 flex items-center justify-center bg-green-500/10 text-green-500 flex-shrink-0" style={{ borderRadius: 2 }}>
+                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "1rem" }}>T</span>
+              </div>
+              <div>
+                <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--foreground)" }}>
+                  {t("The Pulse")}
+                </p>
+                <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
+                  {t("60 trends shaping the region")}
+                </p>
+              </div>
+              <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground group-hover:text-green-500 transition-colors" />
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* ── FRONT PAGE: Lead Debate + Sidebar ── */}
       <section className="py-8 bg-background border-b border-border section-fadein relative">
