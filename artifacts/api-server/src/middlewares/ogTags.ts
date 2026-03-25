@@ -154,10 +154,6 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
       title: "The Voices | The Tribunal",
       description: "100+ curated founders, operators, and change-makers shaping MENA.",
     },
-    "/rankings": {
-      title: "Power Rankings | The Tribunal",
-      description: "Who's driving the Middle East's most important conversations?",
-    },
     "/join": {
       title: "Join The Tribunal",
       description: "The most honest conversation in the Middle East. Founders and operators voting every day.",
