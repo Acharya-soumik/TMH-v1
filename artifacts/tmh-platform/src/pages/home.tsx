@@ -1029,13 +1029,18 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row gap-12 md:gap-16 items-center">
             <div className="flex-1 md:basis-2/3">
-              <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-3 font-serif">{t("Join 10,000+ Voices")}</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-3 font-serif">{t("The Weekly Newsletter")}</p>
               <h2 className="font-display font-black text-4xl md:text-5xl uppercase leading-none tracking-tight text-background mb-4">
                 {t("The Region's Opinion.")}<br />{t("Unfiltered.")}
               </h2>
-              <p className="text-background/75 font-sans text-base leading-relaxed max-w-xl">
-                The questions no one else asks. The data no one else collects. The pulse of <LiveNumber value={menaPop} className="tabular-nums" /> people — straight to your inbox.
+              <p className="text-background/75 font-sans text-base leading-relaxed max-w-xl mb-3">
+                Every week: the sharpest debates, the most controversial predictions, and the data MENA doesn't want you to see. No fluff. No PR. Just the raw pulse of <LiveNumber value={menaPop} className="tabular-nums" /> people.
               </p>
+              <ul className="text-background/60 font-sans text-sm space-y-1.5 max-w-xl">
+                <li className="flex items-center gap-2"><span className="text-primary font-bold">→</span> Unlimited voting on all debates & predictions</li>
+                <li className="flex items-center gap-2"><span className="text-primary font-bold">→</span> Weekly results breakdown — who voted what, and why it matters</li>
+                <li className="flex items-center gap-2"><span className="text-primary font-bold">→</span> Early access to new Voices and Pulse data drops</li>
+              </ul>
             </div>
             <div className="w-full md:basis-1/3">
               {ctaJoined ? (
