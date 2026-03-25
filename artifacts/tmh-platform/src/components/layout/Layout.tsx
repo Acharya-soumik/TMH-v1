@@ -1,9 +1,16 @@
-import { ReactNode } from "react"
+import { ReactNode, useEffect } from "react"
+import { useLocation } from "wouter"
 import { Navbar } from "./Navbar"
 import { Footer } from "./Footer"
 import { CookieConsent } from "@/components/ui/CookieConsent"
 
 export function Layout({ children }: { children: ReactNode }) {
+  const [location] = useLocation()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [location])
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter"
 import { Menu, X, Moon, Sun, Lock } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useTheme } from "@/hooks/use-theme"
 import { cn } from "@/lib/utils"
 import { useI18n, LangToggle } from "@/lib/i18n"
@@ -11,12 +11,50 @@ export function Navbar() {
   const { t } = useI18n()
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isHidden, setIsHidden] = useState(false)
+  const lastScrollY = useRef(0)
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20)
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+    const clearIdleTimer = () => {
+      if (idleTimer.current) {
+        clearTimeout(idleTimer.current)
+        idleTimer.current = null
+      }
+    }
+
+    const startIdleTimer = () => {
+      clearIdleTimer()
+      idleTimer.current = setTimeout(() => {
+        setIsHidden(false)
+      }, 3500)
+    }
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      setIsScrolled(currentScrollY > 20)
+
+      if (currentScrollY <= 80) {
+        setIsHidden(false)
+        clearIdleTimer()
+      } else if (currentScrollY > lastScrollY.current + 5) {
+        if (!mobileMenuOpen) {
+          setIsHidden(true)
+          startIdleTimer()
+        }
+      } else if (currentScrollY < lastScrollY.current - 5) {
+        setIsHidden(false)
+        clearIdleTimer()
+      }
+
+      lastScrollY.current = currentScrollY
+    }
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      clearIdleTimer()
+    }
+  }, [mobileMenuOpen])
 
   const navLinks = [
     { label: t("About"), href: "/about" },
@@ -33,7 +71,8 @@ export function Navbar() {
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b",
         isScrolled
           ? "bg-background/95 backdrop-blur-md border-border shadow-sm"
-          : "bg-background border-border"
+          : "bg-background border-border",
+        isHidden ? "-translate-y-full" : "translate-y-0"
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -86,7 +125,11 @@ export function Navbar() {
 
             <button
               className="md:hidden p-2 text-foreground"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => {
+                const opening = !mobileMenuOpen
+                setMobileMenuOpen(opening)
+                if (opening) setIsHidden(false)
+              }}
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
