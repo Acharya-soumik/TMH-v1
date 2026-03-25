@@ -28,7 +28,15 @@ Sidebar sections:
 - **Content**: Debates (CRUD + editorial workflow + vote options), Predictions (CRUD + resolution dates + momentum), Voices (CRUD + full profile editor)
 - **Audience**: Subscribers (newsletter list from DB, search, CSV export), Applications ("Join The Voices" submissions from DB, review/approve/reject/shortlist)
 
-API endpoints: `/api/cms/subscribers`, `/api/cms/subscribers/export`, `/api/cms/applications`, `/api/cms/analytics` — all backed by real database queries (not mock data).
+All CMS content endpoints are backed by real PostgreSQL queries via Drizzle ORM:
+- **Debates** (`/api/cms/debates`): Queries `pollsTable` + `pollOptionsTable` — 327 polls with full CRUD, status transitions, and vote counts
+- **Voices** (`/api/cms/voices`): Queries `profilesTable` — 103 profiles with full CRUD (no editorial_status column in DB; all treated as "approved")
+- **Predictions** (`/api/cms/predictions`): Still uses in-memory mock data (no predictions table in DB yet)
+- **Stats** (`/api/cms/stats`): Real DB counts for debates/voices; mock counts for predictions
+- **Taxonomy** (`/api/cms/taxonomy`): Categories, tags, sectors, countries, cities all derived from real DB data
+- **Subscribers** (`/api/cms/subscribers`, `/export`): Real DB queries on `newsletterSubscribersTable`
+- **Applications** (`/api/cms/applications`): Real DB queries on `hustlerApplicationsTable`
+- **Analytics** (`/api/cms/analytics`): Real DB aggregations across votes, polls, profiles, subscribers
 
 ## Structure
 

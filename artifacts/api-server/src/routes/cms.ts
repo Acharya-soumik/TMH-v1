@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 import { db, pollsTable, pollOptionsTable, votesTable, newsletterSubscribersTable, hustlerApplicationsTable, profilesTable } from "@workspace/db";
-import { eq, desc, sql, count, like, or } from "drizzle-orm";
+import { eq, desc, sql, count, like, or, inArray, and, asc } from "drizzle-orm";
 
 const router = Router();
 
@@ -46,45 +46,6 @@ function requireCmsAuth(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ error: "Session expired" });
   }
   next();
-}
-
-interface MockDebate {
-  id: number;
-  question: string;
-  context: string | null;
-  category: string;
-  categorySlug: string;
-  tags: string[];
-  pollType: string;
-  cardLayout: string;
-  isFeatured: boolean;
-  isEditorsPick: boolean;
-  editorialStatus: string;
-  endsAt: string | null;
-  updatedAt: string;
-  createdAt: string;
-  relatedProfileIds: number[];
-  options: { id: number; pollId: number; text: string; voteCount: number }[];
-}
-
-interface MockPrediction {
-  id: number;
-  question: string;
-  category: string;
-  categorySlug: string;
-  resolvesAt: string | null;
-  yesPercentage: number;
-  noPercentage: number;
-  totalCount: number;
-  momentum: number;
-  momentumDirection: string;
-  trendData: number[];
-  cardLayout: string;
-  editorialStatus: string;
-  isFeatured: boolean;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
 }
 
 interface HomepageSection {
@@ -130,55 +91,33 @@ interface HomepageConfig {
   };
 }
 
-interface MockVoice {
+interface MockPrediction {
   id: number;
-  name: string;
-  headline: string;
-  role: string;
-  company: string | null;
-  companyUrl: string | null;
-  sector: string;
-  country: string;
-  city: string;
-  imageUrl: string | null;
-  summary: string;
-  story: string;
-  lessonsLearned: string[];
-  quote: string;
-  isFeatured: boolean;
-  isVerified: boolean;
-  viewCount: number;
-  associatedPollCount: number;
+  question: string;
+  category: string;
+  categorySlug: string;
+  resolvesAt: string | null;
+  yesPercentage: number;
+  noPercentage: number;
+  totalCount: number;
+  momentum: number;
+  momentumDirection: string;
+  trendData: number[];
+  cardLayout: string;
   editorialStatus: string;
-  updatedAt: string;
+  isFeatured: boolean;
+  tags: string[];
   createdAt: string;
+  updatedAt: string;
 }
 
-let nextDebateId = 100;
 let nextPredictionId = 100;
-let nextVoiceId = 100;
-let nextOptionId = 1000;
-
-const mockDebates: MockDebate[] = [
-  { id: 1, question: "Will your job still exist in 5 years? Be honest.", context: "AI is reshaping the workforce across the Middle East", category: "Technology & AI", categorySlug: "technology-ai", tags: ["ai", "future-of-work"], pollType: "binary", cardLayout: "featured", isFeatured: true, isEditorsPick: true, editorialStatus: "approved", endsAt: null, updatedAt: new Date().toISOString(), createdAt: new Date(Date.now() - 86400000 * 3).toISOString(), relatedProfileIds: [], options: [{ id: 1, pollId: 1, text: "Yes, AI will replace most jobs", voteCount: 4521 }, { id: 2, pollId: 1, text: "No, AI will create new opportunities", voteCount: 3892 }] },
-  { id: 2, question: "Which Middle Eastern city is the best place to actually build a life?", context: "Beyond careers — cost of living, community, lifestyle", category: "Lifestyle", categorySlug: "lifestyle", tags: ["cities", "mena"], pollType: "multiple", cardLayout: "standard", isFeatured: true, isEditorsPick: false, editorialStatus: "approved", endsAt: null, updatedAt: new Date(Date.now() - 3600000).toISOString(), createdAt: new Date(Date.now() - 86400000 * 7).toISOString(), relatedProfileIds: [], options: [{ id: 3, pollId: 2, text: "Dubai", voteCount: 3200 }, { id: 4, pollId: 2, text: "Riyadh", voteCount: 2100 }, { id: 5, pollId: 2, text: "Amman", voteCount: 1800 }, { id: 6, pollId: 2, text: "Cairo", voteCount: 1500 }] },
-  { id: 3, question: "Is remote work killing startup culture in the region?", context: null, category: "Startups", categorySlug: "startups", tags: ["remote-work", "startups"], pollType: "binary", cardLayout: "compact", isFeatured: false, isEditorsPick: false, editorialStatus: "draft", endsAt: null, updatedAt: new Date(Date.now() - 7200000).toISOString(), createdAt: new Date(Date.now() - 86400000 * 2).toISOString(), relatedProfileIds: [], options: [{ id: 7, pollId: 3, text: "Yes", voteCount: 0 }, { id: 8, pollId: 3, text: "No", voteCount: 0 }] },
-  { id: 4, question: "Should MENA governments regulate crypto more strictly?", context: "Crypto adoption in the region continues to grow", category: "Finance", categorySlug: "finance", tags: ["crypto", "regulation"], pollType: "binary", cardLayout: "standard", isFeatured: false, isEditorsPick: false, editorialStatus: "in_review", endsAt: null, updatedAt: new Date(Date.now() - 86400000).toISOString(), createdAt: new Date(Date.now() - 86400000 * 5).toISOString(), relatedProfileIds: [], options: [{ id: 9, pollId: 4, text: "Yes, more regulation needed", voteCount: 0 }, { id: 10, pollId: 4, text: "No, let the market decide", voteCount: 0 }] },
-  { id: 5, question: "What's the biggest barrier to women in tech in the Middle East?", context: null, category: "Society", categorySlug: "society", tags: ["women-in-tech", "diversity"], pollType: "multiple", cardLayout: "sidebar", isFeatured: false, isEditorsPick: true, editorialStatus: "approved", endsAt: null, updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(), createdAt: new Date(Date.now() - 86400000 * 10).toISOString(), relatedProfileIds: [], options: [{ id: 11, pollId: 5, text: "Cultural expectations", voteCount: 2800 }, { id: 12, pollId: 5, text: "Lack of role models", voteCount: 1900 }, { id: 13, pollId: 5, text: "Funding gaps", voteCount: 1600 }] },
-];
 
 const mockPredictions: MockPrediction[] = [
   { id: 1, question: "Will Saudi Arabia's NEOM project meet its 2030 deadline?", category: "Megaprojects", categorySlug: "megaprojects", resolvesAt: "2030-12-31T00:00:00Z", yesPercentage: 22, noPercentage: 78, totalCount: 8420, momentum: 3.2, momentumDirection: "down", trendData: [35, 32, 28, 25, 22], cardLayout: "featured", editorialStatus: "approved", isFeatured: true, tags: ["saudi", "neom", "vision-2030"], createdAt: new Date(Date.now() - 86400000 * 14).toISOString(), updatedAt: new Date().toISOString() },
   { id: 2, question: "Will Dubai overtake Singapore as the world's top fintech hub by 2027?", category: "Finance", categorySlug: "finance", resolvesAt: "2027-06-30T00:00:00Z", yesPercentage: 61, noPercentage: 39, totalCount: 5230, momentum: 5.1, momentumDirection: "up", trendData: [45, 52, 55, 58, 61], cardLayout: "grid", editorialStatus: "approved", isFeatured: true, tags: ["dubai", "fintech"], createdAt: new Date(Date.now() - 86400000 * 10).toISOString(), updatedAt: new Date(Date.now() - 3600000).toISOString() },
   { id: 3, question: "Will a MENA-based unicorn IPO on NASDAQ in 2026?", category: "Startups", categorySlug: "startups", resolvesAt: "2026-12-31T00:00:00Z", yesPercentage: 45, noPercentage: 55, totalCount: 3100, momentum: 1.8, momentumDirection: "up", trendData: [38, 40, 42, 44, 45], cardLayout: "grid", editorialStatus: "draft", isFeatured: false, tags: ["ipo", "unicorn"], createdAt: new Date(Date.now() - 86400000 * 5).toISOString(), updatedAt: new Date(Date.now() - 86400000).toISOString() },
   { id: 4, question: "Will remote work become the default in Gulf tech companies?", category: "Technology & AI", categorySlug: "technology-ai", resolvesAt: "2027-01-01T00:00:00Z", yesPercentage: 33, noPercentage: 67, totalCount: 2750, momentum: -2.1, momentumDirection: "down", trendData: [42, 38, 35, 34, 33], cardLayout: "compact", editorialStatus: "in_review", isFeatured: false, tags: ["remote-work", "gulf"], createdAt: new Date(Date.now() - 86400000 * 3).toISOString(), updatedAt: new Date(Date.now() - 7200000).toISOString() },
-];
-
-const mockVoices: MockVoice[] = [
-  { id: 1, name: "Layla Al-Rashid", headline: "Building the future of EdTech in Saudi Arabia", role: "Founder & CEO", company: "MindBridge", companyUrl: "https://mindbridge.sa", sector: "Education", country: "Saudi Arabia", city: "Riyadh", imageUrl: null, summary: "Layla dropped out of a PhD program to build the region's most ambitious online learning platform.", story: "Growing up in Jeddah, I watched my mother struggle to access quality education...", lessonsLearned: ["Start before you're ready", "Your network is your net worth", "Fail fast, learn faster"], quote: "Education is the great equalizer — but only if everyone can access it.", isFeatured: true, isVerified: true, viewCount: 12500, associatedPollCount: 3, editorialStatus: "approved", updatedAt: new Date().toISOString(), createdAt: new Date(Date.now() - 86400000 * 30).toISOString() },
-  { id: 2, name: "Omar Khalil", headline: "From refugee to fintech founder", role: "Co-founder", company: "PayFlow", companyUrl: "https://payflow.io", sector: "Finance", country: "UAE", city: "Dubai", imageUrl: null, summary: "Omar's journey from a refugee camp in Jordan to founding one of Dubai's fastest-growing fintech startups.", story: "I arrived in Dubai with $200 and a dream...", lessonsLearned: ["Resilience is a muscle", "Build for the underserved", "Culture eats strategy for breakfast"], quote: "The Middle East doesn't need saving — it needs backing.", isFeatured: true, isVerified: true, viewCount: 9800, associatedPollCount: 2, editorialStatus: "approved", updatedAt: new Date(Date.now() - 3600000).toISOString(), createdAt: new Date(Date.now() - 86400000 * 25).toISOString() },
-  { id: 3, name: "Nadia Hassan", headline: "Leading climate tech innovation in Egypt", role: "CTO", company: "GreenSahara", companyUrl: null, sector: "Climate Tech", country: "Egypt", city: "Cairo", imageUrl: null, summary: "Nadia is pioneering desert agriculture technology that could feed millions.", story: "The Sahara isn't just sand — it's possibility...", lessonsLearned: ["Think in decades, act in days", "The hardest problems are the most worth solving"], quote: "If we can grow food in the desert, we can do anything.", isFeatured: false, isVerified: false, viewCount: 3200, associatedPollCount: 1, editorialStatus: "draft", updatedAt: new Date(Date.now() - 86400000).toISOString(), createdAt: new Date(Date.now() - 86400000 * 7).toISOString() },
-  { id: 4, name: "Tariq Mansour", headline: "Disrupting logistics across the GCC", role: "CEO", company: "SwiftRoute", companyUrl: "https://swiftroute.com", sector: "Logistics", country: "Bahrain", city: "Manama", imageUrl: null, summary: "Tariq built a logistics platform that reduced delivery times by 40% across the Gulf.", story: "I spent 10 years in Amazon's logistics division before returning home...", lessonsLearned: ["Execution beats ideas every time", "Hire slow, fire fast", "Customer obsession isn't a buzzword"], quote: "The best time to build in the Middle East was 10 years ago. The second best time is now.", isFeatured: false, isVerified: true, viewCount: 5600, associatedPollCount: 0, editorialStatus: "in_review", updatedAt: new Date(Date.now() - 7200000).toISOString(), createdAt: new Date(Date.now() - 86400000 * 14).toISOString() },
 ];
 
 router.post("/cms/auth/login", (req, res) => {
@@ -197,86 +136,266 @@ router.post("/cms/auth/verify", requireCmsAuth, (_req, res) => {
 
 router.get("/cms/stats", requireCmsAuth, async (_req, res) => {
   try {
-    const countByStatus = (items: { editorialStatus: string }[], status: string) =>
-      items.filter(i => i.editorialStatus === status).length;
+    const debateStatusCounts = await db
+      .select({ status: pollsTable.editorialStatus, count: count() })
+      .from(pollsTable)
+      .groupBy(pollsTable.editorialStatus);
+
+    const debateStats = {
+      total: debateStatusCounts.reduce((s, r) => s + r.count, 0),
+      drafts: debateStatusCounts.find(r => r.status === "draft")?.count ?? 0,
+      live: debateStatusCounts.find(r => r.status === "approved")?.count ?? 0,
+      flagged: debateStatusCounts.find(r => r.status === "flagged")?.count ?? 0,
+      inReview: debateStatusCounts.find(r => r.status === "in_review")?.count ?? 0,
+      archived: debateStatusCounts.find(r => r.status === "archived")?.count ?? 0,
+    };
+
+    const [profileCountResult] = await db.select({ count: count() }).from(profilesTable);
+    const voiceStats = {
+      total: profileCountResult.count,
+      drafts: 0,
+      live: profileCountResult.count,
+      flagged: 0,
+      inReview: 0,
+      archived: 0,
+    };
+
+    const predCountByStatus = (status: string) => mockPredictions.filter(p => p.editorialStatus === status).length;
+    const predStats = {
+      total: mockPredictions.length,
+      drafts: predCountByStatus("draft"),
+      live: predCountByStatus("approved"),
+      flagged: predCountByStatus("flagged"),
+      inReview: predCountByStatus("in_review"),
+      archived: predCountByStatus("archived"),
+    };
+
+    const recentDebates = await db
+      .select({ id: pollsTable.id, question: pollsTable.question, editorialStatus: pollsTable.editorialStatus, createdAt: pollsTable.createdAt })
+      .from(pollsTable)
+      .orderBy(desc(pollsTable.createdAt))
+      .limit(10);
+
+    const recentActivity = [
+      ...recentDebates.map(d => ({ type: "debate" as const, id: d.id, title: d.question, status: d.editorialStatus, updatedAt: d.createdAt?.toISOString() ?? new Date().toISOString() })),
+      ...mockPredictions.map(p => ({ type: "prediction" as const, id: p.id, title: p.question, status: p.editorialStatus, updatedAt: p.updatedAt })),
+    ].sort((a, b) => new Date(b.updatedAt!).getTime() - new Date(a.updatedAt!).getTime()).slice(0, 10);
 
     return res.json({
-      debates: { total: mockDebates.length, drafts: countByStatus(mockDebates, "draft"), live: countByStatus(mockDebates, "approved"), flagged: countByStatus(mockDebates, "flagged"), inReview: countByStatus(mockDebates, "in_review"), archived: countByStatus(mockDebates, "archived") },
-      predictions: { total: mockPredictions.length, drafts: countByStatus(mockPredictions, "draft"), live: countByStatus(mockPredictions, "approved"), flagged: countByStatus(mockPredictions, "flagged"), inReview: countByStatus(mockPredictions, "in_review"), archived: countByStatus(mockPredictions, "archived") },
-      voices: { total: mockVoices.length, drafts: countByStatus(mockVoices, "draft"), live: countByStatus(mockVoices, "approved"), flagged: countByStatus(mockVoices, "flagged"), inReview: countByStatus(mockVoices, "in_review"), archived: countByStatus(mockVoices, "archived") },
-      recentActivity: [
-        ...mockDebates.map(d => ({ type: "debate" as const, id: d.id, title: d.question, status: d.editorialStatus, updatedAt: d.updatedAt })),
-        ...mockPredictions.map(p => ({ type: "prediction" as const, id: p.id, title: p.question, status: p.editorialStatus, updatedAt: p.updatedAt })),
-        ...mockVoices.map(p => ({ type: "voice" as const, id: p.id, title: p.name, status: p.editorialStatus, updatedAt: p.updatedAt })),
-      ].sort((a, b) => new Date(b.updatedAt!).getTime() - new Date(a.updatedAt!).getTime()).slice(0, 10),
+      debates: debateStats,
+      predictions: predStats,
+      voices: voiceStats,
+      recentActivity,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Stats error:", err);
     return res.status(500).json({ error: "Stats failed" });
   }
 });
 
 router.get("/cms/taxonomy", requireCmsAuth, async (_req, res) => {
-  const debateCategories = [...new Set(mockDebates.map(d => d.category).filter(Boolean))];
-  const predictionCategories = [...new Set(mockPredictions.map(p => p.category).filter(Boolean))];
-  const allTags = [...new Set([
-    ...mockDebates.flatMap(d => d.tags),
-    ...mockPredictions.flatMap(p => p.tags),
-  ])];
-  const sectors = [...new Set(mockVoices.map(v => v.sector).filter(Boolean))];
-  const countries = [...new Set(mockVoices.map(v => v.country).filter(Boolean))];
-  const cities = [...new Set(mockVoices.map(v => v.city).filter(Boolean))];
+  try {
+    const dbCategories = await db
+      .select({ category: pollsTable.category })
+      .from(pollsTable)
+      .groupBy(pollsTable.category);
 
-  return res.json({
-    debateCategories: [...debateCategories, "Technology & AI", "Politics", "Economy", "Finance", "Startups", "Society", "Lifestyle", "Culture", "Energy", "Climate", "Diplomacy", "Healthcare", "Education", "Real Estate"].filter((v, i, a) => a.indexOf(v) === i).sort(),
-    predictionCategories: [...predictionCategories, "Megaprojects", "Energy", "Business", "Technology", "Politics", "Markets", "Geopolitics", "Sports", "Climate"].filter((v, i, a) => a.indexOf(v) === i).sort(),
-    tags: [...allTags, "ai", "startups", "mena", "saudi", "uae", "egypt", "fintech", "climate", "crypto", "energy", "women-in-tech", "future-of-work", "remote-work", "regulation", "vision-2030", "infrastructure", "ipo", "sustainability"].filter((v, i, a) => a.indexOf(v) === i).sort(),
-    sectors: [...sectors, "Technology", "Finance", "Healthcare", "Education", "Energy", "Real Estate", "Logistics", "Media", "Climate Tech", "E-commerce", "Agriculture", "Manufacturing", "Consulting", "Legal"].filter((v, i, a) => a.indexOf(v) === i).sort(),
-    countries: [...countries, "Saudi Arabia", "UAE", "Egypt", "Jordan", "Bahrain", "Kuwait", "Oman", "Qatar", "Lebanon", "Morocco", "Tunisia", "Iraq", "Turkey", "Iran"].filter((v, i, a) => a.indexOf(v) === i).sort(),
-    cities: [...cities, "Dubai", "Riyadh", "Jeddah", "Abu Dhabi", "Cairo", "Amman", "Manama", "Doha", "Kuwait City", "Muscat", "Beirut", "Casablanca", "Istanbul", "Tehran"].filter((v, i, a) => a.indexOf(v) === i).sort(),
-  });
+    const dbSectors = await db
+      .select({ sector: profilesTable.sector })
+      .from(profilesTable)
+      .groupBy(profilesTable.sector);
+
+    const dbCountries = await db
+      .select({ country: profilesTable.country })
+      .from(profilesTable)
+      .groupBy(profilesTable.country);
+
+    const dbCities = await db
+      .select({ city: profilesTable.city })
+      .from(profilesTable)
+      .groupBy(profilesTable.city);
+
+    const dbTags = await db
+      .select({ tags: pollsTable.tags })
+      .from(pollsTable);
+
+    const allDbTags = new Set<string>();
+    for (const row of dbTags) {
+      if (Array.isArray(row.tags)) {
+        for (const t of row.tags) {
+          if (typeof t === "string" && t.trim()) allDbTags.add(t.trim().toLowerCase());
+        }
+      }
+    }
+
+    const debateCategories = [...new Set([
+      ...dbCategories.map(r => r.category),
+      "Technology & AI", "Politics", "Economy", "Finance", "Startups", "Society", "Lifestyle", "Culture", "Energy", "Climate", "Diplomacy", "Healthcare", "Education", "Real Estate",
+    ])].sort();
+
+    const predictionCategories = [...new Set([
+      ...mockPredictions.map(p => p.category),
+      "Megaprojects", "Energy", "Business", "Technology", "Politics", "Markets", "Geopolitics", "Sports", "Climate",
+    ])].sort();
+
+    return res.json({
+      debateCategories,
+      predictionCategories,
+      tags: [...allDbTags].sort(),
+      sectors: [...new Set([...dbSectors.map(r => r.sector), "Technology", "Finance", "Healthcare", "Education", "Energy", "Real Estate", "Logistics", "Media", "Climate Tech", "E-commerce", "Agriculture", "Manufacturing", "Consulting", "Legal"])].sort(),
+      countries: [...new Set([...dbCountries.map(r => r.country), "Saudi Arabia", "UAE", "Egypt", "Jordan", "Bahrain", "Kuwait", "Oman", "Qatar", "Lebanon", "Morocco", "Tunisia", "Iraq", "Turkey", "Iran"])].sort(),
+      cities: [...new Set([...dbCities.map(r => r.city), "Dubai", "Riyadh", "Jeddah", "Abu Dhabi", "Cairo", "Amman", "Manama", "Doha", "Kuwait City", "Muscat", "Beirut", "Casablanca", "Istanbul", "Tehran"])].sort(),
+    });
+  } catch (err) {
+    console.error("Taxonomy error:", err);
+    return res.status(500).json({ error: "Taxonomy failed" });
+  }
 });
 
 router.get("/cms/debates", requireCmsAuth, async (req, res) => {
-  const status = req.query.status as string | undefined;
-  const items = (status && status !== "all")
-    ? mockDebates.filter(d => d.editorialStatus === status)
-    : mockDebates;
-  return res.json({ items: items.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()) });
+  try {
+    const status = req.query.status as string | undefined;
+    const whereClause = (status && status !== "all") ? eq(pollsTable.editorialStatus, status) : undefined;
+
+    const polls = await db
+      .select()
+      .from(pollsTable)
+      .where(whereClause)
+      .orderBy(desc(pollsTable.createdAt));
+
+    const pollIds = polls.map(p => p.id);
+    let optionsMap: Record<number, { id: number; pollId: number; text: string; voteCount: number }[]> = {};
+
+    if (pollIds.length > 0) {
+      const allOptions = await db
+        .select()
+        .from(pollOptionsTable)
+        .where(inArray(pollOptionsTable.pollId, pollIds));
+
+      for (const opt of allOptions) {
+        if (!optionsMap[opt.pollId]) optionsMap[opt.pollId] = [];
+        optionsMap[opt.pollId].push(opt);
+      }
+    }
+
+    const items = polls.map(p => ({
+      id: p.id,
+      question: p.question,
+      context: p.context,
+      category: p.category,
+      categorySlug: p.categorySlug,
+      tags: p.tags ?? [],
+      pollType: p.pollType,
+      cardLayout: "standard",
+      isFeatured: p.isFeatured,
+      isEditorsPick: p.isEditorsPick,
+      editorialStatus: p.editorialStatus,
+      endsAt: p.endsAt?.toISOString() ?? null,
+      createdAt: p.createdAt?.toISOString() ?? new Date().toISOString(),
+      updatedAt: p.createdAt?.toISOString() ?? new Date().toISOString(),
+      relatedProfileIds: p.relatedProfileIds ?? [],
+      options: optionsMap[p.id] ?? [],
+      totalVotes: (optionsMap[p.id] ?? []).reduce((s, o) => s + o.voteCount, 0),
+    }));
+
+    return res.json({ items });
+  } catch (err) {
+    console.error("Debates list error:", err);
+    return res.status(500).json({ error: "Failed to fetch debates" });
+  }
 });
 
 router.get("/cms/debates/:id", requireCmsAuth, async (req, res) => {
-  const debate = mockDebates.find(d => d.id === Number(req.params.id));
-  if (!debate) return res.status(404).json({ error: "Not found" });
-  return res.json(debate);
+  try {
+    const [poll] = await db.select().from(pollsTable).where(eq(pollsTable.id, Number(req.params.id)));
+    if (!poll) return res.status(404).json({ error: "Not found" });
+
+    const options = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, poll.id));
+
+    return res.json({
+      id: poll.id,
+      question: poll.question,
+      context: poll.context,
+      category: poll.category,
+      categorySlug: poll.categorySlug,
+      tags: poll.tags ?? [],
+      pollType: poll.pollType,
+      cardLayout: "standard",
+      isFeatured: poll.isFeatured,
+      isEditorsPick: poll.isEditorsPick,
+      editorialStatus: poll.editorialStatus,
+      endsAt: poll.endsAt?.toISOString() ?? null,
+      createdAt: poll.createdAt?.toISOString() ?? new Date().toISOString(),
+      updatedAt: poll.createdAt?.toISOString() ?? new Date().toISOString(),
+      relatedProfileIds: poll.relatedProfileIds ?? [],
+      options,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to fetch debate" });
+  }
 });
 
 router.put("/cms/debates/:id", requireCmsAuth, async (req, res) => {
-  const idx = mockDebates.findIndex(d => d.id === Number(req.params.id));
-  if (idx === -1) return res.status(404).json({ error: "Not found" });
-  const { options, ...data } = req.body;
-  if (data.editorialStatus && VALID_STATUSES.has(data.editorialStatus)) {
-    if (!isValidStatusTransition(mockDebates[idx].editorialStatus, data.editorialStatus)) {
-      return res.status(400).json({ error: `Cannot transition from '${mockDebates[idx].editorialStatus}' to '${data.editorialStatus}'` });
+  try {
+    const pollId = Number(req.params.id);
+    const [existing] = await db.select().from(pollsTable).where(eq(pollsTable.id, pollId));
+    if (!existing) return res.status(404).json({ error: "Not found" });
+
+    const { options, cardLayout, updatedAt, totalVotes, ...data } = req.body;
+
+    if (data.editorialStatus && VALID_STATUSES.has(data.editorialStatus)) {
+      if (!isValidStatusTransition(existing.editorialStatus, data.editorialStatus)) {
+        return res.status(400).json({ error: `Cannot transition from '${existing.editorialStatus}' to '${data.editorialStatus}'` });
+      }
     }
+
+    const updateFields: Record<string, unknown> = {};
+    if (data.question !== undefined) updateFields.question = data.question;
+    if (data.context !== undefined) updateFields.context = data.context;
+    if (data.category !== undefined) updateFields.category = data.category;
+    if (data.categorySlug !== undefined) updateFields.categorySlug = data.categorySlug;
+    if (data.tags !== undefined) updateFields.tags = data.tags;
+    if (data.pollType !== undefined) updateFields.pollType = data.pollType;
+    if (data.isFeatured !== undefined) updateFields.isFeatured = data.isFeatured;
+    if (data.isEditorsPick !== undefined) updateFields.isEditorsPick = data.isEditorsPick;
+    if (data.editorialStatus !== undefined) updateFields.editorialStatus = data.editorialStatus;
+    if (data.endsAt !== undefined) updateFields.endsAt = data.endsAt ? new Date(data.endsAt) : null;
+    if (data.relatedProfileIds !== undefined) updateFields.relatedProfileIds = data.relatedProfileIds;
+
+    if (Object.keys(updateFields).length > 0) {
+      await db.update(pollsTable).set(updateFields).where(eq(pollsTable.id, pollId));
+    }
+
+    if (options && Array.isArray(options)) {
+      await db.delete(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
+      for (const opt of options) {
+        await db.insert(pollOptionsTable).values({
+          pollId,
+          text: typeof opt === "string" ? opt : opt.text,
+          voteCount: opt.voteCount ?? 0,
+        });
+      }
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Update debate error:", err);
+    return res.status(500).json({ error: "Failed to update debate" });
   }
-  Object.assign(mockDebates[idx], data, { updatedAt: new Date().toISOString() });
-  if (options && Array.isArray(options)) {
-    mockDebates[idx].options = options.map((opt: { text: string; voteCount?: number }, i: number) => ({
-      id: nextOptionId++,
-      pollId: mockDebates[idx].id,
-      text: opt.text,
-      voteCount: opt.voteCount ?? 0,
-    }));
-  }
-  return res.json({ success: true });
 });
 
 router.delete("/cms/debates/:id", requireCmsAuth, async (req, res) => {
-  const idx = mockDebates.findIndex(d => d.id === Number(req.params.id));
-  if (idx === -1) return res.status(404).json({ error: "Not found" });
-  mockDebates.splice(idx, 1);
-  return res.json({ success: true });
+  try {
+    const pollId = Number(req.params.id);
+    await db.delete(votesTable).where(eq(votesTable.pollId, pollId));
+    await db.delete(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
+    await db.delete(pollsTable).where(eq(pollsTable.id, pollId));
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to delete debate" });
+  }
 });
 
 router.get("/cms/predictions", requireCmsAuth, async (req, res) => {
@@ -313,36 +432,121 @@ router.delete("/cms/predictions/:id", requireCmsAuth, async (req, res) => {
 });
 
 router.get("/cms/voices", requireCmsAuth, async (req, res) => {
-  const status = req.query.status as string | undefined;
-  const items = (status && status !== "all")
-    ? mockVoices.filter(v => v.editorialStatus === status)
-    : mockVoices;
-  return res.json({ items: items.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()) });
+  try {
+    const profiles = await db
+      .select()
+      .from(profilesTable)
+      .orderBy(desc(profilesTable.createdAt));
+
+    const items = profiles.map(p => ({
+      id: p.id,
+      name: p.name,
+      headline: p.headline,
+      role: p.role,
+      company: p.company,
+      companyUrl: p.companyUrl,
+      sector: p.sector,
+      country: p.country,
+      city: p.city,
+      imageUrl: p.imageUrl,
+      summary: p.summary,
+      story: p.story,
+      lessonsLearned: p.lessonsLearned ?? [],
+      quote: p.quote,
+      isFeatured: p.isFeatured,
+      isVerified: p.isVerified,
+      viewCount: p.viewCount,
+      associatedPollCount: p.associatedPollCount,
+      editorialStatus: "approved",
+      createdAt: p.createdAt?.toISOString() ?? new Date().toISOString(),
+      updatedAt: p.createdAt?.toISOString() ?? new Date().toISOString(),
+    }));
+
+    return res.json({ items });
+  } catch (err) {
+    console.error("Voices list error:", err);
+    return res.status(500).json({ error: "Failed to fetch voices" });
+  }
 });
 
 router.get("/cms/voices/:id", requireCmsAuth, async (req, res) => {
-  const item = mockVoices.find(v => v.id === Number(req.params.id));
-  if (!item) return res.status(404).json({ error: "Not found" });
-  return res.json(item);
+  try {
+    const [profile] = await db.select().from(profilesTable).where(eq(profilesTable.id, Number(req.params.id)));
+    if (!profile) return res.status(404).json({ error: "Not found" });
+
+    return res.json({
+      id: profile.id,
+      name: profile.name,
+      headline: profile.headline,
+      role: profile.role,
+      company: profile.company,
+      companyUrl: profile.companyUrl,
+      sector: profile.sector,
+      country: profile.country,
+      city: profile.city,
+      imageUrl: profile.imageUrl,
+      summary: profile.summary,
+      story: profile.story,
+      lessonsLearned: profile.lessonsLearned ?? [],
+      quote: profile.quote,
+      isFeatured: profile.isFeatured,
+      isVerified: profile.isVerified,
+      viewCount: profile.viewCount,
+      associatedPollCount: profile.associatedPollCount,
+      editorialStatus: "approved",
+      createdAt: profile.createdAt?.toISOString() ?? new Date().toISOString(),
+      updatedAt: profile.createdAt?.toISOString() ?? new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to fetch voice" });
+  }
 });
 
 router.put("/cms/voices/:id", requireCmsAuth, async (req, res) => {
-  const idx = mockVoices.findIndex(v => v.id === Number(req.params.id));
-  if (idx === -1) return res.status(404).json({ error: "Not found" });
-  if (req.body.editorialStatus && VALID_STATUSES.has(req.body.editorialStatus)) {
-    if (!isValidStatusTransition(mockVoices[idx].editorialStatus, req.body.editorialStatus)) {
-      return res.status(400).json({ error: `Cannot transition from '${mockVoices[idx].editorialStatus}' to '${req.body.editorialStatus}'` });
+  try {
+    const profileId = Number(req.params.id);
+    const [existing] = await db.select().from(profilesTable).where(eq(profilesTable.id, profileId));
+    if (!existing) return res.status(404).json({ error: "Not found" });
+
+    const { editorialStatus, updatedAt, viewCount, associatedPollCount, ...data } = req.body;
+
+    const updateFields: Record<string, unknown> = {};
+    if (data.name !== undefined) updateFields.name = data.name;
+    if (data.headline !== undefined) updateFields.headline = data.headline;
+    if (data.role !== undefined) updateFields.role = data.role;
+    if (data.company !== undefined) updateFields.company = data.company;
+    if (data.companyUrl !== undefined) updateFields.companyUrl = data.companyUrl;
+    if (data.sector !== undefined) updateFields.sector = data.sector;
+    if (data.country !== undefined) updateFields.country = data.country;
+    if (data.city !== undefined) updateFields.city = data.city;
+    if (data.imageUrl !== undefined) updateFields.imageUrl = data.imageUrl;
+    if (data.summary !== undefined) updateFields.summary = data.summary;
+    if (data.story !== undefined) updateFields.story = data.story;
+    if (data.lessonsLearned !== undefined) updateFields.lessonsLearned = data.lessonsLearned;
+    if (data.quote !== undefined) updateFields.quote = data.quote;
+    if (data.isFeatured !== undefined) updateFields.isFeatured = data.isFeatured;
+    if (data.isVerified !== undefined) updateFields.isVerified = data.isVerified;
+
+    if (Object.keys(updateFields).length > 0) {
+      await db.update(profilesTable).set(updateFields).where(eq(profilesTable.id, profileId));
     }
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Update voice error:", err);
+    return res.status(500).json({ error: "Failed to update voice" });
   }
-  Object.assign(mockVoices[idx], req.body, { updatedAt: new Date().toISOString() });
-  return res.json({ success: true });
 });
 
 router.delete("/cms/voices/:id", requireCmsAuth, async (req, res) => {
-  const idx = mockVoices.findIndex(v => v.id === Number(req.params.id));
-  if (idx === -1) return res.status(404).json({ error: "Not found" });
-  mockVoices.splice(idx, 1);
-  return res.json({ success: true });
+  try {
+    await db.delete(profilesTable).where(eq(profilesTable.id, Number(req.params.id)));
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to delete voice" });
+  }
 });
 
 router.post("/cms/:type/:id/status", requireCmsAuth, async (req, res) => {
@@ -366,29 +570,32 @@ router.post("/cms/:type/:id/status", requireCmsAuth, async (req, res) => {
   }
 
   const numId = Number(id);
-  let item: { editorialStatus: string; updatedAt: string } | undefined;
 
-  if (type === "debates") {
-    item = mockDebates.find(d => d.id === numId);
-  } else if (type === "predictions") {
-    item = mockPredictions.find(p => p.id === numId);
-  } else if (type === "voices") {
-    item = mockVoices.find(v => v.id === numId);
-  } else {
-    return res.status(400).json({ error: "Invalid type" });
+  try {
+    if (type === "debates") {
+      const [poll] = await db.select({ editorialStatus: pollsTable.editorialStatus }).from(pollsTable).where(eq(pollsTable.id, numId));
+      if (!poll) return res.status(404).json({ error: "Not found" });
+      const newStatus = validTransitions[action][poll.editorialStatus];
+      if (!newStatus) return res.status(400).json({ error: `Cannot ${action} from status '${poll.editorialStatus}'` });
+      await db.update(pollsTable).set({ editorialStatus: newStatus }).where(eq(pollsTable.id, numId));
+      return res.json({ success: true, newStatus });
+    } else if (type === "predictions") {
+      const item = mockPredictions.find(p => p.id === numId);
+      if (!item) return res.status(404).json({ error: "Not found" });
+      const newStatus = validTransitions[action][item.editorialStatus];
+      if (!newStatus) return res.status(400).json({ error: `Cannot ${action} from status '${item.editorialStatus}'` });
+      item.editorialStatus = newStatus;
+      item.updatedAt = new Date().toISOString();
+      return res.json({ success: true, newStatus });
+    } else if (type === "voices") {
+      return res.json({ success: true, newStatus: "approved" });
+    } else {
+      return res.status(400).json({ error: "Invalid type" });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Status update failed" });
   }
-
-  if (!item) return res.status(404).json({ error: "Not found" });
-
-  const newStatus = validTransitions[action][item.editorialStatus];
-  if (!newStatus) {
-    return res.status(400).json({ error: `Cannot ${action} from status '${item.editorialStatus}'` });
-  }
-
-  item.editorialStatus = newStatus;
-  item.updatedAt = new Date().toISOString();
-
-  return res.json({ success: true, newStatus });
 });
 
 router.post("/cms/:type/bulk-action", requireCmsAuth, async (req, res) => {
@@ -399,49 +606,52 @@ router.post("/cms/:type/bulk-action", requireCmsAuth, async (req, res) => {
     return res.status(400).json({ error: "ids array is required" });
   }
 
-  if (type !== "debates" && type !== "predictions" && type !== "voices") {
-    return res.status(400).json({ error: "Invalid type" });
-  }
-
-  if (action === "delete") {
-    if (type === "debates") {
-      ids.forEach(id => { const idx = mockDebates.findIndex(d => d.id === id); if (idx !== -1) mockDebates.splice(idx, 1); });
-    } else if (type === "predictions") {
-      ids.forEach(id => { const idx = mockPredictions.findIndex(p => p.id === id); if (idx !== -1) mockPredictions.splice(idx, 1); });
-    } else {
-      ids.forEach(id => { const idx = mockVoices.findIndex(v => v.id === id); if (idx !== -1) mockVoices.splice(idx, 1); });
-    }
-    return res.json({ success: true, deleted: ids.length });
-  }
-
-  const statusMap: Record<string, string> = {
-    approve: "approved",
-    reject: "rejected",
-    flag: "flagged",
-    archive: "archived",
-    unflag: "approved",
-    unarchive: "approved",
-    unpublish: "draft",
-    revision: "revision",
-  };
-
-  const newStatus = statusMap[action];
-  if (!newStatus) return res.status(400).json({ error: "Invalid action" });
-
-  const updateItem = (arr: { id: number; editorialStatus: string; updatedAt: string }[]) => {
-    ids.forEach(id => {
-      const item = arr.find(i => i.id === id);
-      if (item) {
-        item.editorialStatus = newStatus;
-        item.updatedAt = new Date().toISOString();
+  try {
+    if (action === "delete") {
+      if (type === "debates") {
+        for (const id of ids) {
+          await db.delete(votesTable).where(eq(votesTable.pollId, id));
+          await db.delete(pollOptionsTable).where(eq(pollOptionsTable.pollId, id));
+          await db.delete(pollsTable).where(eq(pollsTable.id, id));
+        }
+      } else if (type === "predictions") {
+        ids.forEach(id => { const idx = mockPredictions.findIndex(p => p.id === id); if (idx !== -1) mockPredictions.splice(idx, 1); });
+      } else if (type === "voices") {
+        for (const id of ids) {
+          await db.delete(profilesTable).where(eq(profilesTable.id, id));
+        }
+      } else {
+        return res.status(400).json({ error: "Invalid type" });
       }
-    });
-  };
-  if (type === "debates") updateItem(mockDebates);
-  else if (type === "predictions") updateItem(mockPredictions);
-  else updateItem(mockVoices);
+      return res.json({ success: true, deleted: ids.length });
+    }
 
-  return res.json({ success: true, updated: ids.length });
+    const statusMap: Record<string, string> = {
+      approve: "approved", reject: "rejected", flag: "flagged", archive: "archived",
+      unflag: "approved", unarchive: "approved", unpublish: "draft", revision: "revision",
+    };
+
+    const newStatus = statusMap[action];
+    if (!newStatus) return res.status(400).json({ error: "Invalid action" });
+
+    if (type === "debates") {
+      await db.update(pollsTable).set({ editorialStatus: newStatus }).where(inArray(pollsTable.id, ids));
+    } else if (type === "predictions") {
+      ids.forEach(id => {
+        const item = mockPredictions.find(i => i.id === id);
+        if (item) { item.editorialStatus = newStatus; item.updatedAt = new Date().toISOString(); }
+      });
+    } else if (type === "voices") {
+      return res.json({ success: true, updated: ids.length });
+    } else {
+      return res.status(400).json({ error: "Invalid type" });
+    }
+
+    return res.json({ success: true, updated: ids.length });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Bulk action failed" });
+  }
 });
 
 router.post("/cms/upload/:type", requireCmsAuth, async (req, res) => {
@@ -452,96 +662,95 @@ router.post("/cms/upload/:type", requireCmsAuth, async (req, res) => {
     return res.status(400).json({ error: "items array is required" });
   }
 
-  if (type === "debates") {
-    const created = items.map((item: any) => {
-      const debate: MockDebate = {
-        id: nextDebateId++,
-        question: item.question,
-        context: item.context ?? null,
-        category: item.category,
-        categorySlug: item.categorySlug ?? item.category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-        tags: item.tags ?? [],
-        pollType: item.pollType ?? "binary",
-        cardLayout: item.cardLayout ?? "standard",
-        isFeatured: item.isFeatured ?? false,
-        isEditorsPick: item.isEditorsPick ?? false,
-        editorialStatus: item.editorialStatus ?? "draft",
-        endsAt: item.endsAt ?? null,
-        updatedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        relatedProfileIds: item.relatedProfileIds ?? [],
-        options: (item.options ?? []).map((o: string | { text: string }) => ({
-          id: nextOptionId++,
-          pollId: nextDebateId - 1,
-          text: typeof o === "string" ? o : o.text,
-          voteCount: 0,
-        })),
-      };
-      mockDebates.push(debate);
-      return debate;
-    });
-    return res.json({ success: true, created: created.length, items: created });
-  }
+  try {
+    if (type === "debates") {
+      let created = 0;
+      for (const item of items) {
+        const [poll] = await db.insert(pollsTable).values({
+          question: item.question,
+          context: item.context ?? null,
+          category: item.category,
+          categorySlug: item.categorySlug ?? item.category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+          tags: item.tags ?? [],
+          pollType: item.pollType ?? "binary",
+          isFeatured: item.isFeatured ?? false,
+          isEditorsPick: item.isEditorsPick ?? false,
+          editorialStatus: item.editorialStatus ?? "draft",
+          endsAt: item.endsAt ? new Date(item.endsAt) : null,
+          relatedProfileIds: item.relatedProfileIds ?? [],
+        }).returning();
 
-  if (type === "predictions") {
-    const created = items.map((item: any) => {
-      const prediction: MockPrediction = {
-        id: nextPredictionId++,
-        question: item.question,
-        category: item.category,
-        categorySlug: item.categorySlug ?? item.category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-        resolvesAt: item.resolvesAt ?? null,
-        yesPercentage: item.yesPercentage ?? 50,
-        noPercentage: item.noPercentage ?? 50,
-        totalCount: item.totalCount ?? 0,
-        momentum: item.momentum ?? 0,
-        momentumDirection: item.momentumDirection ?? "up",
-        trendData: item.trendData ?? [],
-        cardLayout: item.cardLayout ?? "grid",
-        editorialStatus: item.editorialStatus ?? "draft",
-        isFeatured: item.isFeatured ?? false,
-        tags: item.tags ?? [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      mockPredictions.push(prediction);
-      return prediction;
-    });
-    return res.json({ success: true, created: created.length, items: created });
-  }
+        if (item.options && Array.isArray(item.options)) {
+          for (const opt of item.options) {
+            await db.insert(pollOptionsTable).values({
+              pollId: poll.id,
+              text: typeof opt === "string" ? opt : opt.text,
+              voteCount: 0,
+            });
+          }
+        }
+        created++;
+      }
+      return res.json({ success: true, created });
+    }
 
-  if (type === "voices") {
-    const created = items.map((item: any) => {
-      const voice: MockVoice = {
-        id: nextVoiceId++,
-        name: item.name,
-        headline: item.headline,
-        role: item.role,
-        company: item.company ?? null,
-        companyUrl: item.companyUrl ?? null,
-        sector: item.sector,
-        country: item.country,
-        city: item.city,
-        imageUrl: item.imageUrl ?? null,
-        summary: item.summary,
-        story: item.story,
-        lessonsLearned: item.lessonsLearned ?? [],
-        quote: item.quote,
-        isFeatured: item.isFeatured ?? false,
-        isVerified: item.isVerified ?? false,
-        viewCount: 0,
-        associatedPollCount: 0,
-        editorialStatus: item.editorialStatus ?? "draft",
-        updatedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-      };
-      mockVoices.push(voice);
-      return voice;
-    });
-    return res.json({ success: true, created: created.length, items: created });
-  }
+    if (type === "predictions") {
+      const created = items.map((item: any) => {
+        const prediction: MockPrediction = {
+          id: nextPredictionId++,
+          question: item.question,
+          category: item.category,
+          categorySlug: item.categorySlug ?? item.category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+          resolvesAt: item.resolvesAt ?? null,
+          yesPercentage: item.yesPercentage ?? 50,
+          noPercentage: item.noPercentage ?? 50,
+          totalCount: item.totalCount ?? 0,
+          momentum: item.momentum ?? 0,
+          momentumDirection: item.momentumDirection ?? "up",
+          trendData: item.trendData ?? [],
+          cardLayout: item.cardLayout ?? "grid",
+          editorialStatus: item.editorialStatus ?? "draft",
+          isFeatured: item.isFeatured ?? false,
+          tags: item.tags ?? [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        mockPredictions.push(prediction);
+        return prediction;
+      });
+      return res.json({ success: true, created: created.length });
+    }
 
-  return res.status(400).json({ error: "Invalid type" });
+    if (type === "voices") {
+      let created = 0;
+      for (const item of items) {
+        await db.insert(profilesTable).values({
+          name: item.name,
+          headline: item.headline,
+          role: item.role,
+          company: item.company ?? null,
+          companyUrl: item.companyUrl ?? null,
+          sector: item.sector,
+          country: item.country,
+          city: item.city,
+          imageUrl: item.imageUrl ?? null,
+          summary: item.summary,
+          story: item.story,
+          lessonsLearned: item.lessonsLearned ?? [],
+          quote: item.quote,
+          isFeatured: item.isFeatured ?? false,
+          isVerified: item.isVerified ?? false,
+        });
+        created++;
+      }
+      return res.json({ success: true, created });
+    }
+
+    return res.status(400).json({ error: "Invalid type" });
+  } catch (err) {
+    console.error("Upload error:", err);
+    return res.status(500).json({ error: "Upload failed" });
+  }
 });
 
 const uploadsDir = path.resolve("/home/runner/workspace/uploads");
@@ -729,7 +938,7 @@ router.get("/cms/applications", requireCmsAuth, async (req, res) => {
     }
 
     const whereClause = conditions.length > 0
-      ? conditions.length === 1 ? conditions[0] : sql`${conditions[0]} AND ${conditions[1]}`
+      ? conditions.length === 1 ? conditions[0] : and(...conditions)
       : undefined;
 
     const [items, totalResult] = await Promise.all([
