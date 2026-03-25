@@ -1,14 +1,32 @@
 import type React from "react";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
-import { LayoutDashboard, MessageSquare, TrendingUp, Users, LogOut, Home } from "lucide-react";
+import { LayoutDashboard, MessageSquare, TrendingUp, Users, LogOut, Home, Mail, FileText, BarChart3 } from "lucide-react";
 
-const NAV_ITEMS = [
-  { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/homepage", label: "Homepage", icon: Home },
-  { path: "/debates", label: "Debates", icon: MessageSquare },
-  { path: "/predictions", label: "Predictions", icon: TrendingUp },
-  { path: "/voices", label: "Voices", icon: Users },
+const NAV_SECTIONS = [
+  {
+    label: "OVERVIEW",
+    items: [
+      { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { path: "/analytics", label: "Analytics", icon: BarChart3 },
+      { path: "/homepage", label: "Homepage", icon: Home },
+    ],
+  },
+  {
+    label: "CONTENT",
+    items: [
+      { path: "/debates", label: "Debates", icon: MessageSquare },
+      { path: "/predictions", label: "Predictions", icon: TrendingUp },
+      { path: "/voices", label: "Voices", icon: Users },
+    ],
+  },
+  {
+    label: "AUDIENCE",
+    items: [
+      { path: "/subscribers", label: "Subscribers", icon: Mail },
+      { path: "/applications", label: "Applications", icon: FileText },
+    ],
+  },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -26,22 +44,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             CMS
           </p>
         </div>
-        <nav className="flex-1 p-2 space-y-0.5">
-          {NAV_ITEMS.map(item => {
-            const isActive = location.startsWith(item.path);
-            return (
-              <Link
-                key={item.path}
-                href={item.path}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
-                  isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
-                <item.icon className="w-4 h-4" />
-                {item.label}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 p-2 space-y-3 overflow-auto">
+          {NAV_SECTIONS.map(section => (
+            <div key={section.label}>
+              <p className="px-3 py-1 text-[0.6rem] font-bold text-muted-foreground uppercase tracking-widest" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                {section.label}
+              </p>
+              <div className="space-y-0.5">
+                {section.items.map(item => {
+                  const isActive = location === item.path || (item.path !== "/dashboard" && location.startsWith(item.path));
+                  return (
+                    <Link
+                      key={item.path}
+                      href={item.path}
+                      className={`flex items-center gap-2.5 px-3 py-1.5 text-sm transition-colors ${
+                        isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                      }`}
+                    >
+                      <item.icon className="w-3.5 h-3.5" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
         <div className="p-3 border-t border-border">
           <div className="flex items-center justify-between">

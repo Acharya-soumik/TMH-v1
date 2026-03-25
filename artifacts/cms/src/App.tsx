@@ -11,6 +11,9 @@ import EditDebatePage from "@/pages/edit-debate";
 import EditPredictionPage from "@/pages/edit-prediction";
 import EditVoicePage from "@/pages/edit-voice";
 import HomepagePage from "@/pages/homepage";
+import SubscribersPage from "@/pages/subscribers";
+import ApplicationsPage from "@/pages/applications";
+import AnalyticsPage from "@/pages/analytics";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +34,7 @@ function ProtectedRoutes() {
     <Layout>
       <Switch>
         <Route path="/dashboard" component={DashboardPage} />
+        <Route path="/analytics" component={AnalyticsPage} />
         <Route path="/homepage" component={HomepagePage} />
         <Route path="/debates" component={DebatesPage} />
         <Route path="/debates/:id/edit" component={EditDebatePage} />
@@ -38,6 +42,8 @@ function ProtectedRoutes() {
         <Route path="/predictions/:id/edit" component={EditPredictionPage} />
         <Route path="/voices" component={VoicesPage} />
         <Route path="/voices/:id/edit" component={EditVoicePage} />
+        <Route path="/subscribers" component={SubscribersPage} />
+        <Route path="/applications" component={ApplicationsPage} />
         <Route path="/">
           <Redirect to="/dashboard" />
         </Route>

@@ -3,6 +3,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
+import { db, pollsTable, pollOptionsTable, votesTable, newsletterSubscribersTable, hustlerApplicationsTable, profilesTable } from "@workspace/db";
+import { eq, desc, sql, count, like, or } from "drizzle-orm";
 
 const router = Router();
 
@@ -646,6 +648,203 @@ router.delete("/cms/homepage/banners/:id", requireCmsAuth, (req, res) => {
   if (idx === -1) return res.status(404).json({ error: "Banner not found" });
   homepageConfig.banners.splice(idx, 1);
   return res.json({ success: true });
+});
+
+router.get("/cms/subscribers", requireCmsAuth, async (req, res) => {
+  try {
+    const search = req.query.search as string | undefined;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+    const offset = (page - 1) * limit;
+
+    let whereClause;
+    if (search) {
+      whereClause = like(newsletterSubscribersTable.email, `%${search}%`);
+    }
+
+    const [items, totalResult] = await Promise.all([
+      db.select().from(newsletterSubscribersTable)
+        .where(whereClause)
+        .orderBy(desc(newsletterSubscribersTable.createdAt))
+        .limit(limit)
+        .offset(offset),
+      db.select({ count: count() }).from(newsletterSubscribersTable).where(whereClause),
+    ]);
+
+    const total = totalResult[0]?.count ?? 0;
+
+    const sourceStats = await db
+      .select({ source: newsletterSubscribersTable.source, count: count() })
+      .from(newsletterSubscribersTable)
+      .groupBy(newsletterSubscribersTable.source);
+
+    return res.json({ items, total, page, limit, totalPages: Math.ceil(total / limit), sourceStats });
+  } catch (err) {
+    console.error("Subscribers error:", err);
+    return res.status(500).json({ error: "Failed to fetch subscribers" });
+  }
+});
+
+router.delete("/cms/subscribers/:id", requireCmsAuth, async (req, res) => {
+  try {
+    await db.delete(newsletterSubscribersTable).where(eq(newsletterSubscribersTable.id, Number(req.params.id)));
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to delete subscriber" });
+  }
+});
+
+router.get("/cms/subscribers/export", requireCmsAuth, async (_req, res) => {
+  try {
+    const items = await db.select().from(newsletterSubscribersTable).orderBy(desc(newsletterSubscribersTable.createdAt));
+    const csv = ["email,source,country_code,created_at", ...items.map(i => `${i.email},${i.source},${i.countryCode || ""},${i.createdAt}`)].join("\n");
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=subscribers.csv");
+    return res.send(csv);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to export" });
+  }
+});
+
+router.get("/cms/applications", requireCmsAuth, async (req, res) => {
+  try {
+    const status = req.query.status as string | undefined;
+    const search = req.query.search as string | undefined;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+    const offset = (page - 1) * limit;
+
+    const conditions = [];
+    if (status && status !== "all") {
+      conditions.push(eq(hustlerApplicationsTable.editorialStatus, status));
+    }
+    if (search) {
+      conditions.push(or(
+        like(hustlerApplicationsTable.name, `%${search}%`),
+        like(hustlerApplicationsTable.email, `%${search}%`),
+        like(hustlerApplicationsTable.company, `%${search}%`)
+      ));
+    }
+
+    const whereClause = conditions.length > 0
+      ? conditions.length === 1 ? conditions[0] : sql`${conditions[0]} AND ${conditions[1]}`
+      : undefined;
+
+    const [items, totalResult] = await Promise.all([
+      db.select().from(hustlerApplicationsTable)
+        .where(whereClause)
+        .orderBy(desc(hustlerApplicationsTable.createdAt))
+        .limit(limit)
+        .offset(offset),
+      db.select({ count: count() }).from(hustlerApplicationsTable).where(whereClause),
+    ]);
+
+    const total = totalResult[0]?.count ?? 0;
+
+    const statusCounts = await db
+      .select({ status: hustlerApplicationsTable.editorialStatus, count: count() })
+      .from(hustlerApplicationsTable)
+      .groupBy(hustlerApplicationsTable.editorialStatus);
+
+    return res.json({ items, total, page, limit, totalPages: Math.ceil(total / limit), statusCounts });
+  } catch (err) {
+    console.error("Applications error:", err);
+    return res.status(500).json({ error: "Failed to fetch applications" });
+  }
+});
+
+router.get("/cms/applications/:id", requireCmsAuth, async (req, res) => {
+  try {
+    const [item] = await db.select().from(hustlerApplicationsTable).where(eq(hustlerApplicationsTable.id, Number(req.params.id)));
+    if (!item) return res.status(404).json({ error: "Not found" });
+    return res.json(item);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to fetch application" });
+  }
+});
+
+router.patch("/cms/applications/:id", requireCmsAuth, async (req, res) => {
+  try {
+    const { editorialStatus, editorNotes } = req.body;
+    const updates: Record<string, unknown> = {};
+    if (editorialStatus) updates.editorialStatus = editorialStatus;
+    if (editorNotes !== undefined) updates.editorNotes = editorNotes;
+    if (editorialStatus && editorialStatus !== "pending") updates.reviewedAt = new Date();
+
+    await db.update(hustlerApplicationsTable).set(updates).where(eq(hustlerApplicationsTable.id, Number(req.params.id)));
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to update application" });
+  }
+});
+
+router.get("/cms/analytics", requireCmsAuth, async (_req, res) => {
+  try {
+    const [totalVotesResult] = await db.select({ count: count() }).from(votesTable);
+    const [totalPollsResult] = await db.select({ count: count() }).from(pollsTable);
+    const [totalProfilesResult] = await db.select({ count: count() }).from(profilesTable);
+    const [totalSubscribersResult] = await db.select({ count: count() }).from(newsletterSubscribersTable);
+    const [totalApplicationsResult] = await db.select({ count: count() }).from(hustlerApplicationsTable);
+
+    const votesByCategory = await db
+      .select({ category: pollsTable.category, count: count() })
+      .from(votesTable)
+      .innerJoin(pollsTable, eq(votesTable.pollId, pollsTable.id))
+      .groupBy(pollsTable.category)
+      .orderBy(desc(count()));
+
+    const topPolls = await db
+      .select({
+        id: pollsTable.id,
+        question: pollsTable.question,
+        category: pollsTable.category,
+        totalVotes: sql<number>`COALESCE(SUM(${pollOptionsTable.voteCount}), 0)`.as("total_votes"),
+      })
+      .from(pollsTable)
+      .leftJoin(pollOptionsTable, eq(pollsTable.id, pollOptionsTable.pollId))
+      .groupBy(pollsTable.id, pollsTable.question, pollsTable.category)
+      .orderBy(desc(sql`total_votes`))
+      .limit(10);
+
+    const recentVotes = await db
+      .select({
+        date: sql<string>`DATE(${votesTable.createdAt})`.as("date"),
+        count: count(),
+      })
+      .from(votesTable)
+      .groupBy(sql`DATE(${votesTable.createdAt})`)
+      .orderBy(desc(sql`DATE(${votesTable.createdAt})`))
+      .limit(14);
+
+    const votesByCountry = await db
+      .select({ country: votesTable.countryName, count: count() })
+      .from(votesTable)
+      .where(sql`${votesTable.countryName} IS NOT NULL`)
+      .groupBy(votesTable.countryName)
+      .orderBy(desc(count()))
+      .limit(15);
+
+    return res.json({
+      overview: {
+        totalVotes: totalVotesResult.count,
+        totalPolls: totalPollsResult.count,
+        totalProfiles: totalProfilesResult.count,
+        totalSubscribers: totalSubscribersResult.count,
+        totalApplications: totalApplicationsResult.count,
+      },
+      votesByCategory,
+      topPolls,
+      recentVotes: recentVotes.reverse(),
+      votesByCountry,
+    });
+  } catch (err) {
+    console.error("Analytics error:", err);
+    return res.status(500).json({ error: "Failed to fetch analytics" });
+  }
 });
 
 export default router;

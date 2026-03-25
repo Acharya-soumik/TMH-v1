@@ -76,6 +76,41 @@ export const api = {
     return request("/upload-image", { method: "POST", body: formData });
   },
 
+  getSubscribers: (params?: { search?: string; page?: number; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.search) q.set("search", params.search);
+    if (params?.page) q.set("page", String(params.page));
+    if (params?.limit) q.set("limit", String(params.limit));
+    return request(`/subscribers?${q.toString()}`);
+  },
+  deleteSubscriber: (id: number) => request(`/subscribers/${id}`, { method: "DELETE" }),
+  exportSubscribers: async () => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (authToken) headers["x-cms-token"] = authToken;
+    const res = await fetch(`${API_BASE}/subscribers/export`, { headers });
+    if (!res.ok) throw new Error("Export failed");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "subscribers.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  getApplications: (params?: { status?: string; search?: string; page?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.status) q.set("status", params.status);
+    if (params?.search) q.set("search", params.search);
+    if (params?.page) q.set("page", String(params.page));
+    return request(`/applications?${q.toString()}`);
+  },
+  getApplication: (id: number) => request(`/applications/${id}`),
+  updateApplication: (id: number, data: Record<string, unknown>) =>
+    request(`/applications/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+
+  getAnalytics: () => request("/analytics"),
+
   getHomepage: () => request("/homepage"),
   updateHomepage: (data: Record<string, unknown>) =>
     request("/homepage", { method: "PUT", body: JSON.stringify(data) }),
