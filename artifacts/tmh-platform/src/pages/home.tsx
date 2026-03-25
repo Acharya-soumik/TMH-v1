@@ -330,47 +330,6 @@ export default function Home() {
 
       {/* ── FRONT PAGE: Lead Debate + Sidebar ── */}
       <section className="py-8 bg-background border-b border-border section-fadein relative">
-        {/* Opinion Bubbles — minimal WSJ chat-style, desktop only */}
-        <div className="hidden xl:block pointer-events-none absolute inset-0 overflow-hidden z-0" aria-hidden="true">
-          {[
-            { text: "Bold take.", emoji: "🇦🇪", side: "left", top: "8%", float: "bubble-float-1", delay: "0s", rotate: -2 },
-            { text: "Not yet.", emoji: "🫣", side: "left", top: "55%", float: "bubble-float-3", delay: "1.5s", rotate: 1 },
-            { text: "Finally.", emoji: "🇱🇧", side: "right", top: "12%", float: "bubble-float-2", delay: "0.6s", rotate: 2 },
-            { text: "100%", emoji: "🎯", side: "right", top: "60%", float: "bubble-float-1", delay: "2.2s", rotate: -1 },
-          ].map((bubble, i) => (
-            <div
-              key={i}
-              className={`absolute ${bubble.float}`}
-              style={{
-                ...(bubble.side === "left" ? { left: 12 } : { right: 12 }),
-                top: (bubble as any).top,
-                animationDelay: bubble.delay,
-              }}
-            >
-              <div
-                style={{
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 12,
-                  borderBottomLeftRadius: bubble.side === "left" ? 3 : 12,
-                  borderBottomRightRadius: bubble.side === "right" ? 3 : 12,
-                  padding: "5px 10px",
-                  boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
-                  transform: `rotate(${bubble.rotate}deg)`,
-                  opacity: 0.6,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 5,
-                }}
-              >
-                <span style={{ fontSize: 11 }}>{bubble.emoji}</span>
-                <span style={{ fontFamily: "DM Sans, sans-serif", fontSize: 10, color: "var(--foreground)", fontWeight: 500 }}>
-                  {bubble.text}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-0">
 
