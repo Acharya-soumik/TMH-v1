@@ -42,7 +42,7 @@ export function Navbar() {
               <span className="font-display font-black text-lg uppercase tracking-tight text-foreground leading-none group-hover:text-primary transition-colors">
                 The Tribunal<span className="text-primary">.</span>
               </span>
-              <span className="text-[7px] font-serif tracking-[0.2em] uppercase text-muted-foreground leading-none mt-0.5">
+              <span className="text-[7px] font-serif tracking-[0.2em] uppercase text-muted-foreground leading-none mt-1.5">
                 by The Middle East Hustle
               </span>
             </Link>

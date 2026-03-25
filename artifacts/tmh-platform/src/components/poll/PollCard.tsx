@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Link } from "wouter"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowRight, Share2, Linkedin, Lock, Mail, CheckCircle2, Flame } from "lucide-react"
@@ -78,6 +78,13 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
 
   const isVoted = hasVoted(poll.id)
   const votedOptionId = getVotedOption(poll.id)
+
+  useEffect(() => {
+    if (isVoted && phase === "vote") {
+      const unlocked = localStorage.getItem("tmh_email_submitted") || localStorage.getItem(`tmh_unlocked_${poll.id}`)
+      setPhase(unlocked ? "results" : "gate")
+    }
+  }, [isVoted, phase, poll.id])
 
   const unlock = () => {
     localStorage.setItem(`tmh_unlocked_${poll.id}`, "true")

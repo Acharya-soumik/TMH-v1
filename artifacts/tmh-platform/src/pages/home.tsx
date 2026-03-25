@@ -223,6 +223,7 @@ function FeaturedPredictionCard({ featured, chartW, chartH, padL, padR, padT, pa
   const [vote, setVote] = useState<"yes" | "no" | null>(() => getPredVote(featured.id))
   const [email, setEmail] = useState("")
   const [emailDone, setEmailDone] = useState(false)
+  const [hovIdx, setHovIdx] = useState<number | null>(null)
   const predUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/predictions`
 
   const handleVote = (choice: "yes" | "no") => {
@@ -261,7 +262,7 @@ function FeaturedPredictionCard({ featured, chartW, chartH, padL, padR, padT, pa
         <p className="text-[9px] uppercase tracking-[0.15em] font-bold text-muted-foreground font-serif mb-2">
           Confidence Over Time — Yes %
         </p>
-        <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full" style={{ maxHeight: 160 }}>
+        <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full" style={{ maxHeight: 160 }} onMouseLeave={() => setHovIdx(null)}>
           <defs>
             <linearGradient id="homeYesGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#10B981" stopOpacity="0.25" />
@@ -283,9 +284,42 @@ function FeaturedPredictionCard({ featured, chartW, chartH, padL, padR, padT, pa
           <path d={yesArea} fill="url(#homeYesGrad)" />
           <polyline points={yesPoints} fill="none" stroke="#10B981" strokeWidth="1.8" strokeLinejoin="round" />
           <polyline points={noPoints} fill="none" stroke="#DC143C" strokeWidth="1.2" strokeLinejoin="round" opacity="0.7" />
+          {hovIdx !== null && (
+            <line x1={toX(hovIdx)} y1={padT} x2={toX(hovIdx)} y2={padT + plotH} stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" />
+          )}
+          {featured.data.map((v, i) => (
+            <circle key={`yc${i}`} cx={toX(i)} cy={toY(v)} r={hovIdx === i ? 3 : 0} fill="#10B981" style={{ transition: "r 0.15s" }} />
+          ))}
+          {noData.map((v, i) => (
+            <circle key={`nc${i}`} cx={toX(i)} cy={toY(v)} r={hovIdx === i ? 2.5 : 0} fill="#DC143C" style={{ transition: "r 0.15s" }} />
+          ))}
           <circle cx={toX(featured.data.length - 1)} cy={toY(featured.data[featured.data.length - 1])} r="2.5" fill="#10B981" />
           <circle cx={toX(featured.data.length - 1)} cy={toY(noData[noData.length - 1])} r="2" fill="#DC143C" />
-          <text x={toX(featured.data.length - 1) + 1} y={toY(featured.data[featured.data.length - 1]) - 4} fill="#10B981" fontSize="6" fontWeight="700" fontFamily="'Barlow Condensed', sans-serif">{featured.data[featured.data.length - 1]}%</text>
+          {hovIdx === null && (
+            <text x={toX(featured.data.length - 1) + 1} y={toY(featured.data[featured.data.length - 1]) - 4} fill="#10B981" fontSize="6" fontWeight="700" fontFamily="'Barlow Condensed', sans-serif">{featured.data[featured.data.length - 1]}%</text>
+          )}
+          {featured.data.map((_, i) => {
+            const slotW = plotW / (featured.data.length - 1)
+            return <rect key={`hit${i}`} x={toX(i) - slotW / 2} y={padT} width={slotW} height={plotH} fill="transparent" onMouseEnter={() => setHovIdx(i)} />
+          })}
+          {hovIdx !== null && (() => {
+            const yVal = featured.data[hovIdx]
+            const prev = hovIdx > 0 ? featured.data[hovIdx - 1] : yVal
+            const delta = yVal - prev
+            const tipW = 72
+            const tipH = 30
+            let tipX = toX(hovIdx) + 6
+            if (tipX + tipW > chartW - padR) tipX = toX(hovIdx) - tipW - 6
+            const tipY = Math.max(padT, toY(yVal) - tipH / 2)
+            return (
+              <g>
+                <rect x={tipX} y={tipY} width={tipW} height={tipH} rx="2" fill="rgba(30,30,30,0.92)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
+                <text x={tipX + 4} y={tipY + 9} fill="rgba(255,255,255,0.6)" fontSize="5.5" fontFamily="'Barlow Condensed', sans-serif">{months[hovIdx % 12]} 2026</text>
+                <text x={tipX + 4} y={tipY + 18} fill="#10B981" fontSize="7" fontWeight="700" fontFamily="'Barlow Condensed', sans-serif">{yVal}% YES</text>
+                <text x={tipX + 4} y={tipY + 26} fill={delta >= 0 ? "#10B981" : "#DC143C"} fontSize="5.5" fontFamily="'Barlow Condensed', sans-serif">{delta >= 0 ? "▲" : "▼"} {Math.abs(delta).toFixed(1)}% vs last month</text>
+              </g>
+            )
+          })()}
         </svg>
         <p className="text-[9px] font-serif mt-2" style={{ color: "#10B981" }}>
           {featured.up ? "▲" : "▼"} Confidence moved {featured.up ? "+" : "-"}{featured.momentum}% in the last 30 days
@@ -465,6 +499,7 @@ export default function Home() {
   const { data: categories } = useListCategories()
   const [ctaEmail, setCtaEmail] = useState("")
   const [ctaJoined, setCtaJoined] = useState(() => !!localStorage.getItem("tmh_cta_joined"))
+  const [pulseHovIdx, setPulseHovIdx] = useState<number | null>(null)
   const menaPop = usePopulationCounter()
   const { t, isAr } = useI18n()
 
@@ -782,7 +817,7 @@ export default function Home() {
                         <p className="text-[9px] uppercase tracking-[0.15em] font-bold text-muted-foreground font-serif mb-2">
                           Trend Over 12 Months
                         </p>
-                        <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full" style={{ maxHeight: 140 }}>
+                        <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full" style={{ maxHeight: 140 }} onMouseLeave={() => setPulseHovIdx(null)}>
                           <defs>
                             <linearGradient id="homePulseGrad" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="0%" stopColor={topic.tagColor} stopOpacity="0.25" />
@@ -804,7 +839,35 @@ export default function Home() {
                           })}
                           <path d={area} fill="url(#homePulseGrad)" />
                           <polyline points={pts} fill="none" stroke={topic.tagColor} strokeWidth="1.8" strokeLinejoin="round" />
+                          {pulseHovIdx !== null && (
+                            <line x1={toX(pulseHovIdx)} y1={padT} x2={toX(pulseHovIdx)} y2={padT + plotH} stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" />
+                          )}
+                          {topic.sparkData.map((v, i) => (
+                            <circle key={`pc${i}`} cx={toX(i)} cy={toY(v)} r={pulseHovIdx === i ? 3 : 0} fill={topic.tagColor} style={{ transition: "r 0.15s" }} />
+                          ))}
                           <circle cx={toX(topic.sparkData.length - 1)} cy={toY(topic.sparkData[topic.sparkData.length - 1])} r="2.5" fill={topic.tagColor} />
+                          {topic.sparkData.map((_, i) => {
+                            const slotW = plotW / (topic.sparkData.length - 1)
+                            return <rect key={`ph${i}`} x={toX(i) - slotW / 2} y={padT} width={slotW} height={plotH} fill="transparent" onMouseEnter={() => setPulseHovIdx(i)} />
+                          })}
+                          {pulseHovIdx !== null && (() => {
+                            const val = topic.sparkData[pulseHovIdx]
+                            const prev = pulseHovIdx > 0 ? topic.sparkData[pulseHovIdx - 1] : val
+                            const delta = val - prev
+                            const tipW = 72
+                            const tipH = 30
+                            let tipX = toX(pulseHovIdx) + 6
+                            if (tipX + tipW > chartW - padR) tipX = toX(pulseHovIdx) - tipW - 6
+                            const tipY = Math.max(padT, toY(val) - tipH / 2)
+                            return (
+                              <g>
+                                <rect x={tipX} y={tipY} width={tipW} height={tipH} rx="2" fill="rgba(30,30,30,0.92)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
+                                <text x={tipX + 4} y={tipY + 9} fill="rgba(255,255,255,0.6)" fontSize="5.5" fontFamily="'Barlow Condensed', sans-serif">{months[pulseHovIdx]} 2026</text>
+                                <text x={tipX + 4} y={tipY + 18} fill={topic.tagColor} fontSize="7" fontWeight="700" fontFamily="'Barlow Condensed', sans-serif">${val.toFixed(1)}T</text>
+                                <text x={tipX + 4} y={tipY + 26} fill={delta >= 0 ? "#10B981" : "#DC143C"} fontSize="5.5" fontFamily="'Barlow Condensed', sans-serif">{delta >= 0 ? "▲" : "▼"} ${Math.abs(delta).toFixed(2)}T vs prev</text>
+                              </g>
+                            )
+                          })()}
                         </svg>
                         <p className="text-[9px] font-serif mt-2" style={{ color: topic.tagColor }}>
                           {topic.deltaUp ? "▲" : "▼"} {topic.delta} year-over-year
