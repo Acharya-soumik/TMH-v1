@@ -11,7 +11,8 @@ const router = Router();
 const CMS_USERNAME = process.env.CMS_USERNAME ?? "admin";
 const CMS_PIN = process.env.CMS_PIN ?? "1234";
 
-const sessions = new Map<string, { username: string; createdAt: number }>();
+export const cmsSessions = new Map<string, { username: string; createdAt: number }>();
+const sessions = cmsSessions;
 
 function generateToken(): string {
   return crypto.randomBytes(32).toString("hex");

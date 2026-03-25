@@ -2,8 +2,9 @@ import { useState, useMemo } from "react"
 import { useListProfiles } from "@workspace/api-client-react"
 import { Layout } from "@/components/layout/Layout"
 import { ProfileCard } from "@/components/profile/ProfileCard"
-import { Search } from "lucide-react"
+import { Search, Lock } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Link } from "wouter"
 
 const IMPACT_STATEMENTS: Record<string, string> = {
   "Kitopi": "Scaled cloud kitchens across 5 countries — redefining how the region eats",
@@ -108,6 +109,13 @@ export default function Profiles() {
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>
             Founders. Operators. Changemakers. Finally counted.
           </p>
+          <Link
+            href="/majlis"
+            className="inline-flex items-center gap-2 mt-4 bg-primary text-white text-[11px] font-bold uppercase tracking-[0.15em] px-5 py-2.5 hover:bg-primary/90 transition-colors font-serif"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            Enter The Majlis
+          </Link>
         </div>
 
         {data?.profiles && <VoicesTicker profiles={data.profiles} />}

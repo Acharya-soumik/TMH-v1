@@ -3,7 +3,7 @@ import { useGetProfile } from "@workspace/api-client-react"
 import { Layout } from "@/components/layout/Layout"
 import { PollCard } from "@/components/poll/PollCard"
 import { ProfileCard } from "@/components/profile/ProfileCard"
-import { ArrowLeft, MapPin, Building, Briefcase, Eye, ExternalLink } from "lucide-react"
+import { ArrowLeft, MapPin, Building, Briefcase, Eye, ExternalLink, MessageSquare } from "lucide-react"
 
 const COMPANY_URLS: Record<string, string> = {
   "1833 Members Club": "https://1833.club",
@@ -164,6 +164,13 @@ export default function ProfileDetail() {
                   <MapPin className="w-4 h-4 text-foreground" /> {profile.city}, {profile.country}
                 </div>
               </div>
+
+              <Link
+                href="/majlis"
+                className="inline-flex items-center gap-2 mt-4 text-primary hover:text-primary/80 text-[10px] font-bold uppercase tracking-widest transition-colors"
+              >
+                <MessageSquare className="w-3.5 h-3.5" /> Message in The Majlis
+              </Link>
             </div>
           </div>
         </div>

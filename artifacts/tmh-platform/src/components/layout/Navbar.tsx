@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter"
-import { Menu, X, Moon, Sun } from "lucide-react"
+import { Menu, X, Moon, Sun, Lock } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useTheme } from "@/hooks/use-theme"
 import { cn } from "@/lib/utils"
@@ -24,6 +24,7 @@ export function Navbar() {
     { label: t("Debates"), href: "/polls" },
     { label: t("Predictions"), href: "/predictions" },
     { label: t("Voices"), href: "/profiles" },
+    { label: t("The Majlis"), href: "/majlis", icon: Lock },
   ]
 
   return (
@@ -55,12 +56,13 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "text-[11px] uppercase tracking-[0.2em] font-bold transition-all font-serif",
-                  location === link.href
+                  "text-[11px] uppercase tracking-[0.2em] font-bold transition-all font-serif flex items-center gap-1",
+                  location === link.href || (link.href === "/majlis" && location.startsWith("/majlis"))
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
+                {link.icon && <link.icon className="w-3 h-3" />}
                 {link.label}
               </Link>
             ))}
@@ -101,11 +103,12 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "py-3 border-b border-border font-serif font-bold uppercase tracking-wider text-base transition-colors",
+                  "py-3 border-b border-border font-serif font-bold uppercase tracking-wider text-base transition-colors flex items-center gap-2",
                   location === link.href ? "text-primary" : "text-foreground"
                 )}
                 onClick={() => setMobileMenuOpen(false)}
               >
+                {link.icon && <link.icon className="w-4 h-4" />}
                 {link.label}
               </Link>
             ))}

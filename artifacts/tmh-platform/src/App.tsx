@@ -18,6 +18,8 @@ import Terms from "@/pages/terms"
 import FAQ from "@/pages/faq"
 import Admin from "@/pages/admin"
 import MenaPulse from "@/pages/mena-pulse"
+import Majlis from "@/pages/majlis"
+import MajlisLogin from "@/pages/majlis-login"
 import NotFound from "@/pages/not-found"
 
 const queryClient = new QueryClient({
@@ -45,6 +47,8 @@ function Router() {
       <Route path="/terms" component={Terms} />
       <Route path="/faq" component={FAQ} />
       <Route path="/mena-pulse" component={MenaPulse} />
+      <Route path="/majlis/login" component={MajlisLogin} />
+      <Route path="/majlis" component={Majlis} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>

@@ -983,9 +983,13 @@ export default function Home() {
             </div>
           )}
 
-          <div className="mt-8">
+          <div className="mt-8 flex items-center gap-4 flex-wrap">
             <Link href="/profiles" className="inline-flex items-center gap-2 bg-primary text-white font-bold uppercase tracking-widest text-xs px-8 py-3 hover:bg-primary/90 transition-colors font-serif">
               {t("View All Voices")} <ArrowRight className="w-3 h-3" />
+            </Link>
+            <Link href="/majlis/login" className="inline-flex items-center gap-2 border border-background/30 text-background font-bold uppercase tracking-widest text-xs px-8 py-3 hover:bg-background/10 transition-colors font-serif">
+              <Lock className="w-3 h-3" />
+              {t("Enter The Majlis")}
             </Link>
           </div>
         </div>

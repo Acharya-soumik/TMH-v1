@@ -19,6 +19,7 @@ import PagePulse from "@/pages/page-pulse";
 import PageFaq from "@/pages/page-faq";
 import PageTerms from "@/pages/page-terms";
 import PageContact from "@/pages/page-contact";
+import MajlisPage from "@/pages/majlis";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ function ProtectedRoutes() {
         <Route path="/pages/contact" component={PageContact} />
         <Route path="/subscribers" component={SubscribersPage} />
         <Route path="/applications" component={ApplicationsPage} />
+        <Route path="/majlis" component={MajlisPage} />
         <Route path="/">
           <Redirect to="/dashboard" />
         </Route>

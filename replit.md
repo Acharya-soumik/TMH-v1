@@ -103,6 +103,8 @@ artifacts-monorepo/
 - `poll_options` — Answer options with vote counts
 - `votes` — Vote records keyed by voterToken (localStorage UUID)
 - `profiles` — Curated regional voices with full editorial profiles
+- `majlis_users` — Authenticated Majlis chat users (FK to profiles, email + hashed password, ban/mute flags)
+- `majlis_messages` — Chat messages with reply threading, edit/delete tracking
 
 ### API Endpoints
 - `GET /api/polls` — List polls (with filter/category query params)
@@ -114,6 +116,25 @@ artifacts-monorepo/
 - `GET /api/rankings` — Get rankings (type: profiles/founders/women_leaders/sectors/cities/topics)
 - `GET /api/categories` — List all categories with poll counts
 - `GET /api/weekly-pulse` — Weekly editorial digest
+
+### Majlis API Endpoints
+- `POST /api/majlis/auth/register` — Register (requires valid profileId)
+- `POST /api/majlis/auth/login` — Login with email + password
+- `POST /api/majlis/auth/verify` — Verify session token
+- `GET /api/majlis/messages` — Paginated message history (auth required)
+- `POST /api/majlis/messages` — Send message (auth required)
+- `GET /api/majlis/messages/poll` — Poll for new messages after ID (auth required)
+- `GET /api/majlis/members` — List members with online status (auth required)
+- CMS endpoints: `GET /api/cms/majlis/stats`, `GET/PATCH /api/cms/majlis/users`, `GET/DELETE /api/cms/majlis/messages`
+
+### The Majlis (Private Chat)
+- **Route**: `/majlis` — protected chat room, redirects to `/majlis/login` if not authenticated
+- **Auth**: Email + password registration (invite-only, requires approved Voice profile ID)
+- **Session**: JWT-like token in `x-majlis-token` header, stored in `localStorage` as `majlis_token`
+- **Real-time**: Polling every 3 seconds for new messages
+- **Design**: Dark theme with crimson accents, editorial feel, member sidebar with online status
+- **Entry points**: Navbar (lock icon), Profiles page hero button, individual profile detail links
+- **CMS**: Majlis management under COMMUNITY section — user management (ban/mute/activate), message moderation
 
 ## Database State (as of March 2026)
 - **327 polls** total across 15 categories
