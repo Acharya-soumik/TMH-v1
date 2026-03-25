@@ -3,6 +3,20 @@ import { useEffect, useRef } from "react"
 export function FlipDigit({ char, prevChar }: { char: string; prevChar: string }) {
   const isNumber = char >= "0" && char <= "9"
   const changed = char !== prevChar && isNumber
+  const isSeparator = char === "," || char === "." || char === " "
+
+  if (isSeparator) {
+    return (
+      <span
+        style={{
+          display: "inline-block",
+          lineHeight: 1,
+        }}
+      >
+        {char}
+      </span>
+    )
+  }
 
   return (
     <span
@@ -10,8 +24,8 @@ export function FlipDigit({ char, prevChar }: { char: string; prevChar: string }
         display: "inline-block",
         position: "relative",
         overflow: "hidden",
-        height: "1em",
-        lineHeight: 1,
+        height: "1.15em",
+        lineHeight: 1.15,
       }}
       className="tabular-nums"
     >
