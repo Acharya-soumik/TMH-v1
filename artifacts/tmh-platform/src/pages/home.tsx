@@ -661,7 +661,7 @@ export default function Home() {
                   {trendingPolls?.polls.slice(0, 5).map((poll) => (
                     <Link key={poll.id} href={`/polls/${poll.id}`}>
                       <div className="py-3 border-b border-border group cursor-pointer">
-                        <p className="text-[9px] uppercase tracking-widest text-primary font-serif font-bold">{poll.categoryName}</p>
+                        <p className="text-[9px] uppercase tracking-widest text-primary font-serif font-bold">{poll.category}</p>
                         <p className="font-serif font-black uppercase text-[13px] leading-tight text-foreground mt-1 group-hover:text-primary transition-colors">
                           {poll.question.length > 90 ? poll.question.slice(0, 90) + "…" : poll.question}
                         </p>
@@ -722,7 +722,16 @@ export default function Home() {
               </div>
 
               <div>
-                {PREDICTIONS.slice(1, 6).map((pred) => {
+                {(() => {
+                  const seen = new Set<string>()
+                  seen.add(PREDICTIONS[0].category)
+                  const mixed: typeof PREDICTIONS = []
+                  for (const p of PREDICTIONS) {
+                    if (mixed.length >= 5) break
+                    if (!seen.has(p.category)) { seen.add(p.category); mixed.push(p) }
+                  }
+                  return mixed
+                })().map((pred) => {
                   const sideVote = getPredVote(pred.id)
                   const sidePhase = getPredPhase(pred.id)
                   return (
