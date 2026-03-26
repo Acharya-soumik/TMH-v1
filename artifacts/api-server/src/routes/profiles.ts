@@ -20,6 +20,7 @@ function toProfileResponse(profile: any) {
     viewCount: profile.viewCount,
     associatedPollCount: profile.associatedPollCount,
     quote: profile.quote ?? "",
+    impactStatement: profile.impactStatement ?? null,
   };
 }
 
@@ -124,6 +125,7 @@ router.get("/profiles/:id", async (req, res) => {
       story: profile.story,
       lessonsLearned: profile.lessonsLearned ?? [],
       quote: profile.quote,
+      impactStatement: profile.impactStatement ?? null,
       relatedPolls: relatedPollsWithOptions,
       similarProfiles: similarProfiles.map(toProfileResponse),
     });

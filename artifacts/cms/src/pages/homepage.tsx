@@ -23,8 +23,15 @@ interface Section {
   config: Record<string, unknown>;
 }
 
+interface CountryBreakdown {
+  name: string;
+  flag: string;
+  population: string;
+}
+
 interface HomepageData {
-  masthead: { title: string; subtitle: string; showPopulationCounter: boolean; issueLabel: string };
+  masthead: { title: string; subtitle: string; showPopulationCounter: boolean; issueLabel: string; basePopulation?: number; growthRate?: number; countryBreakdown?: CountryBreakdown[] };
+  sectionStats?: { useOverrides: boolean; overrides: { debates: number | null; predictions: number | null; pulseTopics: number | null; voices: number | null; totalVotes: number | null } };
   ticker: { enabled: boolean; speed: string; items: { topic: string; votes: string }[] };
   sections: Section[];
   banners: Banner[];
@@ -44,7 +51,7 @@ const SECTION_TYPE_LABELS: Record<string, string> = {
 export default function HomepagePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"sections" | "banners" | "masthead" | "newsletter">("sections");
+  const [activeTab, setActiveTab] = useState<"sections" | "banners" | "masthead" | "newsletter" | "stats">("sections");
   const [data, setData] = useState<HomepageData | null>(null);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedBanner, setExpandedBanner] = useState<string | null>(null);
@@ -224,7 +231,7 @@ export default function HomepagePage() {
       )}
 
       <div className="flex gap-1 border-b border-border">
-        {(["sections", "banners", "masthead", "newsletter"] as const).map(tab => (
+        {(["sections", "banners", "masthead", "newsletter", "stats"] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -407,6 +414,38 @@ export default function HomepagePage() {
             Show live MENA population counter
           </label>
 
+          {data.masthead.showPopulationCounter && (
+            <div className="pl-6 space-y-3 border-l-2 border-primary/20">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Base Population">
+                  <input type="number" value={data.masthead.basePopulation || 541000000} onChange={e => setData({ ...data, masthead: { ...data.masthead, basePopulation: Number(e.target.value) } })} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+                </Field>
+                <Field label="Annual Growth Rate (%)">
+                  <input type="number" step="0.01" value={data.masthead.growthRate || 1.56} onChange={e => setData({ ...data, masthead: { ...data.masthead, growthRate: Number(e.target.value) } })} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+                </Field>
+              </div>
+              <div className="space-y-2 mt-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Country Breakdown ({(data.masthead.countryBreakdown || []).length})</h4>
+                  <button
+                    onClick={() => setData({ ...data, masthead: { ...data.masthead, countryBreakdown: [...(data.masthead.countryBreakdown || []), { name: "", flag: "", population: "" }] } })}
+                    className="flex items-center gap-1 px-2 py-1 text-xs bg-secondary rounded-sm hover:bg-secondary/80"
+                  >
+                    + Add Country
+                  </button>
+                </div>
+                {(data.masthead.countryBreakdown || []).map((c: { name: string; flag: string; population: string }, idx: number) => (
+                  <div key={idx} className="flex items-center gap-2 border border-border/50 rounded-sm p-2 bg-card">
+                    <input value={c.flag} onChange={e => { const bd = [...(data.masthead.countryBreakdown || [])]; bd[idx] = { ...c, flag: e.target.value }; setData({ ...data, masthead: { ...data.masthead, countryBreakdown: bd } }); }} placeholder="🇦🇪" className="w-12 px-2 py-1.5 bg-background border border-border rounded-sm text-sm text-center" />
+                    <input value={c.name} onChange={e => { const bd = [...(data.masthead.countryBreakdown || [])]; bd[idx] = { ...c, name: e.target.value }; setData({ ...data, masthead: { ...data.masthead, countryBreakdown: bd } }); }} placeholder="Country name" className="flex-1 px-2 py-1.5 bg-background border border-border rounded-sm text-sm" />
+                    <input value={c.population} onChange={e => { const bd = [...(data.masthead.countryBreakdown || [])]; bd[idx] = { ...c, population: e.target.value }; setData({ ...data, masthead: { ...data.masthead, countryBreakdown: bd } }); }} placeholder="Population" className="w-28 px-2 py-1.5 bg-background border border-border rounded-sm text-sm" />
+                    <button onClick={() => { const bd = (data.masthead.countryBreakdown || []).filter((_: unknown, j: number) => j !== idx); setData({ ...data, masthead: { ...data.masthead, countryBreakdown: bd } }); }} className="text-muted-foreground hover:text-red-500 text-xs">✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="border-t border-border pt-4 mt-4">
             <h3 className="text-sm font-medium mb-3">News Ticker</h3>
             <label className="flex items-center gap-2 text-sm mb-3">
@@ -429,6 +468,28 @@ export default function HomepagePage() {
               <p className="text-[10px] font-serif tracking-[0.25em] uppercase text-muted-foreground mt-1">{data.masthead.subtitle}</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === "stats" && (
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">Override the live counts shown on the homepage. When disabled, counts are fetched live from the database.</p>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={data.sectionStats?.useOverrides || false} onChange={e => setData({ ...data, sectionStats: { ...(data.sectionStats || { useOverrides: false, overrides: { debates: null, predictions: null, pulseTopics: null, voices: null, totalVotes: null } }), useOverrides: e.target.checked } })} className="accent-primary" />
+            Use manual stat overrides instead of live counts
+          </label>
+          {(data.sectionStats?.useOverrides) && (
+            <div className="grid grid-cols-2 gap-3 pl-6 border-l-2 border-primary/20">
+              {(["debates", "predictions", "pulseTopics", "voices", "totalVotes"] as const).map(key => (
+                <Field key={key} label={key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase())}>
+                  <input type="number" value={data.sectionStats?.overrides[key] ?? ""} onChange={e => {
+                    const val = e.target.value === "" ? null : Number(e.target.value);
+                    setData({ ...data, sectionStats: { ...(data.sectionStats || { useOverrides: true, overrides: { debates: null, predictions: null, pulseTopics: null, voices: null, totalVotes: null } }), overrides: { ...(data.sectionStats?.overrides || { debates: null, predictions: null, pulseTopics: null, voices: null, totalVotes: null }), [key]: val } } });
+                  }} placeholder="Live (auto)" className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+                </Field>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

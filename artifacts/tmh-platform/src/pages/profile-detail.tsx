@@ -179,6 +179,16 @@ export default function ProfileDetail() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 lg:grid-cols-3 gap-16">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-16">
+          {/* Impact Statement */}
+          {(profile as Record<string, unknown>).impactStatement && (
+            <section className="bg-background border border-border p-6 md:p-8">
+              <p className="text-[10px] uppercase tracking-[0.25em] font-bold text-primary mb-3">Impact</p>
+              <p className="text-lg font-sans font-medium text-foreground leading-relaxed">
+                {String((profile as Record<string, unknown>).impactStatement)}
+              </p>
+            </section>
+          )}
+
           {/* IN THEIR OWN WORDS — above The Story */}
           {profile.quote && (
             <section>

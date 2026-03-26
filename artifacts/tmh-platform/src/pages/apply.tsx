@@ -2,8 +2,9 @@ import { useState } from "react"
 import { Layout } from "@/components/layout/Layout"
 import { CheckCircle2, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useCmsConfig } from "@/hooks/use-cms-data"
 
-const CRITERIA = [
+const CRITERIA_DEFAULT = [
   "Real, verifiable impact — named outcomes, not just job titles",
   "Based in MENA or with a deep, ongoing connection to the region",
   "A unique story — pivots, failures, non-linear journeys",
@@ -12,17 +13,26 @@ const CRITERIA = [
   "A public profile verifiable on LinkedIn or in the press",
 ]
 
-const COUNTRIES = [
+const COUNTRIES_DEFAULT = [
   "UAE", "Saudi Arabia", "Egypt", "Jordan", "Lebanon", "Kuwait",
   "Bahrain", "Qatar", "Oman", "Morocco", "Tunisia", "Iraq",
   "Palestine", "Other MENA", "Diaspora"
 ]
 
-const SECTORS = [
+const SECTORS_DEFAULT = [
   "Technology / AI", "Fintech", "Startups & VC", "Media & Creative",
   "Healthcare / MedTech", "Education", "Real Estate", "Consulting",
   "Social Enterprise", "Government / Policy", "Arts & Culture", "Other"
 ]
+
+interface ApplyConfig {
+  hero?: { title?: string; tagline?: string; subtitle?: string }
+  criteria?: string[]
+  countries?: string[]
+  sectors?: string[]
+  successMessage?: { title?: string; subtitle?: string; cta?: string }
+  disclaimer?: string
+}
 
 type Status = "idle" | "submitting" | "success" | "error"
 
@@ -33,6 +43,14 @@ export default function Apply() {
     city: "", country: "", sector: "",
     bio: "", quote: "", linkedin: "", impact: "",
   })
+  const { data: config } = useCmsConfig<ApplyConfig>("apply")
+
+  const hero = config?.hero
+  const criteria = config?.criteria?.length ? config.criteria : CRITERIA_DEFAULT
+  const countries = config?.countries?.length ? config.countries : COUNTRIES_DEFAULT
+  const sectors = config?.sectors?.length ? config.sectors : SECTORS_DEFAULT
+  const successMsg = config?.successMessage
+  const disclaimer = config?.disclaimer
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(prev => ({ ...prev, [k]: e.target.value }))
@@ -58,12 +76,14 @@ export default function Apply() {
       {/* Hero */}
       <div className="bg-foreground text-background py-16 border-b border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-4 font-serif">The Voices</p>
+          <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-4 font-serif">{hero?.tagline || "The Voices"}</p>
           <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
-            Think You Belong<br />In The Voices?
+            {(hero?.title || "Think You Belong\nIn The Voices?").split("\n").map((line, i, arr) => (
+              <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+            ))}
           </h1>
           <p className="text-background/75 font-sans text-base mt-4 max-w-xl">
-            We're building the most credible founder directory in the Middle East. Not everyone makes the cut. The bar is high — because our audience is discerning.
+            {hero?.subtitle || "We're building the most credible founder directory in the Middle East. Not everyone makes the cut. The bar is high — because our audience is discerning."}
           </p>
         </div>
       </div>
@@ -75,7 +95,7 @@ export default function Apply() {
             The Bar
           </h2>
           <div className="grid sm:grid-cols-2 gap-4">
-            {CRITERIA.map((c, i) => (
+            {criteria.map((c, i) => (
               <div key={i} className="flex items-start gap-3 p-4 border border-border bg-card">
                 <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                 <span className="text-sm font-sans text-foreground/80 leading-relaxed">{c}</span>
@@ -93,10 +113,10 @@ export default function Apply() {
               <CheckCircle2 className="w-8 h-8 text-primary" />
             </div>
             <h2 className="font-display font-black text-4xl uppercase tracking-tight text-foreground mb-4">
-              Application Received.
+              {successMsg?.title || "Application Received."}
             </h2>
             <p className="text-lg text-muted-foreground font-sans max-w-md mx-auto mb-2">
-              Our AI review runs in minutes. You'll hear back within 48 hours.
+              {successMsg?.subtitle || "Our AI review runs in minutes. You'll hear back within 48 hours."}
             </p>
             <p className="text-sm text-muted-foreground font-sans">
               In the meantime — go vote on something that matters.
@@ -105,7 +125,7 @@ export default function Apply() {
               href="/join"
               className="inline-flex items-center gap-2 mt-8 bg-primary text-white font-bold uppercase tracking-widest text-xs px-8 py-3 hover:bg-primary/90 transition-colors"
             >
-              Join The Tribunal <ArrowRight className="w-3 h-3" />
+              {successMsg?.cta || "Join The Tribunal"} <ArrowRight className="w-3 h-3" />
             </a>
           </div>
         ) : (
@@ -138,13 +158,13 @@ export default function Apply() {
                 <Field label="Country *" required>
                   <select required value={form.country} onChange={set("country")} className={inputCn}>
                     <option value="">Select country…</option>
-                    {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    {countries.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </Field>
                 <Field label="Sector *" required className="sm:col-span-2">
                   <select required value={form.sector} onChange={set("sector")} className={inputCn}>
                     <option value="">Select sector…</option>
-                    {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
+                    {sectors.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </Field>
               </div>
@@ -185,7 +205,7 @@ export default function Apply() {
 
             <div className="pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-6">
               <p className="text-xs text-muted-foreground font-sans leading-relaxed max-w-sm">
-                By submitting you agree to The Tribunal's editorial standards. Applications are reviewed by our AI scoring system within minutes, then by our editorial team within 48 hours.
+                {disclaimer || "By submitting you agree to The Tribunal's editorial standards. Applications are reviewed by our AI scoring system within minutes, then by our editorial team within 48 hours."}
               </p>
               <button
                 type="submit"

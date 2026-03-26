@@ -138,6 +138,10 @@ export const api = {
   updatePromptTemplate: (pillar: string, promptText: string) =>
     request(`/ideation/prompt-templates/${pillar}`, { method: "PUT", body: JSON.stringify({ promptText }) }),
 
+  getSiteSettings: () => request("/site-settings"),
+  updateSiteSettings: (data: Record<string, unknown>) =>
+    request("/site-settings", { method: "PUT", body: JSON.stringify(data) }),
+
   getExclusionList: () => request("/ideation/exclusion-list"),
   addExclusion: (phrase: string) =>
     request("/ideation/exclusion-list", { method: "POST", body: JSON.stringify({ phrase }) }),
@@ -175,8 +179,6 @@ export const api = {
     request(`/ideation/ideas/${ideaId}/publish-draft`, { method: "POST" }),
 
   getRejectionLog: () => request("/ideation/rejection-log"),
-  bulkAddExclusions: (phrases: string[]) =>
-    request("/ideation/exclusion-list/bulk", { method: "POST", body: JSON.stringify({ phrases }) }),
   deleteRejectionLogEntry: (id: number) => request(`/ideation/rejection-log/${id}`, { method: "DELETE" }),
   exportRejectionLog: async () => {
     const headers: Record<string, string> = { "Content-Type": "application/json" };

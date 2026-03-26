@@ -5,8 +5,9 @@ import { Layout } from "@/components/layout/Layout"
 import { PollCard } from "@/components/poll/PollCard"
 import { cn } from "@/lib/utils"
 import { Search, X } from "lucide-react"
+import { useCmsConfig } from "@/hooks/use-cms-data"
 
-const DEBATE_TICKER = [
+const DEBATE_TICKER_DEFAULT = [
   { topic: "Brain Drain", votes: "18,421" },
   { topic: "AI & Jobs", votes: "12,847" },
   { topic: "Gender Leadership", votes: "9,203" },
@@ -19,6 +20,12 @@ const DEBATE_TICKER = [
   { topic: "Gulf Wealth Gap", votes: "10,117" },
 ]
 
+interface PollsConfig {
+  hero?: { title?: string; subtitle?: string }
+  tickerItems?: Array<{ topic: string; votes: string }>
+  tickerSource?: string
+}
+
 export default function Polls() {
   const [location] = useLocation()
   const searchParams = new URLSearchParams(window.location.search)
@@ -30,6 +37,10 @@ export default function Polls() {
 
   const { data: pollsData, isLoading } = useListPolls({ filter, category, limit: 50 })
   const { data: categoriesData } = useListCategories()
+  const { data: config } = useCmsConfig<PollsConfig>("polls")
+
+  const hero = config?.hero
+  const tickerItems = config?.tickerItems?.length ? config.tickerItems : DEBATE_TICKER_DEFAULT
 
   const filteredPolls = useMemo(() => {
     if (!pollsData?.polls) return []
@@ -48,7 +59,7 @@ export default function Polls() {
     { id: 'most_voted', label: 'Most Voted' }
   ] as const
 
-  const doubled = [...DEBATE_TICKER, ...DEBATE_TICKER]
+  const doubled = [...tickerItems, ...tickerItems]
 
   return (
     <Layout>
@@ -58,10 +69,12 @@ export default function Polls() {
             Debates
           </p>
           <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
-            What Does the Region<br />Actually Think?
+            {(hero?.title || "What Does the Region\nActually Think?").split("\n").map((line, i, arr) => (
+              <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+            ))}
           </h1>
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>
-            Not what they say at dinner. What they vote for here.
+            {hero?.subtitle || "Not what they say at dinner. What they vote for here."}
           </p>
         </div>
 

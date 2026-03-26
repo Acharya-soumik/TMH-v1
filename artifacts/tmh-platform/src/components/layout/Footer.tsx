@@ -1,7 +1,17 @@
 import { Link } from "wouter"
 import { useI18n } from "@/lib/i18n"
+import { useSiteSettings } from "@/hooks/use-cms-data"
 
-const SOCIALS = [
+interface SiteSettingsData {
+  footer?: {
+    links?: Array<{ label: string; href: string }>
+    socialLinks?: Array<{ platform: string; url: string }>
+    tagline?: string
+    copyright?: string
+  }
+}
+
+const SOCIALS_DEFAULT = [
   { label: "X", href: "https://x.com/tmhustle" },
   { label: "LinkedIn", href: "https://linkedin.com/company/the-middle-east-hustle" },
   { label: "Instagram", href: "https://instagram.com/tmhustle" },
@@ -9,15 +19,27 @@ const SOCIALS = [
 
 export function Footer() {
   const { t } = useI18n()
+  const { data: settings } = useSiteSettings<SiteSettingsData>()
 
-  const NAV = [
-    { label: t("About"), href: "/about" },
-    { label: t("Pulse"), href: "/mena-pulse" },
-    { label: t("Debates"), href: "/polls" },
-    { label: t("Predictions"), href: "/predictions" },
-    { label: t("Voices"), href: "/profiles" },
-    { label: t("Join The Voices"), href: "/apply" },
-  ]
+  const footerConfig = settings?.footer
+
+  const NAV = footerConfig?.links?.length
+    ? footerConfig.links
+    : [
+        { label: t("About"), href: "/about" },
+        { label: t("Pulse"), href: "/mena-pulse" },
+        { label: t("Debates"), href: "/polls" },
+        { label: t("Predictions"), href: "/predictions" },
+        { label: t("Voices"), href: "/profiles" },
+        { label: t("Join The Voices"), href: "/apply" },
+      ]
+
+  const SOCIALS = footerConfig?.socialLinks?.length
+    ? footerConfig.socialLinks.map(s => ({ label: s.platform, href: s.url }))
+    : SOCIALS_DEFAULT
+
+  const tagline = footerConfig?.tagline || "The voice of 541 million. Real people. Real hustle. Real change."
+  const copyright = footerConfig?.copyright || `© ${new Date().getFullYear()} The Tribunal, by The Middle East Hustle. Founded by Kareem Kaddoura.`
 
   return (
     <footer className="bg-foreground text-background pt-16 pb-8 border-t-2 border-foreground">
@@ -33,7 +55,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-background/50 font-sans text-sm mt-4 max-w-xs leading-relaxed">
-              {t("The voice of 541 million. Real people. Real hustle. Real change.")}
+              {t(tagline)}
             </p>
             <div className="flex items-center gap-4 mt-6">
               {SOCIALS.map(s => (
@@ -80,7 +102,7 @@ export function Footer() {
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[10px] uppercase tracking-widest text-background/30 font-serif">
-            © {new Date().getFullYear()} The Tribunal, by The Middle East Hustle. Founded by Kareem Kaddoura.
+            {copyright}
           </p>
           <div className="flex items-center gap-6">
             <Link href="/faq" className="text-[11px] uppercase tracking-[0.15em] font-bold text-background/50 hover:text-background transition-colors font-serif">{t("FAQ")}</Link>

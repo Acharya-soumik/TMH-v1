@@ -1,8 +1,9 @@
 import { Link } from "wouter"
 import { Layout } from "@/components/layout/Layout"
 import { useI18n } from "@/lib/i18n"
+import { useCmsConfig, useLiveCounts } from "@/hooks/use-cms-data"
 
-const PILLARS = [
+const PILLARS_DEFAULT = [
   {
     num: "01",
     title: "Debates",
@@ -33,7 +34,7 @@ const PILLARS = [
   },
 ]
 
-const BELIEFS = [
+const BELIEFS_DEFAULT = [
   {
     num: "01",
     title: "A Social Experiment",
@@ -66,25 +67,75 @@ const BELIEFS = [
   },
 ]
 
+const COUNTRIES_DEFAULT = [
+  { name: "Egypt", flag: "🇪🇬", pop: "112M" },
+  { name: "Iran", flag: "🇮🇷", pop: "89M" },
+  { name: "Iraq", flag: "🇮🇶", pop: "44M" },
+  { name: "Saudi Arabia", flag: "🇸🇦", pop: "37M" },
+  { name: "Morocco", flag: "🇲🇦", pop: "37M" },
+  { name: "Algeria", flag: "🇩🇿", pop: "46M" },
+  { name: "Sudan", flag: "🇸🇩", pop: "48M" },
+  { name: "Yemen", flag: "🇾🇪", pop: "34M" },
+  { name: "Syria", flag: "🇸🇾", pop: "23M" },
+  { name: "UAE", flag: "🇦🇪", pop: "10M" },
+  { name: "Jordan", flag: "🇯🇴", pop: "11M" },
+  { name: "Tunisia", flag: "🇹🇳", pop: "12M" },
+  { name: "Libya", flag: "🇱🇾", pop: "7M" },
+  { name: "Lebanon", flag: "🇱🇧", pop: "5.5M" },
+  { name: "Palestine", flag: "🇵🇸", pop: "5.5M" },
+  { name: "Oman", flag: "🇴🇲", pop: "4.6M" },
+  { name: "Kuwait", flag: "🇰🇼", pop: "4.3M" },
+  { name: "Qatar", flag: "🇶🇦", pop: "2.7M" },
+  { name: "Bahrain", flag: "🇧🇭", pop: "1.5M" },
+]
+
+interface AboutConfig {
+  hero?: { title?: string; tagline?: string; subtitle?: string }
+  pillars?: Array<{ num: string; title: string; body: string; link: string; cta: string }>
+  beliefs?: Array<{ num: string; title: string; body: string }>
+  founderStatement?: { text?: string; author?: string; quote?: string }
+  regionCoverage?: Array<{ name: string; flag: string; population: string }>
+}
+
 export default function About() {
   const { t, isAr } = useI18n()
+  const { data: config } = useCmsConfig<AboutConfig>("about")
+  const { data: counts } = useLiveCounts()
+
+  const hero = config?.hero
+  const pillars = config?.pillars?.length ? config.pillars : PILLARS_DEFAULT
+  const beliefs = config?.beliefs?.length ? config.beliefs : BELIEFS_DEFAULT
+  const founder = config?.founderStatement
+  const countries = config?.regionCoverage?.length
+    ? config.regionCoverage.map(c => ({ name: c.name, flag: c.flag, pop: c.population }))
+    : COUNTRIES_DEFAULT
+
+  const stats = [
+    { num: counts ? String(counts.voices) : "94", label: "Founding Voices" },
+    { num: counts ? `${counts.debates}+` : "135+", label: "Active Debates" },
+    { num: "19", label: "MENA Countries" },
+    { num: "541M", label: "People in MENA" },
+  ]
+
   return (
     <Layout>
       {/* Hero */}
       <div className="bg-foreground text-background border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-10">
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.28em", color: "#DC143C", marginBottom: "0.5rem" }}>
-            {t("Est. 2026 · Founded by Kareem Kaddoura")}
+            {t(hero?.tagline || "Est. 2026 · Founded by Kareem Kaddoura")}
           </p>
           <h1 style={{ fontFamily: isAr ? "'IBM Plex Sans Arabic', sans-serif" : "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
             {isAr ? (
-              <>{t("The Region's First Collective Mirror")}<span style={{ color: "#DC143C" }}>.</span></>
+              <>{t(hero?.title || "The Region's First Collective Mirror")}<span style={{ color: "#DC143C" }}>.</span></>
             ) : (
-              <>The Region's First<br />Collective Mirror<span style={{ color: "#DC143C" }}>.</span></>
+              <>{(hero?.title || "The Region's First\nCollective Mirror").split("\n").map((line, i, arr) => (
+                <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+              ))}<span style={{ color: "#DC143C" }}>.</span></>
             )}
           </h1>
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>
-            {t("541 million people. Zero platforms asking what they think. Until now.")}
+            {t(hero?.subtitle || "541 million people. Zero platforms asking what they think. Until now.")}
           </p>
         </div>
       </div>
@@ -115,7 +166,7 @@ export default function About() {
             {t("The Platform")}
           </h2>
           <div className="grid md:grid-cols-2 gap-10">
-            {PILLARS.map(p => (
+            {pillars.map(p => (
               <div key={p.num} className="relative">
                 <span className="text-6xl font-display font-black text-foreground/8 leading-none select-none block">{p.num}</span>
                 <div className="-mt-3">
@@ -140,12 +191,7 @@ export default function About() {
       <div className="bg-foreground text-background py-16 border-b border-border">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { num: "94", label: "Founding Voices" },
-              { num: "135+", label: "Active Debates" },
-              { num: "19", label: "MENA Countries" },
-              { num: "541M", label: "People in MENA" },
-            ].map(stat => (
+            {stats.map(stat => (
               <div key={stat.label}>
                 <div className="font-display font-black text-4xl md:text-5xl text-primary leading-none mb-2">{stat.num}</div>
                 <div className="text-[10px] uppercase tracking-[0.2em] text-background/70 font-serif">{t(stat.label)}</div>
@@ -160,28 +206,38 @@ export default function About() {
         <h2 className="font-serif font-black uppercase text-2xl text-foreground mb-8 border-l-4 border-primary pl-4">
           {t("From the Founder")}
         </h2>
-        <p className="text-xl font-sans leading-relaxed text-foreground mb-8">
-          {t("This started as a question I kept asking at dinner tables, in taxis, in boardrooms, and in WhatsApp groups at midnight: what does the Middle East actually think?")}
-        </p>
-
-        <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
-          {t("Not what we're told it thinks. Not what leaders say it thinks. Not what Western media assumes it thinks. What the 541 million people who live here, work here, raise children here, and build things here — actually think.")}
-        </p>
-
-        <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
-          {t("There was no single place to find out. So I built one.")}
-        </p>
+        {(founder?.text || "").split("\n\n").filter(Boolean).length > 0 ? (
+          founder!.text!.split("\n\n").filter(Boolean).map((para, i) => (
+            <p key={i} className={`text-${i === 0 ? 'xl' : 'base'} ${i === 0 ? 'text-foreground' : 'text-muted-foreground'} font-sans leading-relaxed mb-6`}>
+              {t(para)}
+            </p>
+          ))
+        ) : (
+          <>
+            <p className="text-xl font-sans leading-relaxed text-foreground mb-8">
+              {t("This started as a question I kept asking at dinner tables, in taxis, in boardrooms, and in WhatsApp groups at midnight: what does the Middle East actually think?")}
+            </p>
+            <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
+              {t("Not what we're told it thinks. Not what leaders say it thinks. Not what Western media assumes it thinks. What the 541 million people who live here, work here, raise children here, and build things here — actually think.")}
+            </p>
+            <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
+              {t("There was no single place to find out. So I built one.")}
+            </p>
+          </>
+        )}
 
         <blockquote className="font-display text-2xl md:text-3xl border-l-4 border-primary pl-6 py-4 my-12 text-foreground leading-snug">
-          {t("\"The Tribunal is a social experiment disguised as a platform. Every debate is a room I'm placing the region inside. Every vote is a voice that would otherwise never be counted. Every prediction is a bet on where we're headed.\"")}
+          {t(founder?.quote || "\"The Tribunal is a social experiment disguised as a platform. Every debate is a room I'm placing the region inside. Every vote is a voice that would otherwise never be counted. Every prediction is a bet on where we're headed.\"")}
         </blockquote>
 
-        <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
-          {t("I don't have the answers. Nobody does. But for the first time, we're collecting them — honestly, anonymously, at scale. Every vote, every prediction, every profile adds to a picture of the region that has never existed before.")}
-        </p>
+        {!founder?.text && (
+          <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
+            {t("I don't have the answers. Nobody does. But for the first time, we're collecting them — honestly, anonymously, at scale. Every vote, every prediction, every profile adds to a picture of the region that has never existed before.")}
+          </p>
+        )}
 
         <p className="text-base font-sans leading-relaxed text-foreground font-bold">
-          {t("— Kareem Kaddoura, Founder")}
+          {t(founder?.author ? `— ${founder.author}` : "— Kareem Kaddoura, Founder")}
         </p>
       </div>
 
@@ -192,7 +248,7 @@ export default function About() {
             {t("What We Stand For")}
           </h2>
           <div className="grid md:grid-cols-2 gap-8">
-            {BELIEFS.map(b => (
+            {beliefs.map(b => (
               <div key={b.num} className="relative">
                 <span className="text-6xl font-display font-black text-foreground/8 leading-none select-none block">{b.num}</span>
                 <div className="-mt-3">
@@ -214,30 +270,10 @@ export default function About() {
             {t("The Region We Cover")}
           </h2>
           <p className="text-sm text-foreground/75 font-sans mb-8 pl-5">
-            {t("19 countries. 541 million people. One platform.")}
+            {t(`${countries.length} countries. 541 million people. One platform.`)}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
-            {[
-              { name: "Egypt", flag: "🇪🇬", pop: "112M" },
-              { name: "Iran", flag: "🇮🇷", pop: "89M" },
-              { name: "Iraq", flag: "🇮🇶", pop: "44M" },
-              { name: "Saudi Arabia", flag: "🇸🇦", pop: "37M" },
-              { name: "Morocco", flag: "🇲🇦", pop: "37M" },
-              { name: "Algeria", flag: "🇩🇿", pop: "46M" },
-              { name: "Sudan", flag: "🇸🇩", pop: "48M" },
-              { name: "Yemen", flag: "🇾🇪", pop: "34M" },
-              { name: "Syria", flag: "🇸🇾", pop: "23M" },
-              { name: "UAE", flag: "🇦🇪", pop: "10M" },
-              { name: "Jordan", flag: "🇯🇴", pop: "11M" },
-              { name: "Tunisia", flag: "🇹🇳", pop: "12M" },
-              { name: "Libya", flag: "🇱🇾", pop: "7M" },
-              { name: "Lebanon", flag: "🇱🇧", pop: "5.5M" },
-              { name: "Palestine", flag: "🇵🇸", pop: "5.5M" },
-              { name: "Oman", flag: "🇴🇲", pop: "4.6M" },
-              { name: "Kuwait", flag: "🇰🇼", pop: "4.3M" },
-              { name: "Qatar", flag: "🇶🇦", pop: "2.7M" },
-              { name: "Bahrain", flag: "🇧🇭", pop: "1.5M" },
-            ].map(c => (
+            {countries.map(c => (
               <div key={c.name} className="border border-border px-3 py-2.5 text-xs font-serif uppercase tracking-widest text-foreground/80 text-center hover:border-primary hover:text-primary transition-colors flex flex-col items-center gap-1">
                 <span className="text-xl not-italic" style={{ fontFamily: "system-ui" }}>{c.flag}</span>
                 <span>{t(c.name)}</span>

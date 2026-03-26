@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout"
 import { Search, X, Share2, CheckCircle2 } from "lucide-react"
 import { LiveNumber } from "@/components/live-counter/FlipDigit"
 import { useI18n } from "@/lib/i18n"
+import { usePublicPulseTopics, useCmsConfig } from "@/hooks/use-cms-data"
 
 const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000
 const BASE_DATE = new Date("2026-01-01T00:00:00Z").getTime()
@@ -1191,8 +1192,14 @@ function TopicCardComponent({ topic, index }: { topic: TopicCard; index: number 
   )
 }
 
+interface PulseConfig {
+  tickerItems?: Array<{ label: string; value: string; delta: string; up: boolean }>
+}
+
 function PulseTicker() {
-  const doubled = [...TICKER_ITEMS, ...TICKER_ITEMS]
+  const { data: config } = useCmsConfig<PulseConfig>("pulse")
+  const items = config?.tickerItems?.length ? config.tickerItems : TICKER_ITEMS
+  const doubled = [...items, ...items]
 
   return (
     <div style={{ background: "#0D0D0D", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
@@ -1254,7 +1261,7 @@ function BigNumber() {
   )
 }
 
-function CategoryFilter({ active, onSelect }: { active: string; onSelect: (key: string) => void }) {
+function CategoryFilter({ active, onSelect, topics }: { active: string; onSelect: (key: string) => void; topics: TopicCard[] }) {
   const { t } = useI18n()
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "16px 0" }}>
@@ -1281,8 +1288,8 @@ function CategoryFilter({ active, onSelect }: { active: string; onSelect: (key: 
             {t(cat.label)}
             <span style={{ marginLeft: 6, fontSize: 9, opacity: 0.6 }}>
               {cat.key === "ALL"
-                ? EXPLODING_TOPICS.length
-                : EXPLODING_TOPICS.filter(tp => tp.tag === cat.key).length}
+                ? topics.length
+                : topics.filter(tp => tp.tag === cat.key).length}
             </span>
           </button>
         )
@@ -1295,11 +1302,31 @@ export default function MenaPulse() {
   const [activeCategory, setActiveCategory] = useState("ALL")
   const [searchQuery, setSearchQuery] = useState("")
   const { t, isAr } = useI18n()
+  const { data: apiTopics } = usePublicPulseTopics<{ items: Array<{ topicId: string; tag: string; tagColor: string; title: string; stat: string; delta: string; deltaUp: boolean; blurb: string; source: string; sparkData: number[]; liveConfig: { baseValue: number; annualGrowth: number; prefix?: string } | null }> }>()
+
+  const allTopics: TopicCard[] = useMemo(() => {
+    if (apiTopics?.items?.length) {
+      return apiTopics.items.map(p => ({
+        id: p.topicId,
+        tag: p.tag,
+        tagColor: p.tagColor,
+        title: p.title,
+        stat: p.stat,
+        delta: p.delta,
+        deltaUp: p.deltaUp,
+        blurb: p.blurb,
+        source: p.source,
+        sparkData: p.sparkData,
+        live: p.liveConfig ? { baseValue: p.liveConfig.baseValue, annualGrowth: p.liveConfig.annualGrowth, prefix: p.liveConfig.prefix } : undefined,
+      }))
+    }
+    return EXPLODING_TOPICS
+  }, [apiTopics])
 
   const filtered = useMemo(() => {
     let result = activeCategory === "ALL"
-      ? EXPLODING_TOPICS
-      : EXPLODING_TOPICS.filter(tp => tp.tag === activeCategory)
+      ? allTopics
+      : allTopics.filter(tp => tp.tag === activeCategory)
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       result = result.filter(tp =>
@@ -1311,7 +1338,7 @@ export default function MenaPulse() {
       )
     }
     return result
-  }, [activeCategory, searchQuery])
+  }, [activeCategory, searchQuery, allTopics])
 
   return (
     <Layout>
@@ -1335,7 +1362,7 @@ export default function MenaPulse() {
             )}
           </h1>
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>
-            {EXPLODING_TOPICS.length} {t("trends the region needs to confront. Updated quarterly.")}
+            {allTopics.length} {t("trends the region needs to confront. Updated quarterly.")}
           </p>
           <div className="mt-6 max-w-md relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(250,250,250,0.4)" }} />
@@ -1362,7 +1389,7 @@ export default function MenaPulse() {
 
         <div style={{ background: "#0D0D0D", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "0.65rem 0", display: "flex", alignItems: "center", gap: "2.5rem", justifyContent: "center", flexWrap: "wrap" }}>
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(250,250,250,0.5)" }}>
-            <span style={{ color: "#DC143C", fontWeight: 900, fontSize: "0.85rem", marginRight: 6 }}>{EXPLODING_TOPICS.length}</span> {t("Trends")}
+            <span style={{ color: "#DC143C", fontWeight: 900, fontSize: "0.85rem", marginRight: 6 }}>{allTopics.length}</span> {t("Trends")}
           </span>
           <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.1)" }} />
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(250,250,250,0.5)" }}>
@@ -1398,10 +1425,10 @@ export default function MenaPulse() {
               </span>
             </div>
 
-            <CategoryFilter active={activeCategory} onSelect={setActiveCategory} />
+            <CategoryFilter active={activeCategory} onSelect={setActiveCategory} topics={allTopics} />
 
             <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 16, letterSpacing: "0.05em" }}>
-              {t("Showing")} {filtered.length} {t("of")} {EXPLODING_TOPICS.length} {t("trends")}
+              {t("Showing")} {filtered.length} {t("of")} {allTopics.length} {t("trends")}
               {activeCategory !== "ALL" && (
                 <button
                   onClick={() => setActiveCategory("ALL")}

@@ -1,8 +1,22 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useSiteSettings } from "@/hooks/use-cms-data"
+
+interface SiteSettingsData {
+  cookieConsent?: {
+    message?: string
+    linkText?: string
+    linkHref?: string
+    acceptLabel?: string
+    dismissLabel?: string
+  }
+}
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false)
+  const { data: settings } = useSiteSettings<SiteSettingsData>()
+
+  const consent = settings?.cookieConsent
 
   useEffect(() => {
     const accepted = localStorage.getItem("tmh_cookies_accepted")
@@ -30,9 +44,9 @@ export function CookieConsent() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
             <div className="flex-1">
               <p className="text-[11px] font-sans text-background/80 leading-relaxed">
-                TMH uses cookies to remember your votes and improve your experience.{" "}
-                <a href="/terms" className="underline underline-offset-2 hover:text-primary transition-colors">
-                  No spam. Unsubscribe anytime.
+                {consent?.message || "TMH uses cookies to remember your votes and improve your experience."}{" "}
+                <a href={consent?.linkHref || "/terms"} className="underline underline-offset-2 hover:text-primary transition-colors">
+                  {consent?.linkText || "No spam. Unsubscribe anytime."}
                 </a>
               </p>
             </div>
@@ -41,13 +55,13 @@ export function CookieConsent() {
                 onClick={accept}
                 className="px-5 py-2 bg-primary text-white font-black uppercase tracking-[0.15em] text-[10px] hover:bg-primary/90 transition-colors"
               >
-                Got It
+                {consent?.acceptLabel || "Got It"}
               </button>
               <button
                 onClick={accept}
                 className="text-[10px] text-background/40 hover:text-background/70 uppercase tracking-widest font-bold transition-colors"
               >
-                Dismiss
+                {consent?.dismissLabel || "Dismiss"}
               </button>
             </div>
           </div>

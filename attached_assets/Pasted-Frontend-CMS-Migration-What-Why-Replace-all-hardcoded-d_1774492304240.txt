@@ -1,0 +1,31 @@
+Frontend CMS Migration
+What & Why
+Replace all hardcoded data imports in the frontend with API calls so the site is fully driven by CMS-managed content. The backend already has public API endpoints for predictions, pulse topics, page configs, and profiles — the frontend just needs to fetch from them instead of importing static files.
+
+Done looks like
+Predictions pages (homepage featured + dedicated predictions page) fetch from /api/public/predictions instead of importing predictions-data.ts
+Pulse page fetches trend cards from /api/public/pulse-topics and ticker items + categories from /api/public/page/pulse instead of using hardcoded arrays
+Homepage fetches predictions and pulse data from the API for its preview sections; section hook stats come from API (live counts or CMS overrides); population counter reads config from masthead API; ticker mixes real API data instead of hardcoded items
+Profiles page fetches impact statements from the profile API response instead of the hardcoded IMPACT_STATEMENTS map
+Polls page ticker uses API data (auto-calculated or CMS-managed) instead of hardcoded TICKER_ITEMS
+Apply page fetches criteria, dropdowns, and instructional text from the page config API
+About page fetches founder statement and region coverage from the page config API
+Navbar & footer read links, branding, and social URLs from the site settings API
+Cookie consent and share gate copy read from site settings API
+The hardcoded data file predictions-data.ts can be removed (or kept only as fallback)
+All pages gracefully handle loading states and API errors with appropriate fallbacks
+Out of scope
+i18n/Arabic translation management (remains hardcoded for now)
+Creating new CMS management UIs (handled by the backend task)
+Writing new editorial content
+Tasks
+Replace predictions imports — update the predictions page and homepage to fetch from the public predictions API, add loading/error states, remove or deprecate predictions-data.ts
+Replace pulse page hardcoded data — fetch trend cards from public pulse topics API and page config for categories/hero; replace the hardcoded TICKER_ITEMS array with data from the pulse page config API
+Replace homepage hardcoded sections — fetch population counter config from masthead API, section hook stats from API, prediction/pulse preview data from respective APIs, and ticker items from mixed API sources
+Replace profiles page impact statements — read impactStatement from each profile's API response instead of the hardcoded company-to-statement map
+Replace polls page ticker — fetch from polls page config API or auto-calculated endpoint instead of hardcoded TICKER_ITEMS
+Replace apply page hardcoded config — fetch criteria, dropdowns, and text from the apply page config API
+Replace about page hardcoded sections — fetch founder statement and region coverage from the about page config API
+Replace navbar and footer hardcoded content — fetch nav links, footer links, social URLs, branding text, and copyright from the site settings API
+Replace cookie consent and share gate copy with site settings API values
+Add consistent loading skeletons and error fallbacks across all migrated sections

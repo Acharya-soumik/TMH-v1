@@ -589,6 +589,7 @@ router.get("/cms/voices", requireCmsAuth, async (req, res) => {
       story: p.story,
       lessonsLearned: p.lessonsLearned ?? [],
       quote: p.quote,
+      impactStatement: p.impactStatement ?? null,
       isFeatured: p.isFeatured,
       isVerified: p.isVerified,
       viewCount: p.viewCount,
@@ -625,6 +626,7 @@ router.get("/cms/voices/:id", requireCmsAuth, async (req, res) => {
       story: profile.story,
       lessonsLearned: profile.lessonsLearned ?? [],
       quote: profile.quote,
+      impactStatement: profile.impactStatement ?? null,
       isFeatured: profile.isFeatured,
       isVerified: profile.isVerified,
       viewCount: profile.viewCount,
@@ -661,6 +663,7 @@ router.put("/cms/voices/:id", requireCmsAuth, async (req, res) => {
     if (data.story !== undefined) updateFields.story = data.story;
     if (data.lessonsLearned !== undefined) updateFields.lessonsLearned = data.lessonsLearned;
     if (data.quote !== undefined) updateFields.quote = data.quote;
+    if (data.impactStatement !== undefined) updateFields.impactStatement = data.impactStatement;
     if (data.isFeatured !== undefined) updateFields.isFeatured = data.isFeatured;
     if (data.isVerified !== undefined) updateFields.isVerified = data.isVerified;
 
@@ -878,6 +881,7 @@ router.post("/cms/upload/:type", requireCmsAuth, async (req, res) => {
           story: item.story,
           lessonsLearned: item.lessonsLearned ?? [],
           quote: item.quote,
+          impactStatement: item.impactStatement ?? null,
           isFeatured: item.isFeatured ?? false,
           isVerified: item.isVerified ?? false,
         });
@@ -940,13 +944,14 @@ router.put("/cms/homepage", requireCmsAuth, async (req, res) => {
   try {
     const [existing] = await db.select().from(cmsConfigsTable).where(eq(cmsConfigsTable.key, "homepage"));
     const currentConfig = (existing?.value ?? {}) as Record<string, Record<string, unknown> | unknown[] | unknown>;
-    const { masthead, ticker, sections, banners, newsletter } = req.body;
+    const { masthead, ticker, sections, banners, newsletter, sectionStats } = req.body;
 
     if (masthead) currentConfig.masthead = { ...(currentConfig.masthead as Record<string, unknown> ?? {}), ...masthead };
     if (ticker) currentConfig.ticker = { ...(currentConfig.ticker as Record<string, unknown> ?? {}), ...ticker };
     if (sections) currentConfig.sections = sections;
     if (banners) currentConfig.banners = banners;
     if (newsletter) currentConfig.newsletter = { ...(currentConfig.newsletter as Record<string, unknown> ?? {}), ...newsletter };
+    if (sectionStats) currentConfig.sectionStats = { ...(currentConfig.sectionStats as Record<string, unknown> ?? {}), ...sectionStats };
 
     if (existing) {
       await db.update(cmsConfigsTable).set({ value: currentConfig, updatedAt: new Date() }).where(eq(cmsConfigsTable.key, "homepage"));
@@ -1398,6 +1403,96 @@ router.get("/design-tokens", async (_req, res) => {
   } catch (err) {
     console.error("Public design tokens error:", err);
     return res.status(500).json({ error: "Failed to fetch design tokens" });
+  }
+});
+
+router.get("/public/site-settings", async (_req, res) => {
+  try {
+    const [row] = await db.select().from(cmsConfigsTable).where(eq(cmsConfigsTable.key, "site_settings"));
+    if (!row) return res.json({});
+    return res.json(row.value);
+  } catch (err) {
+    console.error("Public site settings error:", err);
+    return res.status(500).json({ error: "Failed to fetch site settings" });
+  }
+});
+
+router.get("/site-settings", async (_req, res) => {
+  try {
+    const [row] = await db.select().from(cmsConfigsTable).where(eq(cmsConfigsTable.key, "site_settings"));
+    if (!row) return res.json({});
+    return res.json(row.value);
+  } catch (err) {
+    console.error("Public site settings error:", err);
+    return res.status(500).json({ error: "Failed to fetch site settings" });
+  }
+});
+
+router.get("/public/live-counts", async (_req, res) => {
+  try {
+    const [debateCount] = await db.select({ count: count() }).from(pollsTable).where(eq(pollsTable.editorialStatus, "approved"));
+    const [predictionCount] = await db.select({ count: count() }).from(predictionsTable).where(eq(predictionsTable.editorialStatus, "approved"));
+    const [pulseCount] = await db.select({ count: count() }).from(pulseTopicsTable).where(eq(pulseTopicsTable.editorialStatus, "approved"));
+    const [voiceCount] = await db.select({ count: count() }).from(profilesTable);
+    const [voteCount] = await db.select({ count: count() }).from(votesTable);
+
+    return res.json({
+      debates: debateCount.count,
+      predictions: predictionCount.count,
+      pulseTopics: pulseCount.count,
+      voices: voiceCount.count,
+      totalVotes: voteCount.count,
+    });
+  } catch (err) {
+    console.error("Live counts error:", err);
+    return res.status(500).json({ error: "Failed to fetch live counts" });
+  }
+});
+
+router.get("/live-counts", async (_req, res) => {
+  try {
+    const [debateCount] = await db.select({ count: count() }).from(pollsTable).where(eq(pollsTable.editorialStatus, "approved"));
+    const [predictionCount] = await db.select({ count: count() }).from(predictionsTable).where(eq(predictionsTable.editorialStatus, "approved"));
+    const [pulseCount] = await db.select({ count: count() }).from(pulseTopicsTable).where(eq(pulseTopicsTable.editorialStatus, "approved"));
+    const [voiceCount] = await db.select({ count: count() }).from(profilesTable);
+    const [voteCount] = await db.select({ count: count() }).from(votesTable);
+
+    return res.json({
+      debates: debateCount.count,
+      predictions: predictionCount.count,
+      pulseTopics: pulseCount.count,
+      voices: voiceCount.count,
+      totalVotes: voteCount.count,
+    });
+  } catch (err) {
+    console.error("Live counts error:", err);
+    return res.status(500).json({ error: "Failed to fetch live counts" });
+  }
+});
+
+router.get("/cms/site-settings", requireCmsAuth, async (_req, res) => {
+  try {
+    const [row] = await db.select().from(cmsConfigsTable).where(eq(cmsConfigsTable.key, "site_settings"));
+    if (!row) return res.json({});
+    return res.json(row.value);
+  } catch (err) {
+    console.error("Site settings error:", err);
+    return res.status(500).json({ error: "Failed to fetch site settings" });
+  }
+});
+
+router.put("/cms/site-settings", requireCmsAuth, async (req, res) => {
+  try {
+    const [existing] = await db.select().from(cmsConfigsTable).where(eq(cmsConfigsTable.key, "site_settings"));
+    if (existing) {
+      await db.update(cmsConfigsTable).set({ value: req.body, updatedAt: new Date() }).where(eq(cmsConfigsTable.key, "site_settings"));
+    } else {
+      await db.insert(cmsConfigsTable).values({ key: "site_settings", value: req.body });
+    }
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Update site settings error:", err);
+    return res.status(500).json({ error: "Failed to update site settings" });
   }
 });
 

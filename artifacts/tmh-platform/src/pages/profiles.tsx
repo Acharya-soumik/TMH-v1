@@ -6,7 +6,7 @@ import { Search, Lock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Link } from "wouter"
 
-const IMPACT_STATEMENTS: Record<string, string> = {
+const IMPACT_STATEMENTS_FALLBACK: Record<string, string> = {
   "Kitopi": "Scaled cloud kitchens across 5 countries — redefining how the region eats",
   "Replit": "Made coding accessible to millions worldwide — democratizing software creation",
   "Sarwa": "AED 10B+ in trading volume — making investing accessible to every Arab",
@@ -27,11 +27,11 @@ const IMPACT_STATEMENTS: Record<string, string> = {
   "Revolut UAE": "Founded Souqalmal, now leading Revolut UAE — making finance transparent for Arabs",
 }
 
-function VoicesTicker({ profiles }: { profiles: Array<{ name: string; company?: string | null; quote: string }> }) {
+function VoicesTicker({ profiles }: { profiles: Array<{ name: string; company?: string | null; quote: string; impactStatement?: string | null }> }) {
   const items = profiles
     .filter(p => p.company && p.name)
     .map(p => {
-      const impact = IMPACT_STATEMENTS[p.company || ""]
+      const impact = p.impactStatement || IMPACT_STATEMENTS_FALLBACK[p.company || ""]
       const statement = impact || (p.quote && p.quote.length > 10 && p.quote.length < 80 ? `"${p.quote.replace(/^["']|["']$/g, "")}"` : null)
       if (!statement) return null
       return { name: p.name.split(" ")[0].toUpperCase(), company: p.company!, statement }

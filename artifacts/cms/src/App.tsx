@@ -22,10 +22,12 @@ import PageContact from "@/pages/page-contact";
 import PageDebates from "@/pages/page-debates";
 import PagePredictions from "@/pages/page-predictions";
 import PageVoices from "@/pages/page-voices";
+import PagePolls from "@/pages/page-polls";
+import PageApply from "@/pages/page-apply";
+import PageSiteSettings from "@/pages/page-site-settings";
 import DesignTokensPage from "@/pages/design-tokens";
 import IdeationPage from "@/pages/ideation";
 import MajlisPage from "@/pages/majlis";
-import IdeationPage from "@/pages/ideation";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +66,9 @@ function ProtectedRoutes() {
         <Route path="/pages/debates" component={PageDebates} />
         <Route path="/pages/predictions" component={PagePredictions} />
         <Route path="/pages/voices" component={PageVoices} />
+        <Route path="/pages/polls" component={PagePolls} />
+        <Route path="/pages/apply" component={PageApply} />
+        <Route path="/site-settings" component={PageSiteSettings} />
         <Route path="/subscribers" component={SubscribersPage} />
         <Route path="/applications" component={ApplicationsPage} />
         <Route path="/majlis" component={MajlisPage} />

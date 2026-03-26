@@ -33,9 +33,17 @@ interface PulseCategory {
   color: string;
 }
 
+interface TickerItem {
+  label: string;
+  value: string;
+  delta: string;
+  up: boolean;
+}
+
 interface PulsePageConfig {
   hero: { title: string; subtitle: string };
   categories: PulseCategory[];
+  tickerItems?: TickerItem[];
 }
 
 const TAG_OPTIONS = ["POWER", "MONEY", "SOCIETY", "TECHNOLOGY", "SURVIVAL", "MIGRATION", "CULTURE", "HEALTH"];
@@ -177,6 +185,30 @@ export default function PagePulse() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="border border-border rounded-sm p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-serif text-lg font-bold uppercase tracking-wide">Ticker Items</h2>
+          <button onClick={() => setConfig({ ...config, tickerItems: [...(config.tickerItems || []), { label: "", value: "", delta: "", up: true }] })} className="flex items-center gap-1 px-2 py-1 text-xs bg-secondary rounded-sm hover:bg-secondary/80">
+            <Plus className="w-3 h-3" /> Add Item
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground">These items scroll across the top of the Pulse page.</p>
+        {(config.tickerItems || []).map((item, i) => (
+          <div key={i} className="flex items-center gap-2 border border-border/50 rounded-sm p-2 bg-card">
+            <input value={item.label} onChange={e => { const items = [...(config.tickerItems || [])]; items[i] = { ...item, label: e.target.value }; setConfig({ ...config, tickerItems: items }); }} placeholder="Label" className="flex-1 px-2 py-1.5 bg-background border border-border rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-primary" />
+            <input value={item.value} onChange={e => { const items = [...(config.tickerItems || [])]; items[i] = { ...item, value: e.target.value }; setConfig({ ...config, tickerItems: items }); }} placeholder="Value" className="w-20 px-2 py-1.5 bg-background border border-border rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-primary" />
+            <input value={item.delta} onChange={e => { const items = [...(config.tickerItems || [])]; items[i] = { ...item, delta: e.target.value }; setConfig({ ...config, tickerItems: items }); }} placeholder="Delta" className="w-16 px-2 py-1.5 bg-background border border-border rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-primary" />
+            <label className="flex items-center gap-1 text-xs">
+              <input type="checkbox" checked={item.up} onChange={e => { const items = [...(config.tickerItems || [])]; items[i] = { ...item, up: e.target.checked }; setConfig({ ...config, tickerItems: items }); }} className="accent-primary" />
+              ↑
+            </label>
+            <button onClick={() => setConfig({ ...config, tickerItems: (config.tickerItems || []).filter((_, j) => j !== i) })} className="text-muted-foreground hover:text-red-500">
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
+        ))}
       </section>
 
       <section className="border border-border rounded-sm p-4 space-y-3">

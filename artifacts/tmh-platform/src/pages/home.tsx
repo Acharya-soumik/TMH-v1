@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useGetFeaturedPoll, useListPolls, useListProfiles, useListCategories } from "@workspace/api-client-react"
 import { Layout } from "@/components/layout/Layout"
 import { PollCard } from "@/components/poll/PollCard"
@@ -10,7 +10,8 @@ import { useI18n } from "@/lib/i18n"
 import { motion, AnimatePresence } from "framer-motion"
 
 import { LiveNumber } from "@/components/live-counter/FlipDigit"
-import { PREDICTIONS, type PredictionCard } from "@/data/predictions-data"
+import { PREDICTIONS as PREDICTIONS_FALLBACK, type PredictionCard } from "@/data/predictions-data"
+import { usePublicPredictions, usePublicPulseTopics, useLiveCounts, useHomepageConfig } from "@/hooks/use-cms-data"
 
 async function copyText(text: string): Promise<boolean> {
   if (navigator.clipboard?.writeText) {
@@ -94,16 +95,18 @@ function getPredVote(predId: number): "yes" | "no" | null {
   return localStorage.getItem(`tmh_pred_${predId}`) as "yes" | "no" | null
 }
 
-const MENA_POP_BASE = 525_000_000
+const MENA_POP_BASE_DEFAULT = 525_000_000
 const MENA_POP_BASE_DATE = new Date("2026-01-01T00:00:00Z").getTime()
-const MENA_GROWTH_RATE = 0.0156
-const MENA_POP_PER_MS = (MENA_POP_BASE * MENA_GROWTH_RATE) / (365.25 * 24 * 60 * 60 * 1000)
+const MENA_GROWTH_RATE_DEFAULT = 0.0156
 
-function usePopulationCounter() {
+function usePopulationCounter(basePopulation?: number, growthRatePercent?: number) {
+  const base = basePopulation ?? MENA_POP_BASE_DEFAULT
+  const rate = growthRatePercent != null ? growthRatePercent / 100 : MENA_GROWTH_RATE_DEFAULT
+  const perMs = (base * rate) / (365.25 * 24 * 60 * 60 * 1000)
   const calcPop = useCallback(() => {
     const elapsed = Date.now() - MENA_POP_BASE_DATE
-    return Math.floor(MENA_POP_BASE + elapsed * MENA_POP_PER_MS)
-  }, [])
+    return Math.floor(base + elapsed * perMs)
+  }, [base, perMs])
   const [pop, setPop] = useState(calcPop)
   useEffect(() => {
     const id = setInterval(() => setPop(calcPop()), 1000)
@@ -230,6 +233,13 @@ function FeaturedPredictionCard({ featured, chartW, chartH, padL, padR, padT, pa
     if (vote) return
     setVote(choice)
     localStorage.setItem(`tmh_pred_${featured.id}`, choice)
+    let token = localStorage.getItem("tmh_voter_token")
+    if (!token) { token = crypto.randomUUID(); localStorage.setItem("tmh_voter_token", token) }
+    fetch(`/api/predictions/${featured.id}/vote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ choice, voterToken: token }),
+    }).catch(() => {})
     const alreadyUnlocked = localStorage.getItem("tmh_email_submitted") || localStorage.getItem(`tmh_pred_unlocked_${featured.id}`)
     setTimeout(() => {
       if (alreadyUnlocked) {
@@ -447,6 +457,13 @@ function SidebarPredictionItem({ pred, sideVote: initialVote, sidePhase: initial
     if (vote) return
     setVote(choice)
     localStorage.setItem(`tmh_pred_${pred.id}`, choice)
+    let token = localStorage.getItem("tmh_voter_token")
+    if (!token) { token = crypto.randomUUID(); localStorage.setItem("tmh_voter_token", token) }
+    fetch(`/api/predictions/${pred.id}/vote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ choice, voterToken: token }),
+    }).catch(() => {})
     const unlocked = localStorage.getItem("tmh_email_submitted") || localStorage.getItem(`tmh_pred_unlocked_${pred.id}`)
     if (unlocked) {
       localStorage.setItem(`tmh_pred_unlocked_${pred.id}`, "true")
@@ -497,10 +514,17 @@ export default function Home() {
   const { data: trendingPolls, isLoading: trendingLoading } = useListPolls({ filter: "trending", limit: 5 })
   const { data: featuredProfiles, isLoading: profilesLoading } = useListProfiles({ filter: "featured", limit: 8 })
   const { data: categories } = useListCategories()
+  const { data: apiPredictions } = usePublicPredictions<{ items: Array<{ id: number; question: string; category: string; resolvesAt: string; yesPercentage: number; noPercentage: number; totalCount: number; momentum: number; momentumDirection: string; trendData: number[] }> }>()
+  const { data: apiPulseTopics } = usePublicPulseTopics<{ items: Array<{ tag: string; tagColor: string; title: string; stat: string; delta: string; deltaUp: boolean; sparkData: number[] }> }>()
+  const { data: liveCounts } = useLiveCounts()
+  const { data: homepageConfig } = useHomepageConfig<{ masthead?: { basePopulation?: number; growthRate?: number } }>()
   const [ctaEmail, setCtaEmail] = useState("")
   const [ctaJoined, setCtaJoined] = useState(() => !!localStorage.getItem("tmh_cta_joined"))
   const [pulseHovIdx, setPulseHovIdx] = useState<number | null>(null)
-  const menaPop = usePopulationCounter()
+  const menaPop = usePopulationCounter(
+    homepageConfig?.masthead?.basePopulation,
+    homepageConfig?.masthead?.growthRate
+  )
   const { t, isAr } = useI18n()
 
   const handleCtaSubmit = (e: React.FormEvent) => {
@@ -510,13 +534,31 @@ export default function Home() {
     setCtaJoined(true)
   }
 
+  const PREDICTIONS: PredictionCard[] = useMemo(() => {
+    if (apiPredictions?.items?.length) {
+      return apiPredictions.items.map(p => ({
+        id: p.id,
+        category: p.category,
+        resolves: p.resolvesAt,
+        question: p.question,
+        count: p.totalCount.toLocaleString(),
+        yes: p.yesPercentage,
+        no: p.noPercentage,
+        momentum: p.momentum,
+        up: p.momentumDirection === "up",
+        data: p.trendData?.length ? p.trendData : [p.yesPercentage],
+      }))
+    }
+    return PREDICTIONS_FALLBACK
+  }, [apiPredictions])
+
   const tickerPolls = trendingPolls?.polls ?? []
   const debateItems = tickerPolls.slice(0, 8).map(p => ({
     topic: p.question?.length > 38 ? p.question.substring(0, 36) + "…" : p.question ?? "Debate",
     badge: "DEBATE" as const,
     stat: `${(p.totalVotes ?? 0).toLocaleString()} votes`,
   }))
-  const predictionItems = [
+  const predictionItemsFallback = [
     { topic: "NEOM's Line will have residents by 2030?", badge: "PREDICTION" as const, stat: "36% yes" },
     { topic: "Saudi non-oil GDP to exceed 50%?", badge: "PREDICTION" as const, stat: "62% yes" },
     { topic: "UAE income tax within 3 years?", badge: "PREDICTION" as const, stat: "38% yes" },
@@ -526,7 +568,15 @@ export default function Home() {
     { topic: "Saudi 2034 World Cup confirmed?", badge: "PREDICTION" as const, stat: "91% yes" },
     { topic: "Oil above $85 all of 2026?", badge: "PREDICTION" as const, stat: "52% yes" },
   ]
-  const pulseItems = [
+  const predictionItems = apiPredictions?.items?.length
+    ? apiPredictions.items.slice(0, 8).map(p => ({
+        topic: p.question.length > 38 ? p.question.substring(0, 36) + "…" : p.question,
+        badge: "PREDICTION" as const,
+        stat: `${p.yesPercentage}% yes`,
+      }))
+    : predictionItemsFallback
+
+  const pulseItemsFallback = [
     { topic: "Youth unemployment across MENA", badge: "PULSE" as const, stat: "↑ 23%" },
     { topic: "Fintech adoption in GCC", badge: "PULSE" as const, stat: "↑ 340%" },
     { topic: "Renewable energy investment", badge: "PULSE" as const, stat: "$15.2B" },
@@ -536,6 +586,13 @@ export default function Home() {
     { topic: "Diabetes crisis in the Gulf", badge: "PULSE" as const, stat: "↑ 17%" },
     { topic: "GCC military spending", badge: "PULSE" as const, stat: "$105B" },
   ]
+  const pulseItems = apiPulseTopics?.items?.length
+    ? apiPulseTopics.items.slice(0, 8).map(p => ({
+        topic: p.title,
+        badge: "PULSE" as const,
+        stat: p.deltaUp ? `↑ ${p.delta}` : p.stat,
+      }))
+    : pulseItemsFallback
   const maxLen = Math.max(debateItems.length, predictionItems.length, pulseItems.length)
   const interleaved: typeof debateItems = []
   for (let i = 0; i < maxLen; i++) {
@@ -598,10 +655,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="grid grid-cols-4 gap-0 divide-x divide-border">
             {[
-              { href: "/polls", label: t("Debates"), desc: "Vote on the questions shaping MENA", count: "422", accent: "#DC143C" },
-              { href: "/predictions", label: t("Predictions"), desc: "Bet on what actually happens next", count: "230", accent: "#3B82F6" },
-              { href: "/mena-pulse", label: t("The Pulse"), desc: "Real trends backed by real data", count: "78", accent: "#10B981" },
-              { href: "/profiles", label: t("Voices"), desc: "The people shaping the region", count: "103", accent: "#A855F7" },
+              { href: "/polls", label: t("Debates"), desc: "Vote on the questions shaping MENA", count: liveCounts ? String(liveCounts.debates) : "422", accent: "#DC143C" },
+              { href: "/predictions", label: t("Predictions"), desc: "Bet on what actually happens next", count: liveCounts ? String(liveCounts.predictions) : "230", accent: "#3B82F6" },
+              { href: "/mena-pulse", label: t("The Pulse"), desc: "Real trends backed by real data", count: liveCounts ? String(liveCounts.pulseTopics) : "78", accent: "#10B981" },
+              { href: "/profiles", label: t("Voices"), desc: "The people shaping the region", count: liveCounts ? String(liveCounts.voices) : "103", accent: "#A855F7" },
             ].map(item => (
               <Link key={item.href} href={item.href} className="group flex flex-col items-center justify-center gap-1 py-3 px-4 hover:bg-secondary/30 transition-colors">
                 <div className="flex items-center gap-3">
@@ -906,11 +963,18 @@ export default function Home() {
               </div>
 
               <div>
-                {[
-                  { tag: "POWER", tagColor: "#EF4444", title: "Press Freedom Collapse", stat: "17 of 19", delta: "Not Free", deltaUp: false, sparkData: [14, 14, 15, 15, 15, 16, 16, 16, 17, 17, 17, 17] },
-                  { tag: "MONEY", tagColor: "#F59E0B", title: "Crypto Trading Volume", stat: "$338B", delta: "+74%", deltaUp: true, sparkData: [89, 110, 125, 145, 160, 180, 210, 240, 268, 295, 318, 338] },
-                  { tag: "SOCIETY", tagColor: "#EC4899", title: "Women in the Workforce", stat: "33.4%", delta: "+9.2pp", deltaUp: true, sparkData: [17, 19, 21, 23, 25, 26, 28, 29, 30, 31, 32, 33.4] },
-                ].map((t2, idx) => {
+                {(apiPulseTopics?.items?.length
+                  ? apiPulseTopics.items.slice(0, 3).map(p => ({
+                      tag: p.tag, tagColor: p.tagColor, title: p.title,
+                      stat: p.stat, delta: p.delta, deltaUp: p.deltaUp,
+                      sparkData: p.sparkData,
+                    }))
+                  : [
+                    { tag: "POWER", tagColor: "#EF4444", title: "Press Freedom Collapse", stat: "17 of 19", delta: "Not Free", deltaUp: false, sparkData: [14, 14, 15, 15, 15, 16, 16, 16, 17, 17, 17, 17] },
+                    { tag: "MONEY", tagColor: "#F59E0B", title: "Crypto Trading Volume", stat: "$338B", delta: "+74%", deltaUp: true, sparkData: [89, 110, 125, 145, 160, 180, 210, 240, 268, 295, 318, 338] },
+                    { tag: "SOCIETY", tagColor: "#EC4899", title: "Women in the Workforce", stat: "33.4%", delta: "+9.2pp", deltaUp: true, sparkData: [17, 19, 21, 23, 25, 26, 28, 29, 30, 31, 32, 33.4] },
+                  ]
+                ).map((t2, idx) => {
                   const max = Math.max(...t2.sparkData)
                   const min = Math.min(...t2.sparkData)
                   const rng = max - min || 1

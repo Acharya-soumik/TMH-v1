@@ -14,30 +14,51 @@ import {
   LineChart,
 } from "recharts"
 
-import { PREDICTIONS, PREDICTION_CATEGORIES, PREDICTIONS_TICKER, type PredictionCard } from "@/data/predictions-data"
+import { PREDICTIONS as PREDICTIONS_FALLBACK, PREDICTION_CATEGORIES as CATEGORIES_FALLBACK, PREDICTIONS_TICKER as TICKER_FALLBACK, type PredictionCard } from "@/data/predictions-data"
+import { usePublicPredictions } from "@/hooks/use-cms-data"
 
-const FEATURED_RAW = [58, 59, 60, 61, 62, 63, 64, 62, 65, 67, 69, 71]
+interface ApiPrediction {
+  id: number
+  question: string
+  category: string
+  resolvesAt: string
+  yesPercentage: number
+  noPercentage: number
+  totalCount: number
+  momentum: number
+  momentumDirection: string
+  trendData: number[]
+  isFeatured?: boolean
+}
+
+function apiToPredictionCard(p: ApiPrediction): PredictionCard {
+  return {
+    id: p.id,
+    category: p.category,
+    resolves: p.resolvesAt,
+    question: p.question,
+    count: p.totalCount.toLocaleString(),
+    yes: p.yesPercentage,
+    no: p.noPercentage,
+    momentum: p.momentum,
+    up: p.momentumDirection === "up",
+    data: p.trendData?.length ? p.trendData : [p.yesPercentage],
+  }
+}
+
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-const FEATURED_DATA = FEATURED_RAW.map((yes, i) => {
-  const slice = FEATURED_RAW.slice(Math.max(0, i - 2), i + 1)
-  const ma = slice.reduce((s, v) => s + v, 0) / slice.length
-  return { month: MONTHS[i], yes, ma: Math.round(ma * 10) / 10 }
-})
-
-const TICKER_DATA = PREDICTIONS_TICKER
 
 const CLOSED_RAW = [55, 58, 60, 62, 63, 65, 67, 67, 67, 80]
 const CLOSED_DATA = CLOSED_RAW.map((yes, i) => ({ week: i + 1, yes }))
 
 // ─── CUSTOM TOOLTIP ──────────────────────────────────────────────────────────
 
-function FeaturedTooltip({ active, payload, label }: any) {
+function FeaturedTooltip({ active, payload, label, chartData }: any) {
   if (!active || !payload?.length) return null
   const curr = payload[0]?.value
-  const prev = FEATURED_DATA.find(d => d.month === label)
-  const prevIdx = FEATURED_DATA.findIndex(d => d.month === label)
-  const prevVal = prevIdx > 0 ? FEATURED_DATA[prevIdx - 1].yes : curr
+  const data = chartData || []
+  const prevIdx = data.findIndex((d: any) => d.month === label)
+  const prevVal = prevIdx > 0 ? data[prevIdx - 1].yes : curr
   const change = curr - prevVal
   return (
     <div style={{ background: "#1a1a1a", border: "1px solid rgba(220,20,60,0.3)", borderRadius: 6, padding: "10px 14px", fontFamily: "DM Sans, sans-serif" }}>
@@ -170,6 +191,15 @@ function VoteButtons({ height = 52, locked = false, predId }: { height?: number;
     if (voted) return
     setVoted(choice)
     if (storageKey) localStorage.setItem(storageKey, choice)
+    if (predId != null) {
+      let token = localStorage.getItem("tmh_voter_token")
+      if (!token) { token = crypto.randomUUID(); localStorage.setItem("tmh_voter_token", token) }
+      fetch(`/api/predictions/${predId}/vote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ choice, voterToken: token }),
+      }).catch(() => {})
+    }
   }
   return (
     <div style={{ display: "flex", gap: 8, width: "100%" }}>
@@ -205,8 +235,8 @@ function VoteButtons({ height = 52, locked = false, predId }: { height?: number;
 
 // ─── MOMENTUM TICKER ─────────────────────────────────────────────────────────
 
-function MomentumTicker() {
-  const doubled = [...TICKER_DATA, ...TICKER_DATA]
+function MomentumTicker({ tickerData }: { tickerData: typeof TICKER_FALLBACK }) {
+  const doubled = [...tickerData, ...tickerData]
   return (
     <div style={{ background: "#0D0D0D", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
       <div className="tmh-ticker-scroll">
@@ -237,10 +267,18 @@ function MomentumTicker() {
 
 // ─── FEATURED PREDICTION ─────────────────────────────────────────────────────
 
-function FeaturedPrediction() {
-  const firstVal = FEATURED_DATA[0].yes
-  const lastVal = FEATURED_DATA[FEATURED_DATA.length - 1].yes
-  const month30Change = lastVal - FEATURED_DATA[FEATURED_DATA.length - 2].yes
+function FeaturedPrediction({ card }: { card: PredictionCard }) {
+  const featuredData = useMemo(() => {
+    return card.data.map((yes, i) => {
+      const slice = card.data.slice(Math.max(0, i - 2), i + 1)
+      const ma = slice.reduce((s, v) => s + v, 0) / slice.length
+      return { month: MONTHS[i % 12], yes, ma: Math.round(ma * 10) / 10 }
+    })
+  }, [card.data])
+
+  const lastVal = featuredData[featuredData.length - 1]?.yes ?? 0
+  const prevVal = featuredData.length >= 2 ? featuredData[featuredData.length - 2].yes : lastVal
+  const month30Change = lastVal - prevVal
 
   return (
     <div
@@ -250,60 +288,19 @@ function FeaturedPrediction() {
       }}
     >
       <div className="grid md:grid-cols-[55fr_45fr] gap-8">
-        {/* LEFT: chart */}
         <div>
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
             Confidence Over Time — YES %
           </p>
           <ResponsiveContainer width="100%" height={200}>
-            <ComposedChart data={FEATURED_DATA} margin={{ top: 10, right: 20, bottom: 20, left: 0 }}>
-              <CartesianGrid
-                vertical={false}
-                stroke="rgba(255,255,255,0.05)"
-              />
-              <XAxis
-                dataKey="month"
-                tickCount={6}
-                tick={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fill: "rgba(250,250,250,0.4)" }}
-                axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
-                tickLine={false}
-              />
-              <YAxis
-                domain={[0, 100]}
-                ticks={[0, 25, 50, 75, 100]}
-                tick={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fill: "rgba(250,250,250,0.4)" }}
-                axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
-                tickLine={false}
-                width={30}
-              />
-              <Tooltip content={<FeaturedTooltip />} cursor={{ stroke: "rgba(16,185,129,0.4)", strokeWidth: 1 }} />
-              <ReferenceLine
-                y={50}
-                stroke="rgba(255,255,255,0.2)"
-                strokeDasharray="4 4"
-                label={{ value: "Tipping Point", position: "right", fontSize: 10, fontFamily: "'Barlow Condensed', sans-serif", fill: "rgba(255,255,255,0.35)" }}
-              />
-              <Area
-                type="monotone"
-                dataKey="yes"
-                fill="rgba(16,185,129,0.1)"
-                stroke="rgba(16,185,129,0.6)"
-                strokeWidth={1.5}
-                dot={false}
-                isAnimationActive={true}
-                animationDuration={1200}
-                animationEasing="ease-out"
-              />
-              <Line
-                type="monotone"
-                dataKey="ma"
-                stroke="#10B981"
-                strokeWidth={1}
-                dot={false}
-                isAnimationActive={true}
-                animationDuration={1400}
-                animationEasing="ease-out"
-              />
+            <ComposedChart data={featuredData} margin={{ top: 10, right: 20, bottom: 20, left: 0 }}>
+              <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="month" tickCount={6} tick={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fill: "rgba(250,250,250,0.4)" }} axisLine={{ stroke: "rgba(255,255,255,0.08)" }} tickLine={false} />
+              <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 11, fill: "rgba(250,250,250,0.4)" }} axisLine={{ stroke: "rgba(255,255,255,0.08)" }} tickLine={false} width={30} />
+              <Tooltip content={<FeaturedTooltip chartData={featuredData} />} cursor={{ stroke: "rgba(16,185,129,0.4)", strokeWidth: 1 }} />
+              <ReferenceLine y={50} stroke="rgba(255,255,255,0.2)" strokeDasharray="4 4" label={{ value: "Tipping Point", position: "right", fontSize: 10, fontFamily: "'Barlow Condensed', sans-serif", fill: "rgba(255,255,255,0.35)" }} />
+              <Area type="monotone" dataKey="yes" fill="rgba(16,185,129,0.1)" stroke="rgba(16,185,129,0.6)" strokeWidth={1.5} dot={false} isAnimationActive={true} animationDuration={1200} animationEasing="ease-out" />
+              <Line type="monotone" dataKey="ma" stroke="#10B981" strokeWidth={1} dot={false} isAnimationActive={true} animationDuration={1400} animationEasing="ease-out" />
             </ComposedChart>
           </ResponsiveContainer>
           <p style={{ fontFamily: "DM Sans, sans-serif", fontStyle: "italic", fontSize: "0.8rem", color: month30Change >= 0 ? "#10B981" : "#DC143C", marginTop: "0.5rem" }}>
@@ -311,40 +308,32 @@ function FeaturedPrediction() {
           </p>
         </div>
 
-        {/* RIGHT: info + vote */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {/* Badges */}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <span style={{ padding: "2px 8px", background: "var(--foreground)", color: "var(--background)", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.2em" }}>
-              Technology
+              {card.category}
             </span>
             <span style={{ padding: "2px 8px", background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)", color: "#F59E0B", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.1em", borderRadius: 2 }}>
-              Resolves: Dec 2031
+              Resolves: {card.resolves}
             </span>
           </div>
 
-          {/* Context line */}
           <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.78rem", color: "var(--muted-foreground)", fontStyle: "italic" }}>
             The region has spoken on the debate. Now they're putting their prediction on it.
           </p>
 
-          {/* Question */}
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "1.2rem", textTransform: "uppercase", lineHeight: 1.2, color: "var(--foreground)", letterSpacing: "0.02em" }}>
-            Will the majority of jobs that exist today still exist in this region by 2031?
+            {card.question}
           </p>
 
-          {/* Participation */}
           <p style={{ fontFamily: "DM Sans, sans-serif", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-            18,392 predictions locked in
+            {card.count} predictions locked in
           </p>
 
-          {/* Confidence bars */}
-          <ConfidenceBars yes={71} no={29} up={true} momentum={2.1} compact={false} />
+          <ConfidenceBars yes={card.yes} no={card.no} up={card.up} momentum={card.momentum} compact={false} />
 
-          {/* Vote buttons */}
-          <VoteButtons height={52} predId={0} />
+          <VoteButtons height={52} predId={card.id} />
 
-          {/* Lock notice */}
           <p style={{ fontFamily: "DM Sans, sans-serif", fontStyle: "italic", fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
             Your prediction is locked until the resolution date. No changing your mind.
           </p>
@@ -495,6 +484,35 @@ export default function Predictions() {
   const [activeCategory, setActiveCategory] = useState("ALL")
   const [visibleCount, setVisibleCount] = useState(20)
 
+  const { data: apiData } = usePublicPredictions<{ items: ApiPrediction[] }>()
+
+  const PREDICTIONS = useMemo(() => {
+    if (apiData?.items?.length) {
+      return apiData.items.map(apiToPredictionCard)
+    }
+    return PREDICTIONS_FALLBACK
+  }, [apiData])
+
+  const PREDICTION_CATEGORIES = useMemo(() => {
+    if (apiData?.items?.length) {
+      const cats = new Set(apiData.items.map(p => p.category))
+      return Array.from(cats).sort()
+    }
+    return CATEGORIES_FALLBACK
+  }, [apiData])
+
+  const tickerData = useMemo(() => {
+    if (apiData?.items?.length) {
+      return apiData.items.slice(0, 30).map(p => ({
+        label: p.question.length > 20 ? p.question.slice(0, 20).toUpperCase() : p.question.toUpperCase(),
+        yes: p.yesPercentage,
+        delta: p.momentum,
+        up: p.momentumDirection === "up",
+      }))
+    }
+    return TICKER_FALLBACK
+  }, [apiData])
+
   const filteredCards = useMemo(() => {
     let result = PREDICTIONS
     if (activeCategory !== "ALL") {
@@ -509,7 +527,7 @@ export default function Predictions() {
       )
     }
     return result
-  }, [searchQuery, activeCategory])
+  }, [searchQuery, activeCategory, PREDICTIONS])
 
   const isFiltering = searchQuery || activeCategory !== "ALL"
 
@@ -565,7 +583,7 @@ export default function Predictions() {
       </div>
 
       {/* Momentum ticker */}
-      <MomentumTicker />
+      <MomentumTicker tickerData={tickerData} />
 
       {/* Category filter */}
       <div style={{ background: "var(--background)", borderBottom: "1px solid var(--border)", padding: "1rem 0" }}>
@@ -614,14 +632,14 @@ export default function Predictions() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Featured prediction */}
-          {!isFiltering && (
+          {!isFiltering && PREDICTIONS.length > 0 && (
             <>
               <div className="mb-4">
                 <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.22em", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
                   Featured Prediction
                 </p>
               </div>
-              <FeaturedPrediction />
+              <FeaturedPrediction card={PREDICTIONS[0]} />
             </>
           )}
 

@@ -343,6 +343,39 @@ const HOMEPAGE_CONFIG_SEED = {
     subtitle: "by The Middle East Hustle",
     showPopulationCounter: true,
     issueLabel: "EST. 2026 \u00B7 ISSUE NO. 001",
+    basePopulation: 541000000,
+    growthRate: 1.56,
+    countryBreakdown: [
+      { name: "Egypt", flag: "\u{1F1EA}\u{1F1EC}", population: "112M" },
+      { name: "Iran", flag: "\u{1F1EE}\u{1F1F7}", population: "89M" },
+      { name: "Iraq", flag: "\u{1F1EE}\u{1F1F6}", population: "44M" },
+      { name: "Saudi Arabia", flag: "\u{1F1F8}\u{1F1E6}", population: "37M" },
+      { name: "Morocco", flag: "\u{1F1F2}\u{1F1E6}", population: "37M" },
+      { name: "Algeria", flag: "\u{1F1E9}\u{1F1FF}", population: "46M" },
+      { name: "Sudan", flag: "\u{1F1F8}\u{1F1E9}", population: "48M" },
+      { name: "Yemen", flag: "\u{1F1FE}\u{1F1EA}", population: "34M" },
+      { name: "Syria", flag: "\u{1F1F8}\u{1F1FE}", population: "23M" },
+      { name: "UAE", flag: "\u{1F1E6}\u{1F1EA}", population: "10M" },
+      { name: "Jordan", flag: "\u{1F1EF}\u{1F1F4}", population: "11M" },
+      { name: "Tunisia", flag: "\u{1F1F9}\u{1F1F3}", population: "12M" },
+      { name: "Libya", flag: "\u{1F1F1}\u{1F1FE}", population: "7M" },
+      { name: "Lebanon", flag: "\u{1F1F1}\u{1F1E7}", population: "5.5M" },
+      { name: "Palestine", flag: "\u{1F1F5}\u{1F1F8}", population: "5.5M" },
+      { name: "Oman", flag: "\u{1F1F4}\u{1F1F2}", population: "4.6M" },
+      { name: "Kuwait", flag: "\u{1F1F0}\u{1F1FC}", population: "4.3M" },
+      { name: "Qatar", flag: "\u{1F1F6}\u{1F1E6}", population: "2.7M" },
+      { name: "Bahrain", flag: "\u{1F1E7}\u{1F1ED}", population: "1.5M" },
+    ],
+  },
+  sectionStats: {
+    useOverrides: false,
+    overrides: {
+      debates: null,
+      predictions: null,
+      pulseTopics: null,
+      voices: null,
+      totalVotes: null,
+    },
   },
   ticker: {
     enabled: true,
@@ -395,6 +428,31 @@ const PAGE_CONFIGS_SEED: Record<string, unknown> = {
       { num: "05", title: "Youngest Region on Earth", body: "60% of MENA is under 30. 541 million people." },
       { num: "06", title: "Real People Only", body: "No bots. No astroturfing. No sponsored opinions." },
     ],
+    founderStatement: {
+      text: "This started as a question I kept asking at dinner tables, in taxis, in boardrooms, and in WhatsApp groups at midnight: what does the Middle East actually think?\n\nNot what we're told it thinks. Not what leaders say it thinks. Not what Western media assumes it thinks. What the 541 million people who live here, work here, raise children here, and build things here \u2014 actually think.\n\nThere was no single place to find out. So I built one.\n\n\"The Tribunal is a social experiment disguised as a platform. Every debate is a room I'm placing the region inside. Every vote is a voice that would otherwise never be counted. Every prediction is a bet on where we're headed.\"\n\nI don't have the answers. Nobody does. But for the first time, we're collecting them \u2014 honestly, anonymously, at scale.",
+      author: "Kareem Kaddoura, Founder",
+    },
+    regionCoverage: [
+      { name: "Egypt", flag: "\u{1F1EA}\u{1F1EC}", population: "112M" },
+      { name: "Iran", flag: "\u{1F1EE}\u{1F1F7}", population: "89M" },
+      { name: "Iraq", flag: "\u{1F1EE}\u{1F1F6}", population: "44M" },
+      { name: "Saudi Arabia", flag: "\u{1F1F8}\u{1F1E6}", population: "37M" },
+      { name: "Morocco", flag: "\u{1F1F2}\u{1F1E6}", population: "37M" },
+      { name: "Algeria", flag: "\u{1F1E9}\u{1F1FF}", population: "46M" },
+      { name: "Sudan", flag: "\u{1F1F8}\u{1F1E9}", population: "48M" },
+      { name: "Yemen", flag: "\u{1F1FE}\u{1F1EA}", population: "34M" },
+      { name: "Syria", flag: "\u{1F1F8}\u{1F1FE}", population: "23M" },
+      { name: "UAE", flag: "\u{1F1E6}\u{1F1EA}", population: "10M" },
+      { name: "Jordan", flag: "\u{1F1EF}\u{1F1F4}", population: "11M" },
+      { name: "Tunisia", flag: "\u{1F1F9}\u{1F1F3}", population: "12M" },
+      { name: "Libya", flag: "\u{1F1F1}\u{1F1FE}", population: "7M" },
+      { name: "Lebanon", flag: "\u{1F1F1}\u{1F1E7}", population: "5.5M" },
+      { name: "Palestine", flag: "\u{1F1F5}\u{1F1F8}", population: "5.5M" },
+      { name: "Oman", flag: "\u{1F1F4}\u{1F1F2}", population: "4.6M" },
+      { name: "Kuwait", flag: "\u{1F1F0}\u{1F1FC}", population: "4.3M" },
+      { name: "Qatar", flag: "\u{1F1F6}\u{1F1E6}", population: "2.7M" },
+      { name: "Bahrain", flag: "\u{1F1E7}\u{1F1ED}", population: "1.5M" },
+    ],
   },
   pulse: {
     categories: [
@@ -412,6 +470,77 @@ const PAGE_CONFIGS_SEED: Record<string, unknown> = {
       title: "MENA PULSE",
       subtitle: "Real-time trend tracking across 19 countries. The region's vital signs.",
     },
+    tickerItems: [
+      { label: "PRESS FREEDOM", value: "17/19", delta: "NOT FREE", up: false },
+      { label: "SURVEILLANCE", value: "$4.8B", delta: "+62%", up: true },
+      { label: "BILLIONAIRES", value: "$186B", delta: "+41%", up: true },
+      { label: "CRYPTO VOL", value: "$338B", delta: "+74%", up: true },
+      { label: "SWF ASSETS", value: "$4.1T", delta: "+18%", up: true },
+      { label: "WATER CRISIS", value: "12/19", delta: "CRITICAL", up: false },
+      { label: "DISPLACED", value: "42M", delta: "GROWING", up: false },
+      { label: "BRAIN DRAIN", value: "1 in 3", delta: "LEAVING", up: false },
+      { label: "MENTAL HEALTH", value: "+312%", delta: "SEARCHES", up: false },
+      { label: "YOUTH JOBLESS", value: "26%", delta: "WORST", up: false },
+      { label: "LGBTQ+ ILLEGAL", value: "18/19", delta: "6 DEATH", up: false },
+      { label: "CHILD MARRIAGE", value: "1 in 5", delta: "GIRLS", up: false },
+      { label: "SPORTSWASHING", value: "$75B+", delta: "SPENT", up: true },
+      { label: "FOOD IMPORTS", value: "85%", delta: "NO CHANGE", up: false },
+      { label: "MILITARY", value: "$198B", delta: "+9%", up: true },
+      { label: "REMITTANCES", value: "$128B", delta: "OUTFLOWS", up: false },
+      { label: "MEGA PROJECTS", value: "$1.3T", delta: "PLANNED", up: true },
+      { label: "EXECUTIONS", value: "1,100+", delta: "IN 2025", up: false },
+    ],
+  },
+  polls: {
+    hero: {
+      title: "What Does the Region Actually Think?",
+      subtitle: "Not what they say at dinner. What they vote for here.",
+    },
+    tickerItems: [
+      { topic: "Brain Drain", votes: "18,421" },
+      { topic: "AI & Jobs", votes: "12,847" },
+      { topic: "Gender Leadership", votes: "9,203" },
+      { topic: "Income Tax UAE", votes: "15,609" },
+      { topic: "Vision 2030", votes: "11,002" },
+      { topic: "Arab Identity", votes: "8,441" },
+      { topic: "Expat Rights", votes: "7,810" },
+      { topic: "Cannabis Reform", votes: "6,290" },
+      { topic: "Arranged Marriage", votes: "5,433" },
+      { topic: "Gulf Wealth Gap", votes: "10,117" },
+    ],
+    tickerSource: "manual",
+  },
+  apply: {
+    hero: {
+      tagline: "The Voices",
+      title: "Think You Belong In The Voices?",
+      subtitle: "We're building the most credible founder directory in the Middle East. Not everyone makes the cut. The bar is high \u2014 because our audience is discerning.",
+    },
+    criteria: [
+      "Real, verifiable impact \u2014 named outcomes, not just job titles",
+      "Based in MENA or with a deep, ongoing connection to the region",
+      "A unique story \u2014 pivots, failures, non-linear journeys",
+      "Built, led, or founded something tangible",
+      "An original quote \u2014 specific to your experience, not a LinkedIn clich\u00E9",
+      "A public profile verifiable on LinkedIn or in the press",
+    ],
+    criteriaHeading: "The Bar",
+    countries: [
+      "UAE", "Saudi Arabia", "Egypt", "Jordan", "Lebanon", "Kuwait",
+      "Bahrain", "Qatar", "Oman", "Morocco", "Tunisia", "Iraq",
+      "Palestine", "Other MENA", "Diaspora",
+    ],
+    sectors: [
+      "Technology / AI", "Fintech", "Startups & VC", "Media & Creative",
+      "Healthcare / MedTech", "Education", "Real Estate", "Consulting",
+      "Social Enterprise", "Government / Policy", "Arts & Culture", "Other",
+    ],
+    successMessage: {
+      title: "Application Received.",
+      subtitle: "Our AI review runs in minutes. You'll hear back within 48 hours.",
+      cta: "Go Vote",
+    },
+    disclaimer: "By submitting you agree to The Tribunal's editorial standards. Applications are reviewed by our AI scoring system within minutes, then by our editorial team within 48 hours.",
   },
   faq: {
     sections: [
@@ -500,6 +629,56 @@ const PAGE_CONFIGS_SEED: Record<string, unknown> = {
   },
 };
 
+const SITE_SETTINGS_SEED = {
+  navigation: {
+    links: [
+      { label: "Debates", href: "/polls", enabled: true },
+      { label: "Predictions", href: "/predictions", enabled: true },
+      { label: "The Pulse", href: "/mena-pulse", enabled: true },
+      { label: "The Voices", href: "/profiles", enabled: true },
+      { label: "About", href: "/about", enabled: true },
+      { label: "The Majlis", href: "/majlis", icon: "lock", enabled: true },
+    ],
+    ctaButton: { label: "Join The Voices", href: "/apply", enabled: true },
+  },
+  footer: {
+    links: [
+      { label: "About", href: "/about" },
+      { label: "Contact", href: "/contact" },
+      { label: "Terms", href: "/terms" },
+      { label: "FAQ", href: "/faq" },
+    ],
+    socialLinks: [
+      { platform: "X (Twitter)", url: "https://x.com/tmehustle", icon: "twitter" },
+      { platform: "LinkedIn", url: "https://linkedin.com/company/themiddleeasthustle", icon: "linkedin" },
+      { platform: "Instagram", url: "https://instagram.com/themiddleeasthustle", icon: "instagram" },
+    ],
+    copyright: "\u00A9 2026 The Middle East Hustle. All rights reserved.",
+    tagline: "The region\u2019s opinion. Unfiltered.",
+  },
+  seo: {
+    siteTitle: "The Tribunal by The Middle East Hustle",
+    siteDescription: "MENA\u2019s first opinion intelligence platform \u2014 covering 19 countries, 541 million people.",
+    ogImage: "/og-image.png",
+  },
+  cookieConsent: {
+    enabled: true,
+    message: "We use localStorage to save your votes. No third-party cookies. No tracking.",
+    acceptLabel: "Got it",
+    dismissLabel: "Dismiss",
+    linkText: "Privacy Policy",
+    linkHref: "/terms",
+  },
+  shareGate: {
+    enabled: true,
+    heading: "Share to Unlock Full Results",
+    body: "We keep The Tribunal free by making opinion data shareable. Share this debate to see the full breakdown.",
+    shareButtonText: "Share This Debate",
+    skipText: "or enter your email",
+    emailPlaceholder: "your@email.com",
+  },
+};
+
 export async function seedCmsData() {
   console.log("Starting CMS data seed...");
 
@@ -566,6 +745,7 @@ export async function seedCmsData() {
   const configs = [
     { key: "homepage", value: HOMEPAGE_CONFIG_SEED },
     ...Object.entries(PAGE_CONFIGS_SEED).map(([key, value]) => ({ key: `page_${key}`, value })),
+    { key: "site_settings", value: SITE_SETTINGS_SEED },
   ];
 
   for (const cfg of configs) {

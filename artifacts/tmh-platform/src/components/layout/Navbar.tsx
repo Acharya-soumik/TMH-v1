@@ -4,6 +4,14 @@ import { useState, useEffect, useRef } from "react"
 import { useTheme } from "@/hooks/use-theme"
 import { cn } from "@/lib/utils"
 import { useI18n, LangToggle } from "@/lib/i18n"
+import { useSiteSettings } from "@/hooks/use-cms-data"
+
+interface SiteSettingsData {
+  navigation?: {
+    links?: Array<{ label: string; href: string; icon?: string; enabled?: boolean }>
+    ctaButton?: { label: string; href: string; enabled?: boolean }
+  }
+}
 
 export function Navbar() {
   const [location] = useLocation()
@@ -14,6 +22,7 @@ export function Navbar() {
   const [isHidden, setIsHidden] = useState(false)
   const lastScrollY = useRef(0)
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { data: settings } = useSiteSettings<SiteSettingsData>()
 
   useEffect(() => {
     const clearIdleTimer = () => {
@@ -56,14 +65,25 @@ export function Navbar() {
     }
   }, [mobileMenuOpen])
 
-  const navLinks = [
+  const defaultLinks = [
     { label: t("About"), href: "/about" },
     { label: t("Pulse"), href: "/mena-pulse" },
     { label: t("Debates"), href: "/polls" },
     { label: t("Predictions"), href: "/predictions" },
     { label: t("Voices"), href: "/profiles" },
-    { label: t("The Majlis"), href: "/majlis", icon: Lock },
+    { label: t("The Majlis"), href: "/majlis", icon: "lock" },
   ]
+
+  const cmsLinks = settings?.navigation?.links?.filter(link => link.enabled !== false)
+  const navLinks = (cmsLinks?.length ? cmsLinks : defaultLinks).map(link => ({
+    ...link,
+    icon: link.icon === "lock" ? Lock : undefined,
+  }))
+
+  const rawCtaButton = settings?.navigation?.ctaButton
+  const ctaButton = rawCtaButton?.enabled !== false
+    ? (rawCtaButton || { label: t("Join The Voices"), href: "/apply" })
+    : null
 
   return (
     <header
@@ -108,12 +128,14 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-3">
+            {ctaButton && (
             <Link
-              href="/apply"
+              href={ctaButton.href}
               className="hidden sm:flex items-center gap-2 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.15em] px-4 py-2 hover:bg-primary/90 transition-colors font-serif"
             >
-              {t("Join The Voices")}
+              {ctaButton.label}
             </Link>
+            )}
 
             <button
               onClick={toggleTheme}
@@ -155,15 +177,17 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+            {ctaButton && (
             <div className="pt-4">
               <Link
-                href="/apply"
+                href={ctaButton.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className="block w-full text-center bg-primary text-white font-bold uppercase tracking-[0.2em] text-sm py-3 font-serif hover:bg-primary/90 transition-colors"
               >
-                {t("Join The Voices")}
+                {ctaButton.label}
               </Link>
             </div>
+            )}
           </div>
         </div>
       )}

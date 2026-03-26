@@ -17,6 +17,7 @@ export const profilesTable = pgTable("profiles", {
   story: text("story").notNull(),
   lessonsLearned: jsonb("lessons_learned").$type<string[]>().notNull().default([]),
   quote: text("quote").notNull(),
+  impactStatement: text("impact_statement"),
   isFeatured: boolean("is_featured").notNull().default(false),
   isVerified: boolean("is_verified").notNull().default(false),
   viewCount: integer("view_count").notNull().default(0),

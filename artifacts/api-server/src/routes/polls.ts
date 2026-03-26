@@ -1,35 +1,10 @@
 import { Router, type IRouter } from "express";
 import { db, pollsTable, pollOptionsTable, votesTable, profilesTable, newsletterSubscribersTable, pollSnapshotsTable } from "@workspace/db";
 import { eq, desc, sql, and, inArray, asc } from "drizzle-orm";
-import https from "https";
-import http from "http";
-
 const router: IRouter = Router();
 
-async function getCountryFromIp(ip: string): Promise<{ code: string; name: string } | null> {
-  if (!ip || ip === "127.0.0.1" || ip === "::1" || ip.startsWith("10.") || ip.startsWith("172.") || ip.startsWith("192.168.")) {
-    return null;
-  }
-  return new Promise((resolve) => {
-    const req = http.get(`http://ip-api.com/json/${ip}?fields=status,countryCode,country`, (res) => {
-      let data = "";
-      res.on("data", (chunk) => (data += chunk));
-      res.on("end", () => {
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.status === "success" && parsed.countryCode) {
-            resolve({ code: parsed.countryCode, name: parsed.country });
-          } else {
-            resolve(null);
-          }
-        } catch {
-          resolve(null);
-        }
-      });
-    });
-    req.on("error", () => resolve(null));
-    req.setTimeout(2000, () => { req.destroy(); resolve(null); });
-  });
+async function getCountryFromIp(_ip: string): Promise<{ code: string; name: string } | null> {
+  return null;
 }
 
 function getClientIp(req: any): string {

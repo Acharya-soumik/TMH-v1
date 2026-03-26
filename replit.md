@@ -26,7 +26,8 @@ Design aligned with main site: "THE TRIBUNAL." branding with crimson period, Pla
 Sidebar sections:
 - **Overview**: Dashboard (content stats + recent activity), Analytics (vote analytics, top polls, votes by category/country, daily activity), Homepage Manager (masthead, ticker, sections, banners, newsletter CTA)
 - **Content**: Debates (CRUD + editorial workflow + vote options), Predictions (CRUD + resolution dates + momentum), Pulse (DB-backed topics with CRUD, spark data, editorial status), Voices (CRUD + full profile editor), Ideation Engine (AI-powered content generation with 5-step agentic workflow)
-- **Pages**: About (hero, pillars, beliefs editor), FAQ (sections + Q&A editor), Terms (sections editor with last-updated date), Contact (emails, social links, office location), Debates Page (hero, ticker, sort labels, empty state), Predictions Page (hero, ticker, categories, featured IDs), Voices Page (hero, impact statements, stats bar, filter labels)
+- **Pages**: About (hero, pillars, beliefs, founder statement, region coverage editor), FAQ (sections + Q&A editor), Terms (sections editor with last-updated date), Contact (emails, social links, office location), Debates Page (hero, ticker, sort labels, empty state), Predictions Page (hero, ticker, categories, featured IDs), Voices Page (hero, impact statements, stats bar, filter labels), Polls Page (hero, ticker items, ticker source), Apply Page (hero, criteria, countries, sectors, success message, disclaimer)
+- **Settings**: Site Settings (navigation links, CTA button, footer links, social links, SEO/meta, cookie consent, share gate copy)
 - **Design**: Design Tokens (brand colors, UI colors, typography — all DB-backed)
 - **Audience**: Subscribers (newsletter list from DB, search, CSV export), Applications ("Join The Voices" submissions from DB, review/approve/reject/shortlist)
 
@@ -36,7 +37,8 @@ All CMS content endpoints are backed by real PostgreSQL queries via Drizzle ORM:
 - **Predictions** (`/api/cms/predictions`): Queries `predictionsTable` — 230 predictions with full CRUD, editorial status, momentum tracking
 - **Pulse Topics** (`/api/cms/pulse-topics`): Queries `pulseTopicsTable` — 56 topics with full CRUD, spark data, editorial status
 - **Design Tokens** (`/api/cms/design-tokens`): Queries `designTokensTable` — 13 tokens with full CRUD (brand colors, UI colors, typography)
-- **Page Configs** (`/api/cms/pages/:page`): Queries `cmsConfigsTable` — about, pulse, faq, terms, contact, debates_page, predictions_page, voices_page
+- **Page Configs** (`/api/cms/pages/:page`): Queries `cmsConfigsTable` — about, pulse, polls, apply, faq, terms, contact, debates_page, predictions_page, voices_page
+- **Site Settings** (`/api/cms/site-settings`): GET + PUT for global navigation, footer, SEO, cookie consent, share gate config
 - **Stats** (`/api/cms/stats`): Real DB counts for debates/voices/predictions
 - **Taxonomy** (`/api/cms/taxonomy`): Categories, tags, sectors, countries, cities all derived from real DB data
 - **Subscribers** (`/api/cms/subscribers`, `/export`): Real DB queries on `newsletterSubscribersTable`
@@ -107,8 +109,9 @@ artifacts-monorepo/
 - `polls` — Poll questions with category, type, editorialStatus, and metadata
 - `poll_options` — Answer options with vote counts
 - `votes` — Vote records keyed by voterToken (localStorage UUID)
-- `profiles` — Curated regional voices with full editorial profiles
+- `profiles` — Curated regional voices with full editorial profiles (includes `impactStatement` text column)
 - `predictions` — MENA prediction market items with category, resolution dates, momentum, editorial status
+- `prediction_votes` — Individual prediction votes (predictionId, choice yes/no, voterToken, country, createdAt)
 - `pulse_topics` — Trend topics with spark data, live config, editorial status
 - `cms_configs` — Key-value config store (homepage, page configs)
 - `design_tokens` — Design system tokens (colors, typography, UI values)
@@ -137,10 +140,14 @@ Canonical public endpoints for frontend consumption:
 - `GET /api/page-config/:page` — Page config by key (alias: `/api/public/page-config/:page`)
   - Keys: `about`, `pulse`, `faq`, `terms`, `contact`, `debates_page`, `predictions_page`, `voices_page`
 - `GET /api/design-tokens` — All design tokens (alias: `/api/public/design-tokens`)
+- `GET /api/site-settings` — Global site settings (alias: `/api/public/site-settings`)
+- `GET /api/live-counts` — Live DB counts: debates, predictions, pulseTopics, voices, totalVotes (alias: `/api/public/live-counts`)
+- `POST /api/predictions/:id/vote` — Cast prediction vote (choice: yes/no, voterToken), returns updated percentages
+- `GET /api/predictions/:id/results` — Get prediction vote results
 
 CMS admin endpoints (`/api/cms/*`) require `x-cms-token` header for mutations.
 
-**Seeding**: CMS seed data runs idempotently on API server startup via `seedCmsData()`. It populates predictions, pulse topics, design tokens, homepage config, and page configs only if the respective tables are empty. Requires DB schema to be pushed first (`pnpm --filter @workspace/db run push`).
+**Seeding**: CMS seed data runs idempotently on API server startup via `seedCmsData()`. It populates predictions, pulse topics, design tokens, homepage config (with population counter + country breakdown + section stats overrides), page configs (about with founderStatement/regionCoverage, pulse with tickerItems, polls, apply), and site_settings (navigation, footer, SEO, cookie consent, share gate). Only inserts if keys don't exist. Requires DB schema to be pushed first (`pnpm --filter @workspace/db run push`).
 
 ### Majlis API Endpoints
 - `POST /api/majlis/auth/register` — Register (requires valid profileId)

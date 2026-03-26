@@ -4,8 +4,14 @@ import { ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Link } from "wouter"
 import { useI18n } from "@/lib/i18n"
+import { useCmsConfig } from "@/hooks/use-cms-data"
 
-const FAQ_SECTIONS = [
+interface FaqSection {
+  category: string
+  questions: Array<{ q: string; a: string }>
+}
+
+const FAQ_SECTIONS_DEFAULT: FaqSection[] = [
   {
     category: "The Platform",
     questions: [
@@ -139,6 +145,9 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 
 export default function FAQ() {
   const { t, isAr } = useI18n()
+  const { data: cmsConfig } = useCmsConfig<{ sections?: FaqSection[] }>("faq")
+  const FAQ_SECTIONS = cmsConfig?.sections?.length ? cmsConfig.sections : FAQ_SECTIONS_DEFAULT
+
   return (
     <Layout>
       <div className="bg-foreground text-background border-b border-border">

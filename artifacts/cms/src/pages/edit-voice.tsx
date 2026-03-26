@@ -25,8 +25,8 @@ export default function EditVoicePage() {
   const [form, setForm] = useState({
     name: "", headline: "", role: "", company: "", companyUrl: "", sector: "",
     country: "", city: "", imageUrl: "", summary: "", story: "",
-    lessonsLearned: [] as string[], quote: "", isFeatured: false, isVerified: false,
-    editorialStatus: "draft",
+    lessonsLearned: [] as string[], quote: "", impactStatement: "",
+    isFeatured: false, isVerified: false, editorialStatus: "draft",
   });
 
   useEffect(() => {
@@ -40,6 +40,7 @@ export default function EditVoicePage() {
           country: data.country || "", city: data.city || "", imageUrl: data.imageUrl || "",
           summary: data.summary || "", story: data.story || "",
           lessonsLearned: data.lessonsLearned || [], quote: data.quote || "",
+          impactStatement: data.impactStatement || "",
           isFeatured: data.isFeatured || false, isVerified: data.isVerified || false,
           editorialStatus: data.editorialStatus || "draft",
         });
@@ -140,6 +141,10 @@ export default function EditVoicePage() {
 
         <Field label="Quote">
           <textarea value={form.quote} onChange={e => update("quote", e.target.value)} rows={2} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary" />
+        </Field>
+
+        <Field label="Impact Statement">
+          <textarea value={form.impactStatement} onChange={e => update("impactStatement", e.target.value)} rows={2} placeholder="e.g. Built the Middle East's first $3.1B acquisition" className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary" />
         </Field>
 
         <div className="flex gap-6">
