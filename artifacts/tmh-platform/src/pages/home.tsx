@@ -550,8 +550,6 @@ export default function Home() {
   return (
     <Layout>
       <style>{`
-        @keyframes fadein { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-        .section-fadein { animation: fadein 0.5s ease forwards; }
         @keyframes bubble-float-1 { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
         @keyframes bubble-float-2 { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-12px); } }
         @keyframes bubble-float-3 { 0%,100% { transform: translateY(-4px); } 50% { transform: translateY(6px); } }
@@ -659,7 +657,7 @@ export default function Home() {
       </div>
 
       {/* ── FRONT PAGE: Lead Debate + Sidebar ── */}
-      <section className="py-8 bg-background border-b border-border section-fadein relative">
+      <section className="py-8 bg-background border-b border-border relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-0">
 
@@ -714,7 +712,7 @@ export default function Home() {
 
 
       {/* ── PREDICTIONS ── */}
-      <section id="predictions" className="py-8 bg-background border-b border-border section-fadein relative">
+      <section id="predictions" className="py-8 bg-background border-b border-border relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-0">
 
@@ -781,7 +779,7 @@ export default function Home() {
       </section>
 
       {/* ── THE PULSE ── */}
-      <section id="pulse" className="py-8 bg-background border-b border-border section-fadein relative">
+      <section id="pulse" className="py-8 bg-background border-b border-border relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-0">
 

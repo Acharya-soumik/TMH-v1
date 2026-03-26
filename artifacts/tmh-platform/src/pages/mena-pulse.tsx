@@ -1096,17 +1096,11 @@ function PulseShareBtn({ title, stat }: { title: string; stat: string }) {
 
 function TopicCardComponent({ topic, index }: { topic: TopicCard; index: number }) {
   const [expanded, setExpanded] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const { t } = useI18n()
   const liveValue = useLiveCounter(
     topic.live?.baseValue ?? 0,
     topic.live?.annualGrowth ?? 0
   )
-
-  useEffect(() => {
-    const tm = setTimeout(() => setMounted(true), index * 50)
-    return () => clearTimeout(tm)
-  }, [index])
 
   return (
     <div
@@ -1116,9 +1110,7 @@ function TopicCardComponent({ topic, index }: { topic: TopicCard; index: number 
         border: "1px solid rgba(255,255,255,0.06)",
         padding: "20px 24px",
         cursor: "pointer",
-        transition: "all 0.4s cubic-bezier(0.23,1,0.32,1)",
-        opacity: mounted ? 1 : 0,
-        transform: mounted ? "translateY(0)" : "translateY(12px)",
+        transition: "border-color 0.3s ease, background 0.3s ease",
         position: "relative",
         overflow: "hidden",
       }}
