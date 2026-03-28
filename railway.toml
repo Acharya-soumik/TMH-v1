@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-installCommand = "pnpm install --frozen-lockfile"
+installCommand = "npm install -g pnpm@10.33.0 && pnpm install --frozen-lockfile"
 buildCommand = "pnpm run build"
 
 [deploy]
