@@ -63,5 +63,5 @@ uploads/
 .claude/
 .mcp.json
 
-# Large binary assets — Keynote decks don't belong in git
-attached_assets/*.key
+# Attached assets — Replit AI workflow screenshots/prompts, not used by the app
+attached_assets/
