@@ -1607,7 +1607,7 @@ export default function Home() {
       {/* ── SECTION HOOKS ── */}
       <section className="bg-background border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <StaggerGrid className="grid grid-cols-4 gap-0 divide-x divide-border">
+          <StaggerGrid className="grid grid-cols-2 md:grid-cols-4 gap-0">
             {[
               {
                 href: "/polls",
@@ -1654,13 +1654,17 @@ export default function Home() {
                 ),
                 accent: "#A855F7",
               },
-            ].map((item) => (
-              <motion.div key={item.href} variants={staggerItem}>
+            ].map((item, i) => (
+              <motion.div
+                key={item.href}
+                variants={staggerItem}
+                className={`${i % 2 !== 0 ? "border-l border-border" : ""} ${i >= 2 ? "border-t border-border md:border-t-0" : ""} ${i > 0 ? "md:border-l md:border-border" : ""}`}
+              >
                 <Link
                   href={item.href}
-                  className="group flex flex-col items-center justify-center gap-1 py-3 px-4 hover:bg-secondary/30 transition-colors"
+                  className="group flex flex-col items-center justify-center gap-1 py-3 px-2 md:px-4 hover:bg-secondary/30 transition-colors min-w-0"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 md:gap-3 min-w-0">
                     <span
                       style={{
                         width: 3,
@@ -1670,6 +1674,7 @@ export default function Home() {
                       }}
                     />
                     <span
+                      className="truncate"
                       style={{
                         fontFamily: "'Barlow Condensed', sans-serif",
                         fontWeight: 800,
@@ -1688,11 +1693,13 @@ export default function Home() {
                         fontWeight: 900,
                         fontSize: "0.85rem",
                         color: item.accent,
+                        flexShrink: 0,
                       }}
                     />
-                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
+                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity -ml-1 shrink-0" />
                   </div>
                   <span
+                    className="truncate max-w-full"
                     style={{
                       fontFamily: "DM Sans, sans-serif",
                       fontSize: "0.6rem",

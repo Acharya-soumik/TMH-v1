@@ -434,8 +434,31 @@ export default function Profiles() {
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <div
                 key={i}
-                className="h-80 bg-secondary animate-pulse border border-border"
-              />
+                className="bg-card border border-border overflow-hidden"
+              >
+                {/* Image shimmer */}
+                <div className="h-56 bg-secondary relative overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-background/20 to-transparent" />
+                </div>
+                {/* Text shimmer */}
+                <div className="p-5 space-y-3">
+                  <div className="h-5 w-3/4 bg-secondary rounded relative overflow-hidden">
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-background/20 to-transparent" />
+                  </div>
+                  <div className="h-3 w-full bg-secondary rounded relative overflow-hidden">
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-background/20 to-transparent" />
+                  </div>
+                  <div className="h-3 w-1/2 bg-secondary rounded relative overflow-hidden">
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-background/20 to-transparent" />
+                  </div>
+                  <div className="h-3 w-2/3 bg-secondary rounded relative overflow-hidden">
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-background/20 to-transparent" />
+                  </div>
+                  <div className="mt-4 h-9 w-full bg-secondary border border-border relative overflow-hidden">
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-background/20 to-transparent" />
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -456,8 +479,7 @@ export default function Profiles() {
           <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.05 }}
+            animate="visible"
             variants={staggerContainer}
           >
             {filtered.map((profile) => (

@@ -248,6 +248,11 @@
   }
 }
 
+/* ── Shimmer skeleton loader ── */
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
 /* ── TMH v5 Opinion Bubble Float ── */
 @keyframes bblfloat {
   0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }

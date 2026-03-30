@@ -65,6 +65,7 @@ function CompanyLink({ company }: { company: string }) {
 export default function ProfileDetail() {
   const [, params] = useRoute("/profiles/:id")
   const id = params?.id ? parseInt(params.id) : 0
+  const [imgError, setImgError] = useState(false)
 
   const { data: profile, isLoading, error } = useGetProfile(id)
 
@@ -94,7 +95,6 @@ export default function ProfileDetail() {
   }
 
   const paragraphs = profile.story.split('\n').filter(Boolean)
-  const [imgError, setImgError] = useState(false)
 
   return (
     <Layout>
