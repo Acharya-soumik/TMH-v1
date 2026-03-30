@@ -1266,6 +1266,7 @@ export default function Predictions() {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
+                setActiveCategory("ALL");
                 setVisibleCount(20);
               }}
               className="text-text2"
@@ -1402,6 +1403,7 @@ export default function Predictions() {
             <button
               onClick={() => {
                 setActiveCategory("ALL");
+                setSearchQuery("");
                 setVisibleCount(20);
               }}
               style={{
@@ -1434,6 +1436,7 @@ export default function Predictions() {
                   key={cat}
                   onClick={() => {
                     setActiveCategory(cat);
+                    setSearchQuery("");
                     setVisibleCount(20);
                   }}
                   style={{

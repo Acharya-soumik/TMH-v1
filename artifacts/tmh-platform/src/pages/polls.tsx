@@ -231,7 +231,10 @@ export default function Polls() {
                 type="text"
                 placeholder="Topic, keyword, country..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCategory(undefined);
+                }}
                 className="w-full bg-secondary border border-border pl-9 pr-8 py-2.5 text-xs font-sans text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
               />
               {searchQuery && (
@@ -272,7 +275,10 @@ export default function Polls() {
             </h3>
             <div className="flex flex-col gap-1">
               <button
-                onClick={() => setCategory(undefined)}
+                onClick={() => {
+                  setCategory(undefined);
+                  setSearchQuery("");
+                }}
                 className={cn(
                   "text-left px-3 py-2 text-xs uppercase tracking-widest font-bold transition-colors flex justify-between",
                   !category
@@ -285,7 +291,10 @@ export default function Polls() {
               {categoriesData?.categories?.map((cat) => (
                 <button
                   key={cat.slug}
-                  onClick={() => setCategory(cat.slug)}
+                  onClick={() => {
+                    setCategory(cat.slug);
+                    setSearchQuery("");
+                  }}
                   className={cn(
                     "text-left px-3 py-2 text-xs uppercase tracking-widest font-bold transition-colors flex justify-between items-center",
                     category === cat.slug
