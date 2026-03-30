@@ -9,7 +9,6 @@ import { Layout } from "@/components/layout/Layout";
 import { PollCard } from "@/components/poll/PollCard";
 import { ProfileCard } from "@/components/profile/ProfileCard";
 import { GlobeConnections } from "@/components/globe/GlobeConnections";
-import { EncryptedText } from "@/components/ui/encrypted-text";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { ArrowRight, Share2, Lock, Mail, CheckCircle2 } from "lucide-react";
@@ -1554,13 +1553,7 @@ export default function Home() {
                   className="font-display font-black text-5xl md:text-6xl lg:text-7xl uppercase tracking-tight text-foreground leading-none"
                   style={{ lineHeight: 0.95 }}
                 >
-                  <EncryptedText
-                    text="The Tribunal."
-                    revealDelayMs={80}
-                    flipDelayMs={40}
-                    encryptedClassName="text-muted-foreground/40"
-                    revealedClassName="text-foreground"
-                  />
+                  The Tribunal.
                 </h1>
                 <motion.p
                   className="text-[10px] font-serif tracking-[0.25em] uppercase text-muted-foreground mt-1"
