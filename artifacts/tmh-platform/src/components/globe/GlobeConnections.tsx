@@ -186,7 +186,7 @@ export function GlobeConnections({
     if (!canvas || !overlay) return;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    let phi   = 0.6;
+    let phi   = 3.72; // start slightly east of Middle East so rotation sweeps it through center
     let width = 0;
 
     const onResize = () => {
@@ -337,7 +337,7 @@ export function GlobeConnections({
       devicePixelRatio: dpr,
       width:            width * dpr,
       height:           width * dpr,
-      phi:              0.6,
+      phi:              3.72,
       theta:            0.25,
       // Dark mode: ocean ≈ #181818, land ≈ #a2a2a2 (bright enough to see continents).
       // mapBrightness=1.5 ensures land is clearly visible (#a2a2a2) while keeping

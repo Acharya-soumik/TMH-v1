@@ -9,6 +9,7 @@ import { Layout } from "@/components/layout/Layout";
 import { PollCard } from "@/components/poll/PollCard";
 import { ProfileCard } from "@/components/profile/ProfileCard";
 import { GlobeConnections } from "@/components/globe/GlobeConnections";
+import { EncryptedText } from "@/components/ui/encrypted-text";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { ArrowRight, Share2, Lock, Mail, CheckCircle2 } from "lucide-react";
@@ -1549,20 +1550,23 @@ export default function Home() {
             <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-6 lg:gap-10">
               {/* Left: title + counter */}
               <div className="flex flex-col items-center lg:items-start justify-center flex-1 text-center lg:text-left">
-                <motion.h1
+                <h1
                   className="font-display font-black text-5xl md:text-6xl lg:text-7xl uppercase tracking-tight text-foreground leading-none"
                   style={{ lineHeight: 0.95 }}
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.75, ease: EASE_OUT_EXPO, delay: 0.1 }}
                 >
-                  The Tribunal<span className="text-primary">.</span>
-                </motion.h1>
+                  <EncryptedText
+                    text="The Tribunal."
+                    revealDelayMs={80}
+                    flipDelayMs={40}
+                    encryptedClassName="text-muted-foreground/40"
+                    revealedClassName="text-foreground"
+                  />
+                </h1>
                 <motion.p
                   className="text-[10px] font-serif tracking-[0.25em] uppercase text-muted-foreground mt-1"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.45 }}
+                  transition={{ duration: 0.5, delay: 0.9 }}
                 >
                   {t("by The Middle East Hustle")}
                 </motion.p>
@@ -1570,7 +1574,7 @@ export default function Home() {
                   className="uppercase tracking-[0.22em] text-muted-foreground font-serif mt-3 flex flex-col items-center lg:items-start gap-1"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.55, ease: EASE_OUT_EXPO, delay: 0.6 }}
+                  transition={{ duration: 0.55, ease: EASE_OUT_EXPO, delay: 0.9 }}
                 >
                   <span className="text-[10px]">{t("The voice of")}</span>
                   <LiveNumber
@@ -1587,7 +1591,7 @@ export default function Home() {
                   className="text-[9px] font-serif tracking-[0.18em] uppercase text-muted-foreground mt-4 hidden lg:block"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.75 }}
+                  transition={{ duration: 0.5, delay: 1.1 }}
                 >
                   {t("Voices connecting globally")}
                 </motion.p>
