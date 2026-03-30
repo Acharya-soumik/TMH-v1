@@ -21,7 +21,13 @@ async function request(path: string, options: RequestInit = {}) {
     headers["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  // Bust CDN cache on GET requests by appending a timestamp
+  const separator = path.includes("?") ? "&" : "?";
+  const url = (!options.method || options.method === "GET")
+    ? `${API_BASE}${path}${separator}_t=${Date.now()}`
+    : `${API_BASE}${path}`;
+
+  const res = await fetch(url, { ...options, headers });
 
   if (res.status === 401) {
     setToken(null);
