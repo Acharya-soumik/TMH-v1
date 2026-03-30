@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useLocation } from "wouter"
 import { MapPin, ExternalLink } from "lucide-react"
 import type { Profile } from "@workspace/api-client-react"
@@ -61,6 +62,7 @@ export function getCompanyUrl(company?: string | null): string {
 
 export function ProfileCard({ profile }: { profile: Profile }) {
   const [, navigate] = useLocation()
+  const [imgError, setImgError] = useState(false)
   const getInitials = (name: string) =>
     name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
 
@@ -74,12 +76,13 @@ export function ProfileCard({ profile }: { profile: Profile }) {
       role="article"
     >
       {/* Photo or initials */}
-      {profile.imageUrl ? (
+      {profile.imageUrl && !imgError ? (
         <div className="relative overflow-hidden h-56 flex-shrink-0 bg-secondary flex items-center justify-center">
           <img
             src={profile.imageUrl}
             alt={profile.name}
             className="w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-300"
+            onError={() => setImgError(true)}
           />
           {profile.isFeatured && (
             <span className="absolute top-3 left-3 bg-primary text-background text-[9px] uppercase tracking-widest px-2 py-1 font-bold">

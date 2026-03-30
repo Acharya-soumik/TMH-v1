@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useRoute, Link } from "wouter"
 import { useGetProfile } from "@workspace/api-client-react"
 import { Layout } from "@/components/layout/Layout"
@@ -93,6 +94,7 @@ export default function ProfileDetail() {
   }
 
   const paragraphs = profile.story.split('\n').filter(Boolean)
+  const [imgError, setImgError] = useState(false)
 
   return (
     <Layout>
@@ -105,13 +107,14 @@ export default function ProfileDetail() {
 
           <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
             {/* Portrait photo */}
-            {profile.imageUrl ? (
+            {profile.imageUrl && !imgError ? (
               <div className="relative flex-shrink-0 w-48 md:w-56 lg:w-64">
                 <div className="relative overflow-hidden border border-border bg-secondary flex items-center justify-center" style={{ aspectRatio: '3/4' }}>
                   <img
                     src={profile.imageUrl}
                     alt={profile.name}
                     className="w-full h-full object-contain grayscale"
+                    onError={() => setImgError(true)}
                   />
                   {profile.isVerified && (
                     <div className="absolute bottom-3 right-3 w-3 h-3 rounded-full bg-primary border-2 border-background" title="Verified Voice" />
