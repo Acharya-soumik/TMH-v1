@@ -260,14 +260,46 @@ Before custom domains are set up, the CMS is served at the `/cms` path on the Ra
 
 This works because `CMS_BASE_PATH=/cms/` is set in the Dockerfile by default.
 
-### Switching to Custom Domain
+### CMS Routing Options
 
-When you're ready to use `cms.yourdomain.com` instead of the `/cms` path:
+The CMS can be accessed via **path-based** or **subdomain-based** routing. The `CMS_BASE_PATH` variable in the Dockerfile controls which mode is active.
 
-1. Add `cms.yourdomain.com` as a custom domain in Railway (Settings → Networking)
-2. Point a CNAME record for `cms` to your Railway CNAME target
-3. Change `CMS_BASE_PATH` from `/cms/` to `/` in the Dockerfile (or override via Railway build args)
-4. Redeploy
+#### Option A — Path routing (`yourdomain.com/cms`)
+
+Keep the Dockerfile default:
+```dockerfile
+ARG CMS_BASE_PATH=/cms/
+```
+
+| URL | Serves |
+|---|---|
+| `yourdomain.com` | Platform |
+| `yourdomain.com/cms` | CMS Admin |
+| `yourdomain.com/api/*` | API |
+
+No subdomain or extra DNS needed. This is the current default for the Railway test domain.
+
+#### Option B — Subdomain routing (`cms.yourdomain.com`)
+
+Change the Dockerfile:
+```dockerfile
+ARG CMS_BASE_PATH=/
+```
+
+| URL | Serves |
+|---|---|
+| `yourdomain.com` | Platform |
+| `cms.yourdomain.com` | CMS Admin (at root `/`) |
+| `*/api/*` | API (both domains) |
+
+Then:
+1. Add both `yourdomain.com` and `cms.yourdomain.com` as custom domains in Railway (Settings → Networking)
+2. Point DNS CNAME records for `@`/`www` and `cms` to the Railway CNAME target
+3. Redeploy
+
+#### Switching between modes
+
+Only one thing changes: `CMS_BASE_PATH` in the Dockerfile. Update the `ARG` line and redeploy — no other code changes needed.
 
 ### Using a Different Domain
 
