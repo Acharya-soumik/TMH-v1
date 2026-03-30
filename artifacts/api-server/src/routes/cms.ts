@@ -123,14 +123,18 @@ router.get("/cms/stats", requireCmsAuth, async (_req, res) => {
       archived: debateStatusCounts.find(r => r.status === "archived")?.count ?? 0,
     };
 
-    const [profileCountResult] = await db.select({ count: count() }).from(profilesTable);
+    const voiceStatusCounts = await db
+      .select({ status: profilesTable.editorialStatus, count: count() })
+      .from(profilesTable)
+      .groupBy(profilesTable.editorialStatus);
+
     const voiceStats = {
-      total: profileCountResult.count,
-      drafts: 0,
-      live: profileCountResult.count,
-      flagged: 0,
-      inReview: 0,
-      archived: 0,
+      total: voiceStatusCounts.reduce((s, r) => s + r.count, 0),
+      drafts: voiceStatusCounts.find(r => r.status === "draft")?.count ?? 0,
+      live: voiceStatusCounts.find(r => r.status === "approved")?.count ?? 0,
+      flagged: voiceStatusCounts.find(r => r.status === "flagged")?.count ?? 0,
+      inReview: voiceStatusCounts.find(r => r.status === "in_review")?.count ?? 0,
+      archived: voiceStatusCounts.find(r => r.status === "archived")?.count ?? 0,
     };
 
     const predStatusCounts = await db
@@ -485,6 +489,12 @@ router.put("/cms/pulse-topics/:id", requireCmsAuth, async (req, res) => {
     const [existing] = await db.select().from(pulseTopicsTable).where(eq(pulseTopicsTable.id, topicId));
     if (!existing) return res.status(404).json({ error: "Not found" });
 
+    if (req.body.editorialStatus && VALID_STATUSES.has(req.body.editorialStatus)) {
+      if (!isValidStatusTransition(existing.editorialStatus, req.body.editorialStatus)) {
+        return res.status(400).json({ error: `Cannot transition from '${existing.editorialStatus}' to '${req.body.editorialStatus}'` });
+      }
+    }
+
     const { id: _id, createdAt: _ca, ...data } = req.body;
     await db.update(pulseTopicsTable).set({ ...data, updatedAt: new Date() }).where(eq(pulseTopicsTable.id, topicId));
     return res.json({ success: true });
@@ -580,9 +590,13 @@ router.delete("/cms/design-tokens/:id", requireCmsAuth, async (req, res) => {
 
 router.get("/cms/voices", requireCmsAuth, async (req, res) => {
   try {
+    const status = req.query.status as string | undefined;
+    const whereClause = (status && status !== "all") ? eq(profilesTable.editorialStatus, status) : undefined;
+
     const profiles = await db
       .select()
       .from(profilesTable)
+      .where(whereClause)
       .orderBy(desc(profilesTable.createdAt));
 
     const items = profiles.map(p => ({
@@ -605,7 +619,7 @@ router.get("/cms/voices", requireCmsAuth, async (req, res) => {
       isVerified: p.isVerified,
       viewCount: p.viewCount,
       associatedPollCount: p.associatedPollCount,
-      editorialStatus: "approved",
+      editorialStatus: p.editorialStatus,
       createdAt: p.createdAt?.toISOString() ?? new Date().toISOString(),
       updatedAt: p.createdAt?.toISOString() ?? new Date().toISOString(),
     }));
@@ -642,7 +656,7 @@ router.get("/cms/voices/:id", requireCmsAuth, async (req, res) => {
       isVerified: profile.isVerified,
       viewCount: profile.viewCount,
       associatedPollCount: profile.associatedPollCount,
-      editorialStatus: "approved",
+      editorialStatus: profile.editorialStatus,
       createdAt: profile.createdAt?.toISOString() ?? new Date().toISOString(),
       updatedAt: profile.createdAt?.toISOString() ?? new Date().toISOString(),
     });
@@ -658,7 +672,13 @@ router.put("/cms/voices/:id", requireCmsAuth, async (req, res) => {
     const [existing] = await db.select().from(profilesTable).where(eq(profilesTable.id, profileId));
     if (!existing) return res.status(404).json({ error: "Not found" });
 
-    const { editorialStatus, updatedAt, viewCount, associatedPollCount, ...data } = req.body;
+    const { updatedAt, viewCount, associatedPollCount, ...data } = req.body;
+
+    if (data.editorialStatus && VALID_STATUSES.has(data.editorialStatus)) {
+      if (!isValidStatusTransition(existing.editorialStatus, data.editorialStatus)) {
+        return res.status(400).json({ error: `Cannot transition from '${existing.editorialStatus}' to '${data.editorialStatus}'` });
+      }
+    }
 
     const updateFields: Record<string, unknown> = {};
     if (data.name !== undefined) updateFields.name = data.name;
@@ -677,6 +697,7 @@ router.put("/cms/voices/:id", requireCmsAuth, async (req, res) => {
     if (data.impactStatement !== undefined) updateFields.impactStatement = data.impactStatement;
     if (data.isFeatured !== undefined) updateFields.isFeatured = data.isFeatured;
     if (data.isVerified !== undefined) updateFields.isVerified = data.isVerified;
+    if (data.editorialStatus !== undefined) updateFields.editorialStatus = data.editorialStatus;
 
     if (Object.keys(updateFields).length > 0) {
       await db.update(profilesTable).set(updateFields).where(eq(profilesTable.id, profileId));
@@ -727,6 +748,9 @@ router.post("/cms/:type/:id/status", requireCmsAuth, async (req, res) => {
       if (!poll) return res.status(404).json({ error: "Not found" });
       const newStatus = validTransitions[action][poll.editorialStatus];
       if (!newStatus) return res.status(400).json({ error: `Cannot ${action} from status '${poll.editorialStatus}'` });
+      if (!isValidStatusTransition(poll.editorialStatus, newStatus)) {
+        return res.status(400).json({ error: `Transition from '${poll.editorialStatus}' to '${newStatus}' is not allowed` });
+      }
       await db.update(pollsTable).set({ editorialStatus: newStatus }).where(eq(pollsTable.id, numId));
       return res.json({ success: true, newStatus });
     } else if (type === "predictions") {
@@ -734,6 +758,9 @@ router.post("/cms/:type/:id/status", requireCmsAuth, async (req, res) => {
       if (!item) return res.status(404).json({ error: "Not found" });
       const newStatus = validTransitions[action][item.editorialStatus];
       if (!newStatus) return res.status(400).json({ error: `Cannot ${action} from status '${item.editorialStatus}'` });
+      if (!isValidStatusTransition(item.editorialStatus, newStatus)) {
+        return res.status(400).json({ error: `Transition from '${item.editorialStatus}' to '${newStatus}' is not allowed` });
+      }
       await db.update(predictionsTable).set({ editorialStatus: newStatus, updatedAt: new Date() }).where(eq(predictionsTable.id, numId));
       return res.json({ success: true, newStatus });
     } else if (type === "pulse-topics") {
@@ -741,10 +768,22 @@ router.post("/cms/:type/:id/status", requireCmsAuth, async (req, res) => {
       if (!item) return res.status(404).json({ error: "Not found" });
       const newStatus = validTransitions[action][item.editorialStatus];
       if (!newStatus) return res.status(400).json({ error: `Cannot ${action} from status '${item.editorialStatus}'` });
+      if (!isValidStatusTransition(item.editorialStatus, newStatus)) {
+        return res.status(400).json({ error: `Transition from '${item.editorialStatus}' to '${newStatus}' is not allowed` });
+      }
       await db.update(pulseTopicsTable).set({ editorialStatus: newStatus, updatedAt: new Date() }).where(eq(pulseTopicsTable.id, numId));
       return res.json({ success: true, newStatus });
     } else if (type === "voices") {
-      return res.json({ success: true, newStatus: "approved" });
+      const [profile] = await db.select({ editorialStatus: profilesTable.editorialStatus }).from(profilesTable).where(eq(profilesTable.id, numId));
+      if (!profile) return res.status(404).json({ error: "Not found" });
+      const newStatus = validTransitions[action][profile.editorialStatus];
+      if (!newStatus) return res.status(400).json({ error: `Cannot ${action} from status '${profile.editorialStatus}'` });
+      // Also verify via ALLOWED_TRANSITIONS for consistency between the two transition systems
+      if (!isValidStatusTransition(profile.editorialStatus, newStatus)) {
+        return res.status(400).json({ error: `Transition from '${profile.editorialStatus}' to '${newStatus}' is not allowed` });
+      }
+      await db.update(profilesTable).set({ editorialStatus: newStatus }).where(eq(profilesTable.id, numId));
+      return res.json({ success: true, newStatus });
     } else {
       return res.status(400).json({ error: "Invalid type" });
     }
@@ -787,10 +826,20 @@ router.post("/cms/:type/bulk-action", requireCmsAuth, async (req, res) => {
     const statusMap: Record<string, string> = {
       approve: "approved", reject: "rejected", flag: "flagged", archive: "archived",
       unflag: "approved", unarchive: "approved", unpublish: "draft", revision: "revision",
+      review: "in_review",
     };
 
     const newStatus = statusMap[action];
     if (!newStatus) return res.status(400).json({ error: "Invalid action" });
+
+    // Validate that newStatus is a recognized status value
+    if (!VALID_STATUSES.has(newStatus)) {
+      return res.status(400).json({ error: `Invalid target status '${newStatus}'` });
+    }
+
+    // NOTE: Per-item transition validation is not performed in bulk actions for performance.
+    // This is a known limitation — invalid transitions (e.g. draft -> unflag) may succeed.
+    // To fully enforce, each item's current status would need to be fetched and checked individually.
 
     if (type === "debates") {
       await db.update(pollsTable).set({ editorialStatus: newStatus }).where(inArray(pollsTable.id, ids));
@@ -799,7 +848,7 @@ router.post("/cms/:type/bulk-action", requireCmsAuth, async (req, res) => {
     } else if (type === "pulse-topics") {
       await db.update(pulseTopicsTable).set({ editorialStatus: newStatus, updatedAt: new Date() }).where(inArray(pulseTopicsTable.id, ids));
     } else if (type === "voices") {
-      return res.json({ success: true, updated: ids.length });
+      await db.update(profilesTable).set({ editorialStatus: newStatus }).where(inArray(profilesTable.id, ids));
     } else {
       return res.status(400).json({ error: "Invalid type" });
     }
@@ -823,6 +872,9 @@ router.post("/cms/upload/:type", requireCmsAuth, async (req, res) => {
     if (type === "debates") {
       let created = 0;
       for (const item of items) {
+        if (item.editorialStatus && !VALID_STATUSES.has(item.editorialStatus)) {
+          return res.status(400).json({ error: `Invalid editorialStatus '${item.editorialStatus}' in upload item` });
+        }
         const [poll] = await db.insert(pollsTable).values({
           question: item.question,
           context: item.context ?? null,
@@ -854,6 +906,9 @@ router.post("/cms/upload/:type", requireCmsAuth, async (req, res) => {
     if (type === "predictions") {
       let created = 0;
       for (const item of items) {
+        if (item.editorialStatus && !VALID_STATUSES.has(item.editorialStatus)) {
+          return res.status(400).json({ error: `Invalid editorialStatus '${item.editorialStatus}' in upload item` });
+        }
         await db.insert(predictionsTable).values({
           question: item.question,
           category: item.category,
@@ -878,6 +933,9 @@ router.post("/cms/upload/:type", requireCmsAuth, async (req, res) => {
     if (type === "voices") {
       let created = 0;
       for (const item of items) {
+        if (item.editorialStatus && !VALID_STATUSES.has(item.editorialStatus)) {
+          return res.status(400).json({ error: `Invalid editorialStatus '${item.editorialStatus}' in upload item` });
+        }
         await db.insert(profilesTable).values({
           name: item.name,
           headline: item.headline,
@@ -895,6 +953,7 @@ router.post("/cms/upload/:type", requireCmsAuth, async (req, res) => {
           impactStatement: item.impactStatement ?? null,
           isFeatured: item.isFeatured ?? false,
           isVerified: item.isVerified ?? false,
+          editorialStatus: item.editorialStatus ?? "draft",
         });
         created++;
       }
@@ -1460,7 +1519,7 @@ router.get("/public/live-counts", async (_req, res) => {
     const [debateCount] = await db.select({ count: count() }).from(pollsTable).where(eq(pollsTable.editorialStatus, "approved"));
     const [predictionCount] = await db.select({ count: count() }).from(predictionsTable).where(eq(predictionsTable.editorialStatus, "approved"));
     const [pulseCount] = await db.select({ count: count() }).from(pulseTopicsTable).where(eq(pulseTopicsTable.editorialStatus, "approved"));
-    const [voiceCount] = await db.select({ count: count() }).from(profilesTable);
+    const [voiceCount] = await db.select({ count: count() }).from(profilesTable).where(eq(profilesTable.editorialStatus, "approved"));
     const [voteCount] = await db.select({ count: count() }).from(votesTable);
 
     return res.json({
@@ -1481,7 +1540,7 @@ router.get("/live-counts", async (_req, res) => {
     const [debateCount] = await db.select({ count: count() }).from(pollsTable).where(eq(pollsTable.editorialStatus, "approved"));
     const [predictionCount] = await db.select({ count: count() }).from(predictionsTable).where(eq(predictionsTable.editorialStatus, "approved"));
     const [pulseCount] = await db.select({ count: count() }).from(pulseTopicsTable).where(eq(pulseTopicsTable.editorialStatus, "approved"));
-    const [voiceCount] = await db.select({ count: count() }).from(profilesTable);
+    const [voiceCount] = await db.select({ count: count() }).from(profilesTable).where(eq(profilesTable.editorialStatus, "approved"));
     const [voteCount] = await db.select({ count: count() }).from(votesTable);
 
     return res.json({

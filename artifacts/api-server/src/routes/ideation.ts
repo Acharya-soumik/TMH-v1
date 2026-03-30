@@ -437,10 +437,12 @@ router.post("/cms/ideation/ideas/:id/update-refined", requireCmsAuth, async (req
 });
 
 router.post("/cms/ideation/ideas/:id/publish-draft", requireCmsAuth, async (req, res) => {
+  const ideaId = Number(req.params.id);
+  let pillarType = "unknown";
   try {
-    const ideaId = Number(req.params.id);
     const [idea] = await db.select().from(ideationIdeasTable).where(eq(ideationIdeasTable.id, ideaId));
     if (!idea) return res.status(404).json({ error: "Idea not found" });
+    pillarType = idea.pillarType;
 
     const content = (idea.refinedContent || idea.content) as Record<string, unknown>;
 
@@ -448,28 +450,36 @@ router.post("/cms/ideation/ideas/:id/publish-draft", requireCmsAuth, async (req,
       const categorySlug = ((content.category as string) || "general")
         .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-      const [poll] = await db.insert(pollsTable).values({
-        question: (content.question as string) || idea.title,
-        context: (content.context as string) || null,
-        category: (content.category as string) || "General",
-        categorySlug,
-        tags: (content.tags as string[]) || ["ai-generated"],
-        pollType: "binary",
-        editorialStatus: "draft",
-      }).returning();
+      const poll = await db.transaction(async (tx) => {
+        const [createdPoll] = await tx.insert(pollsTable).values({
+          question: (content.question as string) || idea.title,
+          context: (content.context as string) || null,
+          category: (content.category as string) || "General",
+          categorySlug,
+          tags: (content.tags as string[]) || ["ai-generated"],
+          pollType: "binary",
+          editorialStatus: "draft",
+        }).returning();
 
-      const options = (content.options as string[]) || ["Yes", "No"];
-      for (const opt of options) {
-        await db.insert(pollOptionsTable).values({
-          pollId: poll.id,
-          text: opt,
-          voteCount: 0,
-        });
-      }
+        if (!createdPoll) {
+          throw new Error("Failed to create poll");
+        }
 
-      await db.update(ideationIdeasTable)
-        .set({ status: "published" })
-        .where(eq(ideationIdeasTable.id, ideaId));
+        const options = (content.options as string[]) || ["Yes", "No"];
+        for (const opt of options) {
+          await tx.insert(pollOptionsTable).values({
+            pollId: createdPoll.id,
+            text: opt,
+            voteCount: 0,
+          });
+        }
+
+        await tx.update(ideationIdeasTable)
+          .set({ status: "published" })
+          .where(eq(ideationIdeasTable.id, ideaId));
+
+        return createdPoll;
+      });
 
       return res.json({ success: true, type: "debate", id: poll.id });
     }
@@ -501,17 +511,21 @@ router.post("/cms/ideation/ideas/:id/publish-draft", requireCmsAuth, async (req,
         updatedAt: now,
       });
 
-      await db.update(ideationIdeasTable)
-        .set({ status: "published" })
-        .where(eq(ideationIdeasTable.id, ideaId));
+      await db.transaction(async (tx) => {
+        await tx.update(ideationIdeasTable)
+          .set({ status: "published" })
+          .where(eq(ideationIdeasTable.id, ideaId));
+      });
 
       return res.json({ success: true, type: "prediction", id: newId });
     }
 
     if (idea.pillarType === "pulse") {
-      await db.update(ideationIdeasTable)
-        .set({ status: "published" })
-        .where(eq(ideationIdeasTable.id, ideaId));
+      await db.transaction(async (tx) => {
+        await tx.update(ideationIdeasTable)
+          .set({ status: "published" })
+          .where(eq(ideationIdeasTable.id, ideaId));
+      });
 
       return res.json({
         success: true,
@@ -530,7 +544,7 @@ router.post("/cms/ideation/ideas/:id/publish-draft", requireCmsAuth, async (req,
 
     return res.status(400).json({ error: `Unsupported pillar type: ${idea.pillarType}` });
   } catch (err) {
-    console.error("Publish draft error:", err);
+    console.error(`Publish draft error for idea ${ideaId} (pillar: ${pillarType}):`, err);
     return res.status(500).json({ error: "Failed to create draft" });
   }
 });
