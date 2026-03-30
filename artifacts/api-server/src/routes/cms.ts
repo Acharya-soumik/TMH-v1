@@ -435,8 +435,8 @@ router.put("/cms/predictions/:id", requireCmsAuth, async (req, res) => {
     }
 
     const { id: _id, createdAt: _ca, ...data } = req.body;
-    await db.update(predictionsTable).set({ ...data, updatedAt: new Date() }).where(eq(predictionsTable.id, predId));
-    return res.json({ success: true });
+    const [updated] = await db.update(predictionsTable).set({ ...data, updatedAt: new Date() }).where(eq(predictionsTable.id, predId)).returning();
+    return res.json({ success: true, item: updated });
   } catch (err) {
     console.error("Update prediction error:", err);
     return res.status(500).json({ error: "Failed to update prediction" });
