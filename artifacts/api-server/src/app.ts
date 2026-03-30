@@ -48,6 +48,16 @@ app.use((req, res, next) => {
   return ogTagsMiddleware(req, res, next);
 });
 
+// ── Disable caching for CMS API routes ─────────────────────
+// Prevents 304 Not Modified responses that return stale data
+// after mutations (e.g., status updates not reflected in list).
+app.use("/api/cms", (_req, res, next) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.set("Pragma", "no-cache");
+  res.set("Expires", "0");
+  next();
+});
+
 // ── API routes ──────────────────────────────────────────────
 
 app.use("/api", router);
