@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import {
   useGetFeaturedPoll,
   useListPolls,
@@ -8,7 +8,7 @@ import {
 import { Layout } from "@/components/layout/Layout";
 import { PollCard } from "@/components/poll/PollCard";
 import { ProfileCard } from "@/components/profile/ProfileCard";
-import { GlobeConnections } from "@/components/globe/GlobeConnections";
+const GlobeConnections = lazy(() => import("@/components/globe/GlobeConnections").then(m => ({ default: m.GlobeConnections })));
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { ArrowRight, Share2, Lock, Mail, CheckCircle2 } from "lucide-react";
@@ -1597,7 +1597,9 @@ export default function Home() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.9, ease: EASE_OUT_EXPO, delay: 0.2 }}
               >
-                <GlobeConnections />
+                <Suspense fallback={<div className="aspect-square" />}>
+                  <GlobeConnections />
+                </Suspense>
               </motion.div>
             </div>
           </motion.div>
