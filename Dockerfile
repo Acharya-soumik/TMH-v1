@@ -11,6 +11,10 @@ COPY scripts/ scripts/
 COPY tsconfig.base.json tsconfig.json ./
 
 RUN pnpm install --frozen-lockfile
+
+# CMS base path: "/cms/" for Railway test domain, "/" for cms.yourdomain.com subdomain
+ARG CMS_BASE_PATH=/cms/
+ENV CMS_BASE_PATH=${CMS_BASE_PATH}
 RUN pnpm run typecheck && pnpm -r --filter="!./artifacts/mockup-sandbox" --if-present run build
 
 EXPOSE 3000

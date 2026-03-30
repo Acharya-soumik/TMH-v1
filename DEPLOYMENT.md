@@ -254,9 +254,20 @@ The server checks `req.hostname`:
 
 ### Fallback for Testing
 
-Before custom domains are set up, you can still access the CMS at the `/cms` path on the Railway test domain:
+Before custom domains are set up, the CMS is served at the `/cms` path on the Railway test domain:
 - `https://your-app.up.railway.app` → Platform
 - `https://your-app.up.railway.app/cms` → CMS
+
+This works because `CMS_BASE_PATH=/cms/` is set in the Dockerfile by default.
+
+### Switching to Custom Domain
+
+When you're ready to use `cms.yourdomain.com` instead of the `/cms` path:
+
+1. Add `cms.yourdomain.com` as a custom domain in Railway (Settings → Networking)
+2. Point a CNAME record for `cms` to your Railway CNAME target
+3. Change `CMS_BASE_PATH` from `/cms/` to `/` in the Dockerfile (or override via Railway build args)
+4. Redeploy
 
 ### Using a Different Domain
 
@@ -281,40 +292,42 @@ const allowedOrigins =
 
 ### Required
 
-| Variable | Example | Description |
+| Variable | Status | Description |
 |---|---|---|
-| `DATABASE_URL` | `postgresql://...` | Supabase Postgres connection string (session mode, port 5432) |
-| `NODE_ENV` | `production` | Must be `production` |
-| `BASE_PATH` | `/` | Base URL path |
-| `MAJLIS_ENCRYPTION_KEY` | 64-char hex | AES-256 key for encrypting Majlis messages |
-| `CMS_USERNAME` | `admin` | CMS admin login username |
-| `CMS_PIN` | `8472` | CMS admin login PIN |
-| `ADMIN_KEY` | random string | API admin key for protected endpoints |
+| `DATABASE_URL` | **Added** | Supabase Postgres via pooler (session mode, port 5432) |
+| `NODE_ENV` | **Added** | Set to `production` |
+| `BASE_PATH` | **Added** | Set to `/` |
+| `UPLOADS_DIR` | **Added** | Set to `uploads` |
+| `MAJLIS_ENCRYPTION_KEY` | **Added** | AES-256 key for encrypting Majlis messages (64-char hex) |
+| `CMS_USERNAME` | **Added** | CMS admin login username |
+| `CMS_PIN` | **Added** | CMS admin login PIN |
+| `ADMIN_KEY` | **Added** | API admin key for protected endpoints |
+| `CMS_BASE_PATH` | **Added** | CMS URL prefix: `/cms/` for Railway test domain, `/` for `cms.yourdomain.com` subdomain |
 
 ### AI (required for Ideation Engine)
 
-| Variable | Example | Description |
+| Variable | Status | Description |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | `sk-ant-...` | Claude API key for content generation + safety review |
-| `PERPLEXITY_API_KEY` | `pplx-...` | Perplexity API key for research queries |
+| `ANTHROPIC_API_KEY` | **Not added** | Claude API key — get from console.anthropic.com |
+| `PERPLEXITY_API_KEY` | **Not added** | Perplexity API key — get from perplexity.ai |
 
 ### Email (optional)
 
-| Variable | Description |
-|---|---|
-| `RESEND_API_KEY` | Resend.com transactional email |
-| `BEEHIIV_API_KEY` | Beehiiv newsletter integration |
-| `BEEHIIV_PUBLICATION_ID` | Beehiiv publication ID |
+| Variable | Status | Description |
+|---|---|---|
+| `RESEND_API_KEY` | **Not added** | Resend.com transactional email |
+| `BEEHIIV_API_KEY` | **Not added** | Beehiiv newsletter integration |
+| `BEEHIIV_PUBLICATION_ID` | **Not added** | Beehiiv publication ID |
 
 ### Media Storage (optional)
 
-| Variable | Description |
-|---|---|
-| `R2_ACCOUNT_ID` | Cloudflare account ID |
-| `R2_ACCESS_KEY_ID` | R2 API token key ID |
-| `R2_SECRET_ACCESS_KEY` | R2 API token secret |
-| `R2_BUCKET_NAME` | R2 bucket name (default: `tmh-uploads`) |
-| `R2_PUBLIC_URL` | Public URL for serving R2 files |
+| Variable | Status | Description |
+|---|---|---|
+| `R2_ACCOUNT_ID` | **Not added** | Cloudflare account ID |
+| `R2_ACCESS_KEY_ID` | **Not added** | R2 API token key ID |
+| `R2_SECRET_ACCESS_KEY` | **Not added** | R2 API token secret |
+| `R2_BUCKET_NAME` | **Not added** | R2 bucket name (default: `tmh-uploads`) |
+| `R2_PUBLIC_URL` | **Not added** | Public URL for serving R2 files |
 
 ### Auto-set by Railway
 
