@@ -115,7 +115,7 @@ export default function MajlisLogin() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
               {mode === "register" && (
                 <div>
                   <label className="text-[10px] font-serif font-bold uppercase tracking-[0.2em] text-muted-foreground block mb-1.5">
@@ -145,6 +145,8 @@ export default function MajlisLogin() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  name="majlis-email"
+                  autoComplete="off"
                   placeholder="your@email.com"
                   className="w-full bg-background border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none transition-colors"
                 />
@@ -160,6 +162,8 @@ export default function MajlisLogin() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    name={mode === "register" ? "majlis-new-password" : "majlis-password"}
+                    autoComplete={mode === "register" ? "new-password" : "off"}
                     placeholder="••••••••"
                     className="w-full bg-background border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none transition-colors pr-10"
                   />

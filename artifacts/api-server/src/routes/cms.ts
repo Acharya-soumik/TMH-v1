@@ -13,6 +13,7 @@ const router = Router();
 
 const CMS_USERNAME = process.env.CMS_USERNAME ?? "admin";
 const CMS_PIN = process.env.CMS_PIN ?? "1234";
+const IS_DEFAULT_CREDS = CMS_USERNAME === "admin" && CMS_PIN === "1234";
 
 if (process.env.NODE_ENV === "production") {
   if (!process.env.CMS_USERNAME || !process.env.CMS_PIN) {
@@ -94,6 +95,9 @@ export const mockPredictions: MockPrediction[] = [
 ];
 
 router.post("/cms/auth/login", (req, res) => {
+  if (IS_DEFAULT_CREDS && process.env.NODE_ENV === "production") {
+    return res.status(503).json({ error: "CMS login disabled — default credentials detected. Set CMS_USERNAME and CMS_PIN environment variables." });
+  }
   const { username, pin } = req.body;
   if (username === CMS_USERNAME && pin === CMS_PIN) {
     const token = generateToken();
