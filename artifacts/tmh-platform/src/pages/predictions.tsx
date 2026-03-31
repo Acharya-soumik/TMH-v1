@@ -38,6 +38,7 @@ import {
   type PredictionCard,
 } from "@/data/predictions-data";
 import { usePredictions, type ApiPrediction } from "@/hooks/use-cms-data";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 function apiToPredictionCard(p: ApiPrediction): PredictionCard {
   return {
@@ -1125,6 +1126,7 @@ function ClosedPredictionCard() {
 // ─── PAGE ────────────────────────────────────────────────────────────────────
 
 export default function Predictions() {
+  usePageTitle("Predictions");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("ALL");
   const [visibleCount, setVisibleCount] = useState(20);

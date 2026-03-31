@@ -6,6 +6,7 @@ import { Search, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import { usePageConfig } from "@/hooks/use-cms-data";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { motion, useReducedMotion } from "motion/react";
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
@@ -161,6 +162,7 @@ function VoicesTicker({
 }
 
 export default function Profiles() {
+  usePageTitle("Voices");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<
     "all" | "featured" | "newest" | "most_viewed"

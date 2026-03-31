@@ -6,6 +6,7 @@ import { PollCard } from "@/components/poll/PollCard";
 import { cn } from "@/lib/utils";
 import { Search, X } from "lucide-react";
 import { usePageConfig } from "@/hooks/use-cms-data";
+import { usePageTitle } from "@/hooks/use-page-title";
 import { motion, useInView, useReducedMotion } from "motion/react";
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
@@ -43,6 +44,7 @@ interface PollsConfig {
 }
 
 export default function Polls() {
+  usePageTitle("Debates");
   const [location] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   const initialCategory = searchParams.get("category") || undefined;

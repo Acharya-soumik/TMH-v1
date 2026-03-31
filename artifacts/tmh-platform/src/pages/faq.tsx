@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { Link } from "wouter"
 import { useI18n } from "@/lib/i18n"
 import { usePageConfig } from "@/hooks/use-cms-data"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 interface FaqSection {
   category: string
@@ -144,6 +145,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function FAQ() {
+  usePageTitle("FAQ");
   const { t, isAr } = useI18n()
   const { data: cmsConfig } = usePageConfig<{ sections?: FaqSection[] }>("faq")
   const FAQ_SECTIONS = cmsConfig?.sections?.length ? cmsConfig.sections : FAQ_SECTIONS_DEFAULT

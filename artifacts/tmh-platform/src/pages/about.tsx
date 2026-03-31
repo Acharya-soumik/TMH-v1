@@ -2,6 +2,7 @@ import { Link } from "wouter"
 import { Layout } from "@/components/layout/Layout"
 import { useI18n } from "@/lib/i18n"
 import { usePageConfig } from "@/hooks/use-cms-data"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const FALLBACK_PILLARS = [
   {
@@ -98,6 +99,7 @@ interface AboutConfig {
 }
 
 export default function About() {
+  usePageTitle("About");
   const { t, isAr } = useI18n()
   const { data: pageConfig } = usePageConfig<AboutConfig & {
     stats?: Array<{ num: string; label: string }>;

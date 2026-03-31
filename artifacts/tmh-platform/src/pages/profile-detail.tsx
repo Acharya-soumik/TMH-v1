@@ -5,6 +5,7 @@ import { Layout } from "@/components/layout/Layout"
 import { PollCard } from "@/components/poll/PollCard"
 import { ProfileCard } from "@/components/profile/ProfileCard"
 import { ArrowLeft, MapPin, Building, Briefcase, Eye, ExternalLink, MessageSquare } from "lucide-react"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const COMPANY_URLS: Record<string, string> = {
   "1833 Members Club": "https://1833.club",
@@ -68,6 +69,7 @@ export default function ProfileDetail() {
   const [imgError, setImgError] = useState(false)
 
   const { data: profile, isLoading, error } = useGetProfile(id)
+  usePageTitle(profile?.name)
 
   if (isLoading) {
     return (

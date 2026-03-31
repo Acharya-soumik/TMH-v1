@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout"
 import { CheckCircle2, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePageConfig } from "@/hooks/use-cms-data"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const FALLBACK_CRITERIA = [
   "Real, verifiable impact — named outcomes, not just job titles",
@@ -37,6 +38,7 @@ interface ApplyConfig {
 type Status = "idle" | "submitting" | "success" | "error"
 
 export default function Apply() {
+  usePageTitle("Join The Voices");
   const [status, setStatus] = useState<Status>("idle")
   const [form, setForm] = useState({
     name: "", email: "", title: "", company: "",

@@ -3,8 +3,10 @@ import { useGetFeaturedPoll } from "@workspace/api-client-react"
 import { PollCard } from "@/components/poll/PollCard"
 import { Layout } from "@/components/layout/Layout"
 import { Link } from "wouter"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 export default function Join() {
+  usePageTitle("Join");
   const { data: poll, isLoading } = useGetFeaturedPoll()
   const [email, setEmail] = useState("")
   const [joined, setJoined] = useState(() => !!localStorage.getItem("tmh_cta_joined"))

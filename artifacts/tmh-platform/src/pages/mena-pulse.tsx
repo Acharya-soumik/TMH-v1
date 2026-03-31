@@ -8,6 +8,7 @@ import {
   usePageConfig,
   type ApiPulseTopic,
 } from "@/hooks/use-cms-data";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
 const BASE_DATE = new Date("2026-01-01T00:00:00Z").getTime();
@@ -1729,6 +1730,7 @@ function CategoryFilter({
 }
 
 export default function MenaPulse() {
+  usePageTitle("MENA Pulse");
   const [activeCategory, setActiveCategory] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedId, setHighlightedId] = useState<string | null>(null);

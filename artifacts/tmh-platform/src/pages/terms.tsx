@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const SECTIONS = [
   {
@@ -69,6 +70,7 @@ const SECTIONS = [
 ]
 
 export default function Terms() {
+  usePageTitle("Terms");
   return (
     <Layout>
       <div className="bg-foreground text-background py-16 border-b border-border">

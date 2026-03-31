@@ -234,6 +234,7 @@ import {
   useLiveCounts,
   type ApiPrediction,
 } from "@/hooks/use-cms-data";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 function apiToPredCard(p: ApiPrediction): PredictionCard {
   return {
@@ -1309,6 +1310,7 @@ function SidebarPredictionItem({
 }
 
 export default function Home() {
+  usePageTitle();
   const { data: featuredPoll, isLoading: featuredLoading } =
     useGetFeaturedPoll();
   const { data: trendingPolls, isLoading: trendingLoading } = useListPolls({

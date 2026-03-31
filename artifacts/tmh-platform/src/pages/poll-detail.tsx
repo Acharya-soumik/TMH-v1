@@ -5,6 +5,7 @@ import { PollCard } from "@/components/poll/PollCard"
 import { TrendChart } from "@/components/poll/TrendChart"
 import { ArrowLeft, AlertCircle } from "lucide-react"
 import { useVoter } from "@/hooks/use-voter"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 export default function PollDetail() {
   const [, params] = useRoute("/polls/:id")
@@ -12,6 +13,7 @@ export default function PollDetail() {
   const { hasVoted, profile } = useVoter()
 
   const { data: poll, isLoading, error } = useGetPoll(id)
+  usePageTitle(poll?.question)
 
   const { data: relatedData } = useListPolls(
     { category: poll?.categorySlug, limit: 8 },

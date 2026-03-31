@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout"
 import { useLocation, Link } from "wouter"
 import { Send, Users, LogOut, ChevronDown, Shield, ArrowDown, MessageSquare, Hash, Mail, Plus, X, Menu, BarChart3, TrendingUp, Activity } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const API_BASE = import.meta.env?.VITE_API_BASE_URL ?? ""
 
@@ -473,6 +474,7 @@ function CreateGroupModal({ members, onClose, onSubmit }: {
 }
 
 export default function Majlis() {
+  usePageTitle("The Majlis");
   const [, navigate] = useLocation()
   const [user, setUser] = useState<MajlisUser | null>(null)
   const [channels, setChannels] = useState<Channel[]>([])

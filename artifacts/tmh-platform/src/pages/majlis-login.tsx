@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useLocation } from "wouter";
 import { Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 const API_BASE = import.meta.env?.VITE_API_BASE_URL ?? "";
 
 export default function MajlisLogin() {
+  usePageTitle("The Majlis");
   const [, navigate] = useLocation();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
