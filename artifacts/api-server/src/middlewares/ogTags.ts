@@ -81,7 +81,8 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
   const protocol = req.secure ? "https" : "http"
   const fullUrl = `${protocol}://${host}${req.originalUrl}`
 
-  const pollMatch = req.path.match(/^\/polls\/(\d+)/)
+  const debateMatch = req.path.match(/^\/debates\/(\d+)/)
+  const pollMatch = req.path.match(/^\/polls\/(\d+)/) || debateMatch
   if (pollMatch) {
     // We'll try to fetch poll data from the internal polls route
     const pollId = pollMatch[1]
@@ -161,6 +162,18 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
     "/apply": {
       title: "Become a Voice | The Tribunal",
       description: "Think you belong? Apply now. Bar is high.",
+    },
+    "/predictions": {
+      title: "Predictions | The Tribunal",
+      description: "Bloomberg-style prediction market for MENA. Track confidence, watch consensus shift, and call the future.",
+    },
+    "/mena-pulse": {
+      title: "MENA Pulse | The Tribunal",
+      description: "Exploding Topics for MENA. 36 data-driven trend cards across 8 categories — the region's vital signs in real time.",
+    },
+    "/about": {
+      title: "About | The Tribunal",
+      description: "The voice of 541 million. Why we built MENA's most honest opinion platform — and what comes next.",
     },
   }
 
