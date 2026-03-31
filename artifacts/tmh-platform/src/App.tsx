@@ -1,8 +1,9 @@
-import { Switch, Route, Router as WouterRouter } from "wouter"
+import { Switch, Route, Router as WouterRouter, Redirect } from "wouter"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Toaster } from "@/components/ui/toaster"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { I18nProvider } from "@/lib/i18n"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
 
 import Home from "@/pages/home"
 import Polls from "@/pages/polls"
@@ -20,6 +21,7 @@ import Admin from "@/pages/admin"
 import MenaPulse from "@/pages/mena-pulse"
 import Majlis from "@/pages/majlis"
 import MajlisLogin from "@/pages/majlis-login"
+import Contact from "@/pages/contact"
 import NotFound from "@/pages/not-found"
 
 const queryClient = new QueryClient({
@@ -49,7 +51,15 @@ function Router() {
       <Route path="/mena-pulse" component={MenaPulse} />
       <Route path="/majlis/login" component={MajlisLogin} />
       <Route path="/majlis" component={Majlis} />
+      <Route path="/contact" component={Contact} />
       <Route path="/admin" component={Admin} />
+      {/* /debates aliases — mirror /polls routes */}
+      <Route path="/debates" component={Polls} />
+      <Route path="/debates/archive" component={PollArchive} />
+      <Route path="/debates/:id" component={PollDetail} />
+      {/* URL redirects */}
+      <Route path="/voices"><Redirect to="/profiles" /></Route>
+      <Route path="/pulse"><Redirect to="/mena-pulse" /></Route>
       <Route component={NotFound} />
     </Switch>
   )
@@ -57,16 +67,18 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <I18nProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-        </I18nProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <I18nProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+            <Toaster />
+          </I18nProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   )
 }
 
