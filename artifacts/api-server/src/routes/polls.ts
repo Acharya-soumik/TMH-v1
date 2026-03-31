@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import rateLimit from "express-rate-limit";
 import { db, pollsTable, pollOptionsTable, votesTable, profilesTable, newsletterSubscribersTable, pollSnapshotsTable } from "@workspace/db";
 import { eq, desc, sql, and, inArray, asc } from "drizzle-orm";
+import { syncToBeehiiv } from "./newsletter";
 
 const router: IRouter = Router();
 
@@ -331,6 +332,8 @@ router.post("/polls/:id/email-unlock", async (req, res) => {
       countryCode: geoData?.code ?? null,
     }).onConflictDoNothing();
     console.log(`[NEWSLETTER] New subscriber: ${email} (poll ${pollId}, ${geoData?.name ?? "unknown"})`);
+    // Sync to Beehiiv non-blocking
+    syncToBeehiiv(email.trim(), "share_gate").catch(() => {})
     return res.json({ success: true });
   } catch (err) {
     console.error(err);

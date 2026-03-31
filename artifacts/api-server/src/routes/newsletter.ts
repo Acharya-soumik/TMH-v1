@@ -3,7 +3,7 @@ import { db, newsletterSubscribersTable } from "@workspace/db"
 
 const router = Router()
 
-async function syncToBeehiiv(email: string, source: string) {
+export async function syncToBeehiiv(email: string, source: string) {
   const BEEHIIV_API_KEY = process.env.BEEHIIV_API_KEY
   const BEEHIIV_PUB_ID = process.env.BEEHIIV_PUBLICATION_ID
   if (!BEEHIIV_API_KEY || !BEEHIIV_PUB_ID) return

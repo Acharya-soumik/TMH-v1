@@ -41,7 +41,10 @@ export async function generateShareCard(opts: ShareCardOptions): Promise<Blob | 
   const ctx = canvas.getContext("2d")
   if (!ctx) return null
 
-  await document.fonts.ready
+  await Promise.race([
+    document.fonts.ready,
+    new Promise(resolve => setTimeout(resolve, 2000))
+  ])
 
   const BLACK = "#0A0A0A"
   const WHITE = "#F2EDE4"
@@ -136,7 +139,10 @@ export async function generateStoryCard(opts: ShareCardOptions): Promise<Blob | 
   const ctx = canvas.getContext("2d")
   if (!ctx) return null
 
-  await document.fonts.ready
+  await Promise.race([
+    document.fonts.ready,
+    new Promise(resolve => setTimeout(resolve, 2000))
+  ])
 
   const BLACK = "#0A0A0A"
   const WHITE = "#F2EDE4"

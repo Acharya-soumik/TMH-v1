@@ -266,9 +266,9 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
         const ok = await copyToClipboard(shareText)
         toast({ title: ok ? "Copied — share your take!" : "Ready to share", description: "Paste it anywhere to spread the debate." })
       }
-    } catch {
-      const ok = await copyToClipboard(pollUrl)
-      if (ok) toast({ title: "Link copied!", description: "Share your stance." })
+    } catch (err) {
+      const ok = await copyToClipboard(shareText || pollUrl)
+      toast({ title: ok ? "Copied to clipboard!" : "Share this link", description: ok ? "Paste it anywhere to share your stance." : pollUrl })
     } finally {
       setIsSharing(false)
     }
@@ -687,7 +687,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                   placeholder={shareGate?.emailPlaceholder || "your@email.com"}
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="flex-1 px-4 py-3 text-foreground text-sm font-sans focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground rounded-sm"
+                  className="flex-1 px-4 py-3 text-white text-sm font-sans focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground rounded-sm"
                   style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
                 />
                 <button
