@@ -97,7 +97,7 @@ export function usePredictions(category?: string) {
     queryFn: () => {
       const params = new URLSearchParams()
       if (category) params.set("category", category)
-      params.set("limit", "100")
+      params.set("limit", "500")
       const qs = params.toString()
       return fetchJson(`/api/public/predictions${qs ? `?${qs}` : ""}`)
     },

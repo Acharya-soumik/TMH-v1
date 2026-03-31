@@ -420,7 +420,7 @@ function getPredVote(predId: number): "yes" | "no" | null {
   return localStorage.getItem(`tmh_pred_${predId}`) as "yes" | "no" | null;
 }
 
-const MENA_POP_BASE_DEFAULT = 525_000_000;
+const MENA_POP_BASE_DEFAULT = 541_000_000;
 const MENA_POP_BASE_DATE = new Date("2026-01-01T00:00:00Z").getTime();
 const MENA_GROWTH_RATE_DEFAULT = 0.0156;
 
