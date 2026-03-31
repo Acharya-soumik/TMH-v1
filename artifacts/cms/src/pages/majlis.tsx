@@ -73,6 +73,8 @@ export default function MajlisPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState("");
+  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
+  const [copiedGenerated, setCopiedGenerated] = useState(false);
   const [copiedToken, setCopiedToken] = useState<number | null>(null);
 
   const loadData = async () => {
@@ -118,24 +120,44 @@ export default function MajlisPage() {
 
   const createInvite = async () => {
     setInviteError("");
+    setGeneratedCode(null);
+    setCopiedGenerated(false);
     if (!inviteProfileId || !inviteEmail) {
       setInviteError("Profile ID and email are required");
       return;
     }
     setInviteLoading(true);
     try {
-      await majlisRequest("/invites", {
+      const data = await majlisRequest("/invites", {
         method: "POST",
         body: JSON.stringify({ profileId: parseInt(inviteProfileId), email: inviteEmail }),
       });
       setInviteProfileId("");
       setInviteEmail("");
-      setShowInviteForm(false);
+      setGeneratedCode(data.invite?.token || null);
       loadData();
     } catch (err) {
       setInviteError("Failed to create invite. Voice must be verified and not already registered.");
     } finally {
       setInviteLoading(false);
+    }
+  };
+
+  const copyGeneratedCode = async () => {
+    if (!generatedCode) return;
+    try {
+      await navigator.clipboard.writeText(generatedCode);
+      setCopiedGenerated(true);
+      setTimeout(() => setCopiedGenerated(false), 2000);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = generatedCode;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setCopiedGenerated(true);
+      setTimeout(() => setCopiedGenerated(false), 2000);
     }
   };
 
@@ -224,47 +246,72 @@ export default function MajlisPage() {
 
           {showInviteForm && (
             <div className="border border-border p-4 space-y-3">
-              <h3 className="text-sm font-bold text-foreground">New Invite</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Voice Profile ID</label>
-                  <input
-                    type="number"
-                    value={inviteProfileId}
-                    onChange={e => setInviteProfileId(e.target.value)}
-                    placeholder="e.g. 219"
-                    className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={e => setInviteEmail(e.target.value)}
-                    placeholder="voice@email.com"
-                    className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                  />
-                </div>
-              </div>
-              {inviteError && (
-                <p className="text-xs text-red-400">{inviteError}</p>
+              {generatedCode ? (
+                <>
+                  <h3 className="text-sm font-bold text-green-400">Invite Created Successfully</h3>
+                  <div className="flex items-center gap-3 bg-secondary/30 border border-border p-3">
+                    <code className="text-sm font-mono text-foreground flex-1 tracking-wider">{generatedCode}</code>
+                    <button
+                      onClick={copyGeneratedCode}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 border border-border hover:border-foreground"
+                    >
+                      <Copy className="w-3 h-3" />
+                      {copiedGenerated ? "Copied!" : "Copy Code"}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Share this code with the Voice to complete registration. Expires in 7 days.</p>
+                  <button
+                    onClick={() => { setShowInviteForm(false); setGeneratedCode(null); setCopiedGenerated(false); }}
+                    className="text-sm text-muted-foreground hover:text-foreground px-4 py-1.5 border border-border"
+                  >
+                    Done
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-sm font-bold text-foreground">New Invite</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground block mb-1">Voice Profile ID</label>
+                      <input
+                        type="number"
+                        value={inviteProfileId}
+                        onChange={e => setInviteProfileId(e.target.value)}
+                        placeholder="e.g. 219"
+                        className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground block mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={inviteEmail}
+                        onChange={e => setInviteEmail(e.target.value)}
+                        placeholder="voice@email.com"
+                        className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  {inviteError && (
+                    <p className="text-xs text-red-400">{inviteError}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={createInvite}
+                      disabled={inviteLoading}
+                      className="text-sm bg-primary text-white px-4 py-1.5 hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    >
+                      {inviteLoading ? "Creating..." : "Send Invite"}
+                    </button>
+                    <button
+                      onClick={() => { setShowInviteForm(false); setInviteError(""); setGeneratedCode(null); }}
+                      className="text-sm text-muted-foreground hover:text-foreground px-4 py-1.5 border border-border"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
               )}
-              <div className="flex gap-2">
-                <button
-                  onClick={createInvite}
-                  disabled={inviteLoading}
-                  className="text-sm bg-primary text-white px-4 py-1.5 hover:bg-primary/90 transition-colors disabled:opacity-50"
-                >
-                  {inviteLoading ? "Creating..." : "Send Invite"}
-                </button>
-                <button
-                  onClick={() => { setShowInviteForm(false); setInviteError(""); }}
-                  className="text-sm text-muted-foreground hover:text-foreground px-4 py-1.5 border border-border"
-                >
-                  Cancel
-                </button>
-              </div>
             </div>
           )}
 
