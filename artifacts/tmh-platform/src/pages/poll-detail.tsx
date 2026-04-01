@@ -1,5 +1,5 @@
 import { useRoute, Link } from "wouter"
-import { useGetPoll, useListPolls } from "@workspace/api-client-react"
+import { useGetPoll, useListPolls, useGetPollTrends } from "@workspace/api-client-react"
 import { Layout } from "@/components/layout/Layout"
 import { PollCard } from "@/components/poll/PollCard"
 import { TrendChart } from "@/components/poll/TrendChart"
@@ -19,6 +19,8 @@ export default function PollDetail() {
     { category: poll?.categorySlug, limit: 8 },
     { query: { enabled: !!poll?.categorySlug } as any }
   )
+
+  const { data: trendData } = useGetPollTrends(id)
 
   if (isLoading) {
     return (
@@ -67,13 +69,15 @@ export default function PollDetail() {
           <PollCard poll={poll} featured />
         </div>
 
-        <div className="bg-card border border-border p-6 md:p-10 mb-16">
-          <div className="h-px w-8 bg-primary mb-6" />
-          <h3 className="font-serif font-black uppercase text-xl tracking-wider mb-6">
-            How Opinion Has Shifted
-          </h3>
-          <TrendChart pollId={poll.id} />
-        </div>
+        {trendData?.dataPoints?.length ? (
+          <div className="bg-card border border-border p-6 md:p-10 mb-16">
+            <div className="h-px w-8 bg-primary mb-6" />
+            <h3 className="font-serif font-black uppercase text-xl tracking-wider mb-6">
+              How Opinion Has Shifted
+            </h3>
+            <TrendChart pollId={poll.id} />
+          </div>
+        ) : null}
 
         {poll.context && (
           <div className="bg-background border border-border p-8 md:p-12 mb-16">

@@ -67,12 +67,19 @@ export default function Polls() {
     if (!pollsData?.polls) return [];
     if (!searchQuery.trim()) return pollsData.polls;
     const q = searchQuery.toLowerCase();
-    return pollsData.polls.filter(
-      (p) =>
-        p.question?.toLowerCase().includes(q) ||
-        p.category?.toLowerCase().includes(q) ||
-        (p.tags as string[])?.some((t: string) => t.toLowerCase().includes(q)),
-    );
+    return pollsData.polls
+      .map(p => {
+        let score = 0;
+        if (p.category?.toLowerCase() === q) score += 10;
+        if (p.category?.toLowerCase().includes(q)) score += 5;
+        if ((p.tags as string[])?.some(t => t.toLowerCase() === q)) score += 8;
+        if ((p.tags as string[])?.some(t => t.toLowerCase().includes(q))) score += 3;
+        if (p.question?.toLowerCase().includes(q)) score += 2;
+        return { poll: p, score };
+      })
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(({ poll }) => poll);
   }, [pollsData?.polls, searchQuery]);
 
   const tabs = [
