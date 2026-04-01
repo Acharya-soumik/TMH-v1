@@ -329,7 +329,7 @@ export default function Polls() {
               transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
             >
               <h3 className="font-serif font-bold text-2xl uppercase tracking-wider text-foreground mb-2">
-                No polls found
+                No debates found
               </h3>
               <p className="text-sm text-muted-foreground mb-6 font-sans">
                 {searchQuery

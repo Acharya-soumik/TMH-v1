@@ -61,7 +61,7 @@ export function Navbar() {
   const defaultLinks = [
     { label: t("About"), href: "/about" },
     { label: t("Pulse"), href: "/mena-pulse" },
-    { label: t("Debates"), href: "/polls" },
+    { label: t("Debates"), href: "/debates" },
     { label: t("Predictions"), href: "/predictions" },
     { label: t("Voices"), href: "/profiles" },
     { label: t("The Majlis"), href: "/majlis", icon: "lock" },

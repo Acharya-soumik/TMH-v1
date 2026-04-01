@@ -236,7 +236,7 @@ export async function generateStoryCard(opts: ShareCardOptions): Promise<Blob | 
 }
 
 export function getPollUrl(pollId: number): string {
-  return `${window.location.origin}/polls/${pollId}`
+  return `${window.location.origin}/debates/${pollId}`
 }
 
 export function getWhatsAppUrl(question: string, pollUrl: string): string {

@@ -36,10 +36,10 @@ export default function PollDetail() {
       <Layout>
         <div className="max-w-4xl mx-auto px-4 py-24 text-center">
           <AlertCircle className="w-16 h-16 text-primary mx-auto mb-6" />
-          <h1 className="text-4xl font-serif font-black uppercase tracking-tight mb-4">Poll not found</h1>
-          <p className="text-muted-foreground mb-8 font-sans">This poll might have been removed or the link is invalid.</p>
-          <Link href="/polls" className="bg-foreground text-background px-6 py-3 font-bold text-xs uppercase tracking-widest hover:bg-primary transition-colors">
-            Back to Polls
+          <h1 className="text-4xl font-serif font-black uppercase tracking-tight mb-4">Debate not found</h1>
+          <p className="text-muted-foreground mb-8 font-sans">This debate might have been removed or the link is invalid.</p>
+          <Link href="/debates" className="bg-foreground text-background px-6 py-3 font-bold text-xs uppercase tracking-widest hover:bg-primary transition-colors">
+            Back to Debates
           </Link>
         </div>
       </Layout>
@@ -59,8 +59,8 @@ export default function PollDetail() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 lg:py-16">
-        <Link href="/polls" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground font-bold mb-8 transition-colors">
-          <ArrowLeft className="w-3 h-3" /> Back to all polls
+        <Link href="/debates" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground font-bold mb-8 transition-colors">
+          <ArrowLeft className="w-3 h-3" /> Back to All Debates
         </Link>
 
         <div className="mb-16">

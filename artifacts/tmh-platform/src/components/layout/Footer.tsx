@@ -35,7 +35,7 @@ export function Footer() {
     : [
         { label: t("About"), href: "/about" },
         { label: t("Pulse"), href: "/mena-pulse" },
-        { label: t("Debates"), href: "/polls" },
+        { label: t("Debates"), href: "/debates" },
         { label: t("Predictions"), href: "/predictions" },
         { label: t("Voices"), href: "/profiles" },
         { label: t("Join The Voices"), href: "/apply" },
@@ -107,7 +107,7 @@ export function Footer() {
           <div className="flex items-center gap-6">
             <Link href="/faq" className="text-[11px] uppercase tracking-[0.15em] font-bold text-background/50 hover:text-background transition-colors font-serif">{t("FAQ")}</Link>
             <Link href="/terms" className="text-[11px] uppercase tracking-[0.15em] font-bold text-background/50 hover:text-background transition-colors font-serif">{t("Terms")}</Link>
-            <a href="mailto:hello@themiddleeasthustle.com" className="text-[11px] uppercase tracking-[0.15em] font-bold text-background/50 hover:text-background transition-colors font-serif">{t("Contact")}</a>
+            <Link href="/contact" className="text-[11px] uppercase tracking-[0.15em] font-bold text-background/50 hover:text-background transition-colors font-serif">{t("Contact")}</Link>
           </div>
         </div>
       </div>
