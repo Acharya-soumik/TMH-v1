@@ -181,12 +181,14 @@ export default function ApplicationsPage() {
                     )}
                     <div className="flex items-center gap-2">
                       <a href={`mailto:${app.email}`} className="text-sm text-primary hover:underline">{app.email}</a>
-                      {app.linkedin && (
-                        <a href={app.linkedin} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      )}
                     </div>
+                    {app.linkedin && (
+                      <div className="mt-1">
+                        <a href={app.linkedin} target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">
+                          {app.linkedin}
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
 

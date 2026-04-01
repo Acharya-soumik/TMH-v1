@@ -502,7 +502,6 @@ export default function Majlis() {
     const token = getToken()
     const u = getUser()
     if (!token || !u) {
-      navigate("/majlis/login")
       return
     }
     setUser(u)
@@ -512,7 +511,7 @@ export default function Majlis() {
         if (!r.ok) {
           localStorage.removeItem("majlis_token")
           localStorage.removeItem("majlis_user")
-          navigate("/majlis/login")
+          setUser(null)
         }
       })
       .catch(() => {})
@@ -738,8 +737,14 @@ export default function Majlis() {
   if (!user) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center pt-20">
-          <p className="text-muted-foreground">Loading...</p>
+        <div className="text-center py-20">
+          <h2 className="font-display font-black text-2xl uppercase tracking-tight text-foreground mb-2">
+            The Majlis is Invite-Only
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            A private space for verified voices across MENA.{" "}
+            <a href="/apply" className="text-primary underline">Apply to join</a>.
+          </p>
         </div>
       </Layout>
     )

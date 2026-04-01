@@ -150,8 +150,10 @@ router.post("/apply", async (req, res) => {
 
   const aiResult = scoreApplication({ name, email, title, company, bio, linkedin, quote, impact, city, country })
 
+  let refNumber = `TMH-${Date.now()}`
+
   try {
-    await db.insert(hustlerApplicationsTable).values({
+    const [inserted] = await db.insert(hustlerApplicationsTable).values({
       name,
       email: email.toLowerCase().trim(),
       title,
@@ -167,8 +169,9 @@ router.post("/apply", async (req, res) => {
       aiStatus: aiResult.status,
       aiReasoning: aiResult.reasoning,
       aiChecklist: aiResult.checklist,
-    })
-    console.log(`[APPLY] Stored application: ${name} <${email}> | Score: ${aiResult.score} | Status: ${aiResult.status}`)
+    }).returning()
+    refNumber = `TMH-${inserted.id || Date.now()}`
+    console.log(`[APPLY] Stored application: ${name} <${email}> | Score: ${aiResult.score} | Status: ${aiResult.status} | Ref: ${refNumber}`)
   } catch (err) {
     console.error("[APPLY] DB save failed:", err)
   }
@@ -177,6 +180,7 @@ router.post("/apply", async (req, res) => {
 
   return res.json({
     success: true,
+    referenceNumber: refNumber,
     message: "Application received. Our AI review runs in minutes.",
     aiScore: aiResult.score,
     aiStatus: aiResult.status,
