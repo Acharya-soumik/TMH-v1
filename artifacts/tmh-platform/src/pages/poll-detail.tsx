@@ -8,7 +8,7 @@ import { useVoter } from "@/hooks/use-voter"
 import { usePageTitle } from "@/hooks/use-page-title"
 
 export default function PollDetail() {
-  const [, params] = useRoute("/polls/:id")
+  const [, params] = useRoute("/debates/:id")
   const id = params?.id ? parseInt(params.id) : 0
   const { hasVoted, profile } = useVoter()
 

@@ -638,7 +638,7 @@ export default function Majlis() {
 
   const handlePaste = async (e: React.ClipboardEvent<HTMLInputElement>) => {
     const text = e.clipboardData.getData("text")
-    const pollMatch = text.match(/\/polls\/(\d+)/)
+    const pollMatch = text.match(/\/debates\/(\d+)/)
     const predMatch = text.match(/\/predictions\/(\d+)/)
     if (!pollMatch && !predMatch) return
 

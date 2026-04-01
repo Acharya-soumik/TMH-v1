@@ -35,9 +35,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/polls" component={Polls} />
-      <Route path="/polls/archive" component={PollArchive} />
-      <Route path="/polls/:id" component={PollDetail} />
+      <Route path="/debates" component={Polls} />
+      <Route path="/debates/archive" component={PollArchive} />
+      <Route path="/debates/:id" component={PollDetail} />
       <Route path="/profiles" component={Profiles} />
       <Route path="/profiles/:id" component={ProfileDetail} />
       <Route path="/predictions" component={Predictions} />
@@ -51,10 +51,6 @@ function Router() {
       <Route path="/majlis" component={Majlis} />
       <Route path="/contact" component={Contact} />
       <Route path="/admin" component={Admin} />
-      {/* /debates aliases — mirror /polls routes */}
-      <Route path="/debates" component={Polls} />
-      <Route path="/debates/archive" component={PollArchive} />
-      <Route path="/debates/:id" component={PollDetail} />
       {/* URL redirects */}
       <Route path="/voices"><Redirect to="/profiles" /></Route>
       <Route path="/pulse"><Redirect to="/mena-pulse" /></Route>
