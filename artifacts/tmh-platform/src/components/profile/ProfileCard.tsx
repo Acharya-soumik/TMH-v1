@@ -77,7 +77,7 @@ export function ProfileCard({ profile }: { profile: Profile }) {
     >
       {/* Photo or initials */}
       {profile.imageUrl && !imgError ? (
-        <div className="relative overflow-hidden h-56 flex-shrink-0 bg-secondary flex items-center justify-center">
+        <div className="w-full aspect-[3/4] relative overflow-hidden flex-shrink-0 bg-secondary flex items-center justify-center">
           <img
             src={profile.imageUrl}
             alt={profile.name}

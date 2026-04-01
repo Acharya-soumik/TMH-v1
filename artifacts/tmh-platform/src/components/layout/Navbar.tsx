@@ -108,13 +108,13 @@ export function Navbar() {
 
           </div>
 
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-3 lg:gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "text-[11px] uppercase tracking-[0.2em] font-bold transition-all font-serif flex items-center gap-1",
+                  "text-[9px] lg:text-[11px] uppercase tracking-[0.15em] lg:tracking-[0.2em] font-bold transition-all font-serif flex items-center gap-1",
                   location === link.href || (link.href === "/majlis" && location.startsWith("/majlis"))
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
@@ -130,7 +130,7 @@ export function Navbar() {
             {ctaButton && (
             <Link
               href={ctaButton.href}
-              className="hidden sm:flex items-center gap-2 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.15em] px-4 py-2 hover:bg-primary/90 transition-colors font-serif"
+              className="hidden lg:flex items-center gap-2 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.15em] px-4 py-2 hover:bg-primary/90 transition-colors font-serif"
             >
               {ctaButton.label}
             </Link>

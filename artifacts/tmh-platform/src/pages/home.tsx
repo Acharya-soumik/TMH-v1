@@ -1722,6 +1722,7 @@ export default function Home() {
 
       {/* ── MIXED TICKER ── */}
       <div
+        className="min-h-[48px]"
         style={{
           background: "#0D0D0D",
           borderTop: "1px solid rgba(255,255,255,0.06)",
@@ -2553,10 +2554,10 @@ export default function Home() {
                 {t("Explore Topics")}
               </h2>
             </div>
-            <StaggerGrid className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {categories.categories.map((cat) => (
-                <motion.div key={cat.slug} variants={staggerItem}>
                 <Link
+                  key={cat.slug}
                   href={`/polls?category=${cat.slug}`}
                   className="bg-secondary p-5 flex flex-col justify-between transition-all hover:bg-foreground hover:text-background group border border-border hover:-translate-y-0.5 hover:shadow-md duration-300"
                 >
@@ -2567,9 +2568,8 @@ export default function Home() {
                     {cat.pollCount} Debates
                   </span>
                 </Link>
-                </motion.div>
               ))}
-            </StaggerGrid>
+            </div>
           </div>
           </FadeUp>
         </section>
