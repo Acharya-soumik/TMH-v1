@@ -196,6 +196,11 @@ export default function Profiles() {
     return data.profiles.filter((p) => p.country === country);
   }, [data?.profiles, country]);
 
+  const filteredCountries = useMemo(() => {
+    const set = new Set(filtered.map((p) => p.country).filter(Boolean));
+    return set.size;
+  }, [filtered]);
+
   const filters = [
     { id: "all", label: "All" },
     { id: "featured", label: "Most Relevant" },
@@ -310,7 +315,7 @@ export default function Profiles() {
                 marginRight: 6,
               }}
             >
-              {data?.profiles?.length ?? "—"}
+              {filtered.length || "—"}
             </span>{" "}
             Voices
           </span>
@@ -339,7 +344,7 @@ export default function Profiles() {
                 marginRight: 6,
               }}
             >
-              {countries.length || "—"}
+              {filteredCountries || "—"}
             </span>{" "}
             Countries
           </span>
