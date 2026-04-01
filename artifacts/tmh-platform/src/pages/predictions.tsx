@@ -397,10 +397,12 @@ function VoteButtons({
   height = 52,
   locked = false,
   predId,
+  onVote,
 }: {
   height?: number;
   locked?: boolean;
   predId?: number;
+  onVote?: (predId: number, choice: "yes" | "no") => void;
 }) {
   const storageKey = predId != null ? `tmh_pred_${predId}` : null;
   const [voted, setVoted] = useState<"yes" | "no" | null>(() => {
@@ -413,6 +415,7 @@ function VoteButtons({
     setVoted(choice);
     if (storageKey) localStorage.setItem(storageKey, choice);
     if (predId != null) {
+      onVote?.(predId, choice);
       let token = localStorage.getItem("tmh_voter_token");
       if (!token) {
         token = crypto.randomUUID();
@@ -542,7 +545,7 @@ function MomentumTicker({
 
 // ─── FEATURED PREDICTION ─────────────────────────────────────────────────────
 
-function FeaturedPrediction({ card }: { card: PredictionCard }) {
+function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (predId: number, choice: "yes" | "no") => void }) {
   const featuredData = useMemo(() => {
     return card.data.map((yes, i) => {
       const slice = card.data.slice(Math.max(0, i - 2), i + 1);
@@ -743,7 +746,7 @@ function FeaturedPrediction({ card }: { card: PredictionCard }) {
             compact={false}
           />
 
-          <VoteButtons height={52} predId={card.id} />
+          <VoteButtons height={52} predId={card.id} onVote={onVote} />
 
           <p
             style={{
@@ -764,7 +767,19 @@ function FeaturedPrediction({ card }: { card: PredictionCard }) {
 
 // ─── PREDICTION GRID CARD ────────────────────────────────────────────────────
 
-function PredictionGridCard({ card, highlighted }: { card: PredictionCard; highlighted?: boolean }) {
+function PredictionGridCard({
+  card,
+  highlighted,
+  isExpanded,
+  onToggleExpand,
+  onVote,
+}: {
+  card: PredictionCard;
+  highlighted?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
+  onVote?: (predId: number, choice: "yes" | "no") => void;
+}) {
   const [glowing, setGlowing] = useState(!!highlighted);
 
   useEffect(() => {
@@ -777,7 +792,9 @@ function PredictionGridCard({ card, highlighted }: { card: PredictionCard; highl
   return (
     <div
       id={`pred-${card.id}`}
+      onClick={() => onToggleExpand?.()}
       style={{
+        cursor: "pointer",
         background: glowing ? "rgba(220,20,60,0.08)" : "var(--card)",
         border: `1.5px solid ${glowing ? "rgba(220,20,60,0.7)" : "rgba(220,20,60,0.15)"}`,
         boxShadow: glowing ? "0 0 0 2px rgba(220,20,60,0.35), 0 0 28px rgba(220,20,60,0.25)" : undefined,
@@ -874,8 +891,17 @@ function PredictionGridCard({ card, highlighted }: { card: PredictionCard; highl
         compact={true}
       />
 
+      {/* Resolution date (always visible) */}
+      {card.resolves && card.resolves !== "TBD" && (
+        <span className="text-[9px] uppercase tracking-widest text-muted-foreground">
+          Resolves {new Date(card.resolves).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+        </span>
+      )}
+
       {/* Vote buttons */}
-      <VoteButtons height={44} predId={card.id} />
+      <div onClick={(e) => e.stopPropagation()}>
+        <VoteButtons height={44} predId={card.id} onVote={onVote} />
+      </div>
 
       {/* Lock notice */}
       <p
@@ -888,6 +914,18 @@ function PredictionGridCard({ card, highlighted }: { card: PredictionCard; highl
       >
         Your prediction is locked until the resolution date.
       </p>
+
+      {/* Expanded details */}
+      {isExpanded && (
+        <div className="mt-4 pt-4 border-t border-border">
+          <p className="text-xs text-muted-foreground mb-2">
+            Resolves: {card.resolves !== "TBD" ? new Date(card.resolves).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "To be determined"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Category: {card.category} · {card.count} predictions locked in
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -1133,6 +1171,8 @@ export default function Predictions() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("ALL");
   const [visibleCount, setVisibleCount] = useState(20);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [voteOverrides, setVoteOverrides] = useState<Record<number, { yes: number; no: number }>>({});
   const [highlightedId, setHighlightedId] = useState<string | null>(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get("shared");
@@ -1168,8 +1208,25 @@ export default function Predictions() {
     return FALLBACK_TICKER_DATA;
   }, [apiData]);
 
+  const handleVoteOverride = (predId: number, choice: "yes" | "no") => {
+    setVoteOverrides((prev) => {
+      const card = PREDICTIONS.find((c) => c.id === predId);
+      if (!card) return prev;
+      const currentYes = prev[predId]?.yes ?? card.yes;
+      const currentNo = prev[predId]?.no ?? card.no;
+      const shift = 1;
+      const newYes = choice === "yes" ? Math.min(currentYes + shift, 99) : Math.max(currentYes - shift, 1);
+      const newNo = 100 - newYes;
+      return { ...prev, [predId]: { yes: newYes, no: newNo } };
+    });
+  };
+
   const filteredCards = useMemo(() => {
-    let result = PREDICTIONS;
+    let result = PREDICTIONS.map((c) => {
+      const ov = voteOverrides[c.id];
+      if (ov) return { ...c, yes: ov.yes, no: ov.no };
+      return c;
+    });
     if (activeCategory !== "ALL") {
       result = result.filter((c) => c.category === activeCategory);
     }
@@ -1183,7 +1240,7 @@ export default function Predictions() {
       );
     }
     return result;
-  }, [searchQuery, activeCategory, PREDICTIONS]);
+  }, [searchQuery, activeCategory, PREDICTIONS, voteOverrides]);
 
   // When shared param is present, ensure the card is visible and scroll to it
   useEffect(() => {
@@ -1513,7 +1570,10 @@ export default function Predictions() {
                   Featured Prediction
                 </p>
               </div>
-              <FeaturedPrediction card={PREDICTIONS[0]} />
+              <FeaturedPrediction
+                card={voteOverrides[PREDICTIONS[0].id] ? { ...PREDICTIONS[0], yes: voteOverrides[PREDICTIONS[0].id].yes, no: voteOverrides[PREDICTIONS[0].id].no } : PREDICTIONS[0]}
+                onVote={handleVoteOverride}
+              />
             </motion.div>
           )}
 
@@ -1593,7 +1653,13 @@ export default function Predictions() {
               >
                 {filteredCards.slice(0, visibleCount).map((card) => (
                   <motion.div key={card.id} variants={staggerItem}>
-                    <PredictionGridCard card={card} highlighted={highlightedId === String(card.id)} />
+                    <PredictionGridCard
+                      card={card}
+                      highlighted={highlightedId === String(card.id)}
+                      isExpanded={expandedId === card.id}
+                      onToggleExpand={() => setExpandedId(expandedId === card.id ? null : card.id)}
+                      onVote={handleVoteOverride}
+                    />
                   </motion.div>
                 ))}
               </motion.div>
