@@ -112,7 +112,7 @@ function parseSharedContent(content: string): { text: string; shared: SharedCont
 function SharedCard({ shared }: { shared: SharedContent }) {
   const colorMap = { debate: "#DC143C", prediction: "#3B82F6", pulse: "#10B981" }
   const iconMap = { debate: BarChart3, prediction: TrendingUp, pulse: Activity }
-  const linkMap = { debate: `/polls/${shared.id}`, prediction: `/predictions`, pulse: `/mena-pulse` }
+  const linkMap = { debate: `/debates/${shared.id}`, prediction: `/predictions`, pulse: `/mena-pulse` }
   const labelMap = { debate: "DEBATE", prediction: "PREDICTION", pulse: "PULSE" }
   const Icon = iconMap[shared.type]
   const color = colorMap[shared.type]
