@@ -1,7 +1,7 @@
 import { Link } from "wouter"
 import { Layout } from "@/components/layout/Layout"
 import { useI18n } from "@/lib/i18n"
-import { usePageConfig } from "@/hooks/use-cms-data"
+import { usePageConfig, useLiveCounts } from "@/hooks/use-cms-data"
 import { usePageTitle } from "@/hooks/use-page-title"
 
 const FALLBACK_PILLARS = [
@@ -112,9 +112,10 @@ export default function About() {
   const countries = pageConfig?.regionCoverage?.length
     ? pageConfig.regionCoverage.map(c => ({ name: c.name, flag: c.flag, pop: c.population }))
     : COUNTRIES_DEFAULT
+  const { data: liveCounts } = useLiveCounts()
   const stats = pageConfig?.stats?.length ? pageConfig.stats : [
-    { num: "94", label: "Founding Voices" },
-    { num: "135+", label: "Active Debates" },
+    { num: String(liveCounts?.voices ?? 94), label: "Founding Voices" },
+    { num: `${liveCounts?.debates ?? 135}+`, label: "Active Debates" },
     { num: "19", label: "MENA Countries" },
     { num: "541M", label: "People in MENA" },
   ]
@@ -129,9 +130,9 @@ export default function About() {
           </p>
           <h1 style={{ fontFamily: isAr ? "'IBM Plex Sans Arabic', sans-serif" : "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
             {isAr ? (
-              <>{t(hero?.title || "The Region's First Collective Mirror")}<span style={{ color: "#DC143C" }}>.</span></>
+              <>{t((hero?.title || "The Region's First Collective Mirror").replace(/[.]+$/, ""))}<span style={{ color: "#DC143C" }}>.</span></>
             ) : (
-              <>{(hero?.title || "The Region's First\nCollective Mirror").split("\n").map((line, i, arr) => (
+              <>{((hero?.title || "The Region's First\nCollective Mirror").replace(/[.]+$/, "")).split("\n").map((line, i, arr) => (
                 <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
               ))}<span style={{ color: "#DC143C" }}>.</span></>
             )}

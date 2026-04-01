@@ -39,7 +39,7 @@ export function CookieConsent() {
               <p className="text-[11px] font-sans text-background/80 leading-relaxed">
                 {consent?.message || "TMH uses cookies to remember your votes and improve your experience."}{" "}
                 <a href={consent?.linkHref || "/terms"} className="underline underline-offset-2 hover:text-primary transition-colors">
-                  {consent?.linkText || "No spam. Unsubscribe anytime."}
+                  {consent?.linkText || "Read our Terms & Conditions"}
                 </a>
               </p>
             </div>

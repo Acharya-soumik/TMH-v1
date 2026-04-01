@@ -1555,7 +1555,7 @@ export default function Home() {
                   className="font-display font-black text-5xl md:text-6xl lg:text-7xl uppercase tracking-tight text-foreground leading-none"
                   style={{ lineHeight: 0.95 }}
                 >
-                  The Tribunal.
+                  The Tribunal<span className="text-primary">.</span>
                 </h1>
                 <motion.p
                   className="text-[10px] font-serif tracking-[0.25em] uppercase text-muted-foreground mt-1"

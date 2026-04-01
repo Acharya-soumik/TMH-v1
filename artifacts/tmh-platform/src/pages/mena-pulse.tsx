@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Search, X, Share2, CheckCircle2 } from "lucide-react";
 import { LiveNumber } from "@/components/live-counter/FlipDigit";
 import { useI18n } from "@/lib/i18n";
+import { useToast } from "@/hooks/use-toast";
 import {
   usePulseTopics,
   usePageConfig,
@@ -1191,6 +1192,7 @@ function MiniSparkline({
 
 function PulseShareBtn({ title, stat, id }: { title: string; stat: string; id: string }) {
   const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
   const url =
     typeof window !== "undefined"
       ? `${window.location.origin}/mena-pulse?shared=${id}`
@@ -1213,6 +1215,7 @@ function PulseShareBtn({ title, stat, id }: { title: string; stat: string; id: s
         await navigator.clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+        toast({ title: "Link copied!", description: "Share this trend." });
         return;
       } catch {}
     }
@@ -1227,6 +1230,7 @@ function PulseShareBtn({ title, stat, id }: { title: string; stat: string; id: s
       document.body.removeChild(ta);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      toast({ title: "Link copied!", description: "Share this trend." });
     } catch {}
   };
 
@@ -1843,15 +1847,15 @@ export default function MenaPulse() {
             {isAr ? (
               <>
                 {t(
-                  pulseConfig?.hero?.subtitle ||
-                    "What's Actually Happening in MENA",
+                  (pulseConfig?.hero?.subtitle ||
+                    "What's Actually Happening in MENA").replace(/[.?!]+$/, ""),
                 )}
                 <span style={{ color: "#DC143C" }}>.</span>
               </>
             ) : (
               <>
-                {pulseConfig?.hero?.subtitle ||
-                  "What's Actually\nHappening in MENA"}
+                {(pulseConfig?.hero?.subtitle ||
+                  "What's Actually\nHappening in MENA").replace(/[.?!]+$/, "")}
                 <span style={{ color: "#DC143C" }}>.</span>
               </>
             )}
