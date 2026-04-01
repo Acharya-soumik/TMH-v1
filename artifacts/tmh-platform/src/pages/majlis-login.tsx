@@ -34,6 +34,12 @@ export default function MajlisLogin() {
         return;
       }
 
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+        setError("Please enter a valid email address");
+        setLoading(false);
+        return;
+      }
+
       const endpoint =
         mode === "login"
           ? `${API_BASE}/api/majlis/auth/login`
@@ -93,6 +99,9 @@ export default function MajlisLogin() {
                 onClick={() => {
                   setMode("login");
                   setError("");
+                  setEmail("");
+                  setPassword("");
+                  setInviteToken("");
                 }}
                 className={`flex-1 pb-3 text-xs font-serif font-bold uppercase tracking-[0.2em] transition-colors border-b-2 ${
                   mode === "login"
@@ -106,6 +115,9 @@ export default function MajlisLogin() {
                 onClick={() => {
                   setMode("register");
                   setError("");
+                  setEmail("");
+                  setPassword("");
+                  setInviteToken("");
                 }}
                 className={`flex-1 pb-3 text-xs font-serif font-bold uppercase tracking-[0.2em] transition-colors border-b-2 ${
                   mode === "register"
@@ -181,6 +193,14 @@ export default function MajlisLogin() {
                     )}
                   </button>
                 </div>
+                {mode === "login" && (
+                  <p className="text-[10px] text-muted-foreground mt-2">
+                    Forgot your password?{" "}
+                    <a href="mailto:hello@themiddleeasthustle.com" className="text-primary underline">
+                      Contact admin
+                    </a>
+                  </p>
+                )}
               </div>
 
               {error && (
