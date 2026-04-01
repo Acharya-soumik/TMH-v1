@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Search, X, Share2, CheckCircle2, MessageSquare } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
+import { useToast } from "@/hooks/use-toast";
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
@@ -315,6 +316,7 @@ async function predCopyText(text: string): Promise<boolean> {
 
 function PredShareBtn({ question, id }: { question: string; id: number }) {
   const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
   const url =
     typeof window !== "undefined"
       ? `${window.location.origin}/predictions?shared=${id}`
@@ -335,6 +337,7 @@ function PredShareBtn({ question, id }: { question: string; id: number }) {
     if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      toast({ title: "Link copied!", description: "Share this prediction." });
     }
   };
 
@@ -1473,6 +1476,20 @@ export default function Predictions() {
       {/* Content */}
       <div className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Loading skeletons */}
+          {isLoading && PREDICTIONS.length === 0 && (
+            <>
+              <div className="mb-12">
+                <div className="animate-pulse bg-card border border-border h-64 w-full" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="animate-pulse bg-card border border-border p-6 h-48" />
+                ))}
+              </div>
+            </>
+          )}
+
           {/* Featured prediction */}
           {!isFiltering && PREDICTIONS.length > 0 && (
             <motion.div

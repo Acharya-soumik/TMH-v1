@@ -45,6 +45,7 @@ export default function Apply() {
     city: "", country: "", sector: "",
     bio: "", quote: "", linkedin: "", impact: "",
   })
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const { data: pageConfig } = usePageConfig<ApplyConfig>("apply")
 
   const hero = pageConfig?.hero
@@ -54,11 +55,33 @@ export default function Apply() {
   const successMsg = pageConfig?.successMessage
   const disclaimer = pageConfig?.disclaimer
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm(prev => ({ ...prev, [k]: e.target.value }))
+    if (fieldErrors[k]) setFieldErrors(prev => { const next = { ...prev }; delete next[k]; return next })
+  }
+
+  const validate = (): Record<string, string> => {
+    const errors: Record<string, string> = {}
+    if (!form.name.trim()) errors.name = "Name is required"
+    if (!form.email.trim()) errors.email = "Email is required"
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = "Please enter a valid email"
+    if (!form.title.trim()) errors.title = "Title is required"
+    if (!form.company.trim()) errors.company = "Company is required"
+    if (!form.country) errors.country = "Country is required"
+    if (!form.sector) errors.sector = "Sector is required"
+    if (!form.bio.trim()) errors.bio = "Tagline is required"
+    if (!form.quote.trim()) errors.quote = "Quote is required"
+    if (!form.impact.trim()) errors.impact = "Impact statement is required"
+    if (!form.linkedin.trim()) errors.linkedin = "LinkedIn URL is required"
+    else if (!/^https?:\/\/.+/.test(form.linkedin)) errors.linkedin = "Please enter a valid URL"
+    return errors
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const errors = validate()
+    setFieldErrors(errors)
+    if (Object.keys(errors).length > 0) return
     setStatus("submitting")
     try {
       const res = await fetch("/api/apply", {
@@ -140,18 +163,22 @@ export default function Apply() {
                 <Field label="Full Name *" required>
                   <input required type="text" placeholder="Kareem Kaddoura" value={form.name} onChange={set("name")}
                     className={inputCn} />
+                  {fieldErrors.name && <p className="text-xs text-primary mt-1">{fieldErrors.name}</p>}
                 </Field>
                 <Field label="Email *" required>
                   <input required type="email" placeholder="you@company.com" value={form.email} onChange={set("email")}
                     className={inputCn} />
+                  {fieldErrors.email && <p className="text-xs text-primary mt-1">{fieldErrors.email}</p>}
                 </Field>
                 <Field label="Title / Role *" required>
                   <input required type="text" placeholder="Founder & CEO" value={form.title} onChange={set("title")}
                     className={inputCn} />
+                  {fieldErrors.title && <p className="text-xs text-primary mt-1">{fieldErrors.title}</p>}
                 </Field>
                 <Field label="Company / Organisation *" required>
                   <input required type="text" placeholder="Your Company" value={form.company} onChange={set("company")}
                     className={inputCn} />
+                  {fieldErrors.company && <p className="text-xs text-primary mt-1">{fieldErrors.company}</p>}
                 </Field>
                 <Field label="City">
                   <input type="text" placeholder="Dubai" value={form.city} onChange={set("city")}
@@ -162,12 +189,14 @@ export default function Apply() {
                     <option value="">Select country…</option>
                     {countries.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
+                  {fieldErrors.country && <p className="text-xs text-primary mt-1">{fieldErrors.country}</p>}
                 </Field>
                 <Field label="Sector *" required className="sm:col-span-2">
                   <select required value={form.sector} onChange={set("sector")} className={inputCn}>
                     <option value="">Select sector…</option>
                     {sectors.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
+                  {fieldErrors.sector && <p className="text-xs text-primary mt-1">{fieldErrors.sector}</p>}
                 </Field>
               </div>
             </div>
@@ -181,16 +210,19 @@ export default function Apply() {
                   <textarea required rows={3} value={form.bio} onChange={set("bio")}
                     placeholder="e.g. 'Co-founded MUNCH:ON (2017), scaled to 50,000 corporate users across the Gulf, sold to Careem in 2022. Now building the next one.'"
                     className={cn(inputCn, "resize-none")} />
+                  {fieldErrors.bio && <p className="text-xs text-primary mt-1">{fieldErrors.bio}</p>}
                 </Field>
                 <Field label="Signature Quote *" required hint="One sentence. First person. Specific to your experience. Not a motivational poster.">
                   <input required type="text" value={form.quote} onChange={set("quote")}
                     placeholder='"The best time to build in the Middle East was 10 years ago. The second best time is now." — make it yours.'
                     className={inputCn} />
+                  {fieldErrors.quote && <p className="text-xs text-primary mt-1">{fieldErrors.quote}</p>}
                 </Field>
                 <Field label="Impact Statement *" required hint="What is the one most impressive thing you have built, led, or achieved?">
                   <textarea required rows={3} value={form.impact} onChange={set("impact")}
                     placeholder="Named outcomes: revenue generated, users reached, employees hired, exits completed, publications, awards."
                     className={cn(inputCn, "resize-none")} />
+                  {fieldErrors.impact && <p className="text-xs text-primary mt-1">{fieldErrors.impact}</p>}
                 </Field>
               </div>
             </div>
@@ -202,6 +234,7 @@ export default function Apply() {
               <Field label="LinkedIn Profile URL *" required hint="Must match your name and current role.">
                 <input required type="url" placeholder="https://linkedin.com/in/yourprofile" value={form.linkedin} onChange={set("linkedin")}
                   className={inputCn} />
+                {fieldErrors.linkedin && <p className="text-xs text-primary mt-1">{fieldErrors.linkedin}</p>}
               </Field>
             </div>
 
