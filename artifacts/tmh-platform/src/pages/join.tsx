@@ -45,7 +45,7 @@ export default function Join() {
           </span>
         </Link>
         <div className="flex items-center gap-6">
-          <Link href="/polls" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">Polls</Link>
+          <Link href="/debates" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">Debates</Link>
           <Link href="/profiles" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">Voices</Link>
           <Link href="/about" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">About</Link>
         </div>
@@ -117,7 +117,7 @@ export default function Join() {
         </div>
 
         <div className="mt-6 text-center border-t border-border pt-6">
-          <Link href="/polls" className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground transition-colors font-serif">
+          <Link href="/debates" className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground transition-colors font-serif">
             Browse All Debates →
           </Link>
         </div>

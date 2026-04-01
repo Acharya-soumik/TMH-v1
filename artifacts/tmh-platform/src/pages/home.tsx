@@ -535,7 +535,7 @@ function LiveActivity() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
           >
-            <Link href={`/polls/${item.pollId}`} className="group block">
+            <Link href={`/debates/${item.pollId}`} className="group block">
               <p className="font-sans text-sm text-foreground/80 leading-relaxed group-hover:text-foreground transition-colors">
                 <span className="mr-2">
                   {FLAG_MAP[item.countryCode ?? ""] ?? "🌍"}
@@ -1614,7 +1614,7 @@ export default function Home() {
           <StaggerGrid className="grid grid-cols-2 md:grid-cols-4 gap-0">
             {[
               {
-                href: "/polls",
+                href: "/debates",
                 label: t("Debates"),
                 desc: "Vote on the questions shaping MENA",
                 count: String(
@@ -1825,7 +1825,7 @@ export default function Home() {
                   {t("Latest Debates")}
                 </p>
                 <Link
-                  href="/polls"
+                  href="/debates"
                   className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground font-serif transition-colors"
                 >
                   {t("View All")}
@@ -1843,7 +1843,7 @@ export default function Home() {
                 <StaggerGrid>
                   {trendingPolls?.polls?.slice(0, 4).map((poll) => (
                     <motion.div key={poll.id} variants={staggerItem}>
-                    <Link href={`/polls/${poll.id}`}>
+                    <Link href={`/debates/${poll.id}`}>
                       <motion.div
                         className="py-3 border-b border-border group cursor-pointer"
                         whileHover={{ x: 4 }}
@@ -2558,7 +2558,7 @@ export default function Home() {
               {categories.categories.map((cat) => (
                 <Link
                   key={cat.slug}
-                  href={`/polls?category=${cat.slug}`}
+                  href={`/debates?category=${cat.slug}`}
                   className="bg-secondary p-5 flex flex-col justify-between transition-all hover:bg-foreground hover:text-background group border border-border hover:-translate-y-0.5 hover:shadow-md duration-300"
                 >
                   <span className="font-serif font-bold uppercase tracking-wider text-base mb-3 leading-tight">

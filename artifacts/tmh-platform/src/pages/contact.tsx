@@ -228,7 +228,7 @@ export default function Contact() {
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <a
-              href="/polls"
+              href="/debates"
               className="bg-foreground text-background px-6 py-2.5 font-bold uppercase tracking-widest text-[10px] hover:bg-primary transition-colors font-serif"
             >
               {t("Enter The Debates")}

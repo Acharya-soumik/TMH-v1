@@ -348,7 +348,7 @@ const AR: Record<string, string> = {
   "What is The Tribunal?": "شو هي المحكمة؟",
   "Is The Tribunal free to use?": "هل المحكمة مجانية؟",
   "Who is behind The Tribunal?": "مين ورا المحكمة؟",
-  "Are the polls scientific?": "هل الاستطلاعات علمية؟",
+  "Are the debates scientific?": "هل الاستطلاعات علمية؟",
 
   "How do the debates work?": "كيف تشتغل المناظرات؟",
   "Can I vote more than once?": "فيني صوّت أكتر من مرة؟",

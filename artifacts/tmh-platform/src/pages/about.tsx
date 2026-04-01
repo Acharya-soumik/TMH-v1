@@ -9,7 +9,7 @@ const FALLBACK_PILLARS = [
     num: "01",
     title: "Debates",
     body: "The questions no one asks out loud — about identity, money, religion, gender, power, and the future. Every debate is anonymous. Every vote is permanent. What the region thinks stays on record.",
-    link: "/polls",
+    link: "/debates",
     cta: "Enter the Debates",
   },
   {
@@ -324,7 +324,7 @@ export default function About() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/polls"
+              href="/debates"
               className="bg-foreground text-background px-8 py-3 font-bold uppercase tracking-widest text-xs hover:bg-primary transition-colors font-serif"
             >
               {t("Cast Your Vote")}

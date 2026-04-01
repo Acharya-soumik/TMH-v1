@@ -275,7 +275,7 @@ function CreatePollForm({ adminKey, onCreated }: { adminKey: string; onCreated: 
           type="submit" disabled={saving}
           className="px-6 py-2.5 bg-primary text-white font-black uppercase tracking-[0.15em] text-[11px] hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
-          {saving ? "Publishing…" : "Publish Poll"}
+          {saving ? "Publishing…" : "Publish Debate"}
         </button>
         {success && <span className="text-green-500 font-bold text-[11px] uppercase tracking-widest">Poll published!</span>}
       </div>
@@ -359,7 +359,7 @@ export default function Admin() {
 
   const tabs = [
     { id: "applications", label: "Applications", icon: FileText },
-    { id: "create-poll", label: "Create Poll", icon: PlusCircle },
+    { id: "create-poll", label: "Create Debate", icon: PlusCircle },
     { id: "stats", label: "Stats", icon: BarChart2 },
   ] as const
 
@@ -471,7 +471,7 @@ export default function Admin() {
               { label: "Total Applications", value: stats.applications },
               { label: "Pending Review", value: stats.pendingApplications },
               { label: "Subscribers", value: stats.subscribers },
-              { label: "Live Polls", value: stats.polls },
+              { label: "Live Debates", value: stats.polls },
               { label: "Total Votes", value: stats.totalVotes?.toLocaleString() },
             ].map(s => (
               <div key={s.label} className="border border-border bg-card p-6">

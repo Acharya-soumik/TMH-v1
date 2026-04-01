@@ -347,7 +347,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
             </div>
           </div>
 
-          <Link href={`/polls/${poll.id}`}>
+          <Link href={`/debates/${poll.id}`}>
             <h3 className={cn(
               "font-serif font-black text-foreground uppercase tracking-tight hover:text-primary transition-colors cursor-pointer mb-4",
               featured ? "text-4xl md:text-5xl leading-none" : "text-3xl leading-none"
@@ -378,7 +378,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
               )}
             </div>
             {!featured && (
-              <Link href={`/polls/${poll.id}`} className="text-foreground hover:text-primary flex items-center gap-1 transition-colors font-bold">
+              <Link href={`/debates/${poll.id}`} className="text-foreground hover:text-primary flex items-center gap-1 transition-colors font-bold">
                 VIEW <ArrowRight className="w-3 h-3" />
               </Link>
             )}

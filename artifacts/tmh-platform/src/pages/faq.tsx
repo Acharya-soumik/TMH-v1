@@ -29,8 +29,8 @@ const FAQ_SECTIONS_DEFAULT: FaqSection[] = [
         a: "The Tribunal was founded by Kareem Kaddoura under The Middle East Hustle. The platform is editorially independent — no government, political party, or corporate entity funds or influences the questions we ask or the results we publish.",
       },
       {
-        q: "Are the polls scientific?",
-        a: "No. Our polls are not statistically representative surveys. They represent the self-selected opinions of people who visit the platform. They should be understood as sentiment indicators, not scientific research. We never present results as nationally representative data.",
+        q: "Are the debates scientific?",
+        a: "No. Our debates are not statistically representative surveys. They represent the self-selected opinions of people who visit the platform. They should be understood as sentiment indicators, not scientific research. We never present results as nationally representative data.",
       },
     ],
   },

@@ -42,7 +42,7 @@ export default function NotFound() {
             {t("Go to Homepage")}
           </Link>
           <Link
-            href="/polls"
+            href="/debates"
             className="border border-foreground text-foreground px-8 py-3 font-bold uppercase tracking-widest text-xs hover:bg-foreground hover:text-background transition-colors font-serif"
           >
             {t("Enter The Debates")}
