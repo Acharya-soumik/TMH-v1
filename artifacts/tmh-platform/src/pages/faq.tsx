@@ -39,7 +39,7 @@ const FAQ_SECTIONS_DEFAULT: FaqSection[] = [
     questions: [
       {
         q: "How do the debates work?",
-        a: "Every debate is a single question with multiple options. You click your answer. Your vote is anonymous — we don't store your IP address or personally identify you. After voting, you unlock full results either by sharing the debate on social media (WhatsApp, X, LinkedIn, Telegram) or entering your email. This Share Gate is what makes The Tribunal viral — the results spread with every share.",
+        a: "Every debate is a single question with multiple options. You click your answer. Your vote is anonymous — we don't store your IP address or personally identify you. After voting, you unlock full results by sharing the debate on social media (WhatsApp, X, LinkedIn, Telegram) or entering your email. This Share Gate is what makes The Tribunal viral — the results spread with every share.",
       },
       {
         q: "Can I vote more than once?",
@@ -55,7 +55,7 @@ const FAQ_SECTIONS_DEFAULT: FaqSection[] = [
       },
       {
         q: "What is the Country Breakdown?",
-        a: "Once you unlock results, you see how votes broke down by country across all 19 MENA nations. Knowing that Egyptians voted differently from Emiratis on the same question tells a real story. Country is derived from your IP at the moment of voting — the IP itself is never stored.",
+        a: "The Country Breakdown is a planned feature that will show how votes break down by country across MENA nations. Knowing that Egyptians voted differently from Emiratis on the same question tells a real story. This feature is coming soon.",
       },
     ],
   },
@@ -77,7 +77,7 @@ const FAQ_SECTIONS_DEFAULT: FaqSection[] = [
     questions: [
       {
         q: "What is The Pulse?",
-        a: "The Pulse is our data-driven trend tracking page — think 'Exploding Topics' but built specifically for the MENA region. It features 36 trend cards across 8 categories (Power, Money, Society, Tech, Survival, Migration, Culture, Health) tracking what's actually moving — and what's breaking — across the region. Filter by category. Each card includes real data, growth metrics, source attribution, and context.",
+        a: "The Pulse is our data-driven trend tracking page — think 'Exploding Topics' but built specifically for the MENA region. It features 50+ trend cards across 8 categories (Power, Money, Society, Tech, Survival, Migration, Culture, Health) tracking what's actually moving — and what's breaking — across the region. Filter by category. Each card includes real data, growth metrics, source attribution, and context.",
       },
       {
         q: "How are Pulse trends selected?",
@@ -107,15 +107,15 @@ const FAQ_SECTIONS_DEFAULT: FaqSection[] = [
     questions: [
       {
         q: "What data do you collect?",
-        a: "When you vote: your vote selection, the debate ID, timestamp, and your approximate country (derived from IP at voting time — the IP itself is never stored). When you give us your email: your email address and how you signed up. We don't use tracking pixels, retargeting, or cross-site analytics. See our Terms & Conditions for the full breakdown.",
+        a: "When you vote: your vote selection, the debate ID, and timestamp. When you give us your email: your email address and how you signed up. We don't use tracking pixels, retargeting, or cross-site analytics. We do not store your IP address. See our Terms & Conditions for the full breakdown.",
       },
       {
         q: "Do you track my IP address?",
-        a: "We use your IP address briefly at the moment of voting to determine your country (e.g., 'UAE,' 'Egypt'). The IP itself is discarded immediately. Only the country name is stored with your vote. We never log, store, or share full IP addresses.",
+        a: "No. We do not store, log, or share your IP address. Your vote is recorded anonymously with only your vote selection and a random device token. Geographic breakdowns may be added in a future update using privacy-preserving methods.",
       },
       {
         q: "Where does the country data in results come from?",
-        a: "Every vote is tagged with the country associated with the voter's IP at the moment of voting. VPN users may show an incorrect country. Country data is presented in aggregate — you can never identify an individual voter from our published breakdowns.",
+        a: "Geographic breakdowns are a planned feature. When available, country data will be presented in aggregate — you will never be able to identify an individual voter from published breakdowns.",
       },
     ],
   },
