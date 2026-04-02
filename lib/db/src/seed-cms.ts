@@ -4142,7 +4142,7 @@ const PAGE_CONFIGS_SEED: Record<string, unknown> = {
     successMessage: {
       title: "Application Received.",
       subtitle:
-        "Our AI review runs in minutes. You'll hear back within 48 hours.",
+        "We are reviewing your application. You'll hear back within 48 hours.",
       cta: "Go Vote",
     },
     disclaimer:
