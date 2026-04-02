@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Search, X, Share2, CheckCircle2, MessageSquare } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useToast } from "@/hooks/use-toast";
+import { ShareModal } from "@/components/ShareModal";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
 
@@ -317,47 +318,38 @@ async function predCopyText(text: string): Promise<boolean> {
 }
 
 function PredShareBtn({ question, id }: { question: string; id: number }) {
-  const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
+  const [showModal, setShowModal] = useState(false);
   const url =
     typeof window !== "undefined"
       ? `${window.location.origin}/predictions?shared=${id}`
       : `/predictions?shared=${id}`;
 
-  const handleShare = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (navigator.share) {
-      try {
-        await navigator.share({ url, title: question });
-        return;
-      } catch (err) {
-        if ((err as Error).name === "AbortError") return;
-      }
-    }
-    const ok = await predCopyText(url);
-    if (ok) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      toast({ title: "Link copied!", description: "Share this prediction." });
-    }
-  };
-
   return (
-    <button
-      onClick={handleShare}
-      title="Share"
-      style={{
-        background: "none",
-        border: "none",
-        cursor: "pointer",
-        padding: "4px",
-        color: copied ? "#10B981" : "rgba(250,250,250,0.4)",
-        transition: "color 0.15s",
-      }}
-    >
-      {copied ? <CheckCircle2 size={14} /> : <Share2 size={14} />}
-    </button>
+    <>
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowModal(true); }}
+        title="Share"
+        style={{
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: "4px",
+          color: "rgba(250,250,250,0.4)",
+          transition: "color 0.15s",
+        }}
+      >
+        <Share2 size={14} />
+      </button>
+      {showModal && (
+        <ShareModal
+          url={url}
+          title={question}
+          heading="Share to Unlock Full Results"
+          body="We keep The Tribunal free by making opinion data shareable. Share this prediction to see the full breakdown."
+          onClose={() => setShowModal(false)}
+        />
+      )}
+    </>
   );
 }
 

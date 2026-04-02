@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 import { ResultsBreakdown } from "./ResultsBreakdown"
 import { generateShareCard, generateStoryCard, getPollUrl, getWhatsAppUrl, getLinkedInUrl } from "@/lib/shareCard"
 import { ShareToMajlisModal } from "@/components/ShareToMajlisModal"
+import { ShareModal } from "@/components/ShareModal"
 
 interface PollCardProps {
   poll: Poll
@@ -79,6 +80,8 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
   const [wasFirstTimer, setWasFirstTimer] = useState(false)
   const [showShareTooltip, setShowShareTooltip] = useState(false)
   const [showMajlisShare, setShowMajlisShare] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [showGateModal, setShowGateModal] = useState(true)
   const shareTooltipRef = useRef<HTMLDivElement>(null)
   const hasMajlisToken = typeof window !== "undefined" && !!localStorage.getItem("majlis_token")
 
@@ -128,7 +131,9 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
     )
 
     const alreadyUnlocked = localStorage.getItem("tmh_email_submitted") || localStorage.getItem(`tmh_unlocked_${poll.id}`)
-    setTimeout(() => alreadyUnlocked ? unlock() : setPhase("gate"), 500)
+    setTimeout(() => {
+      if (alreadyUnlocked) { unlock() } else { setShowGateModal(true); setPhase("gate") }
+    }, 500)
   }
 
   const handleShareWhatsApp = () => {
@@ -201,30 +206,10 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
     setTimeout(unlock, 500)
   }
 
-  const handleCardShareIcon = async (e: React.MouseEvent) => {
+  const handleCardShareIcon = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    const url = getPollUrl(poll.id)
-
-    // Mobile: use native share sheet (iOS share menu, Android intent)
-    if (navigator.share) {
-      try {
-        await navigator.share({ url, title: poll.question })
-        return
-      } catch (err) {
-        if ((err as Error).name === "AbortError") return
-        // share failed for other reason, fall through to clipboard
-      }
-    }
-
-    // Desktop: clipboard copy
-    const ok = await copyToClipboard(url)
-    if (ok) {
-      toast({ title: "Link copied!" })
-    } else {
-      setShowShareTooltip(true)
-      setTimeout(() => setShowShareTooltip(false), 4000)
-    }
+    setShowShareModal(true)
   }
 
   const handleEmailUnlock = (e: React.FormEvent) => {
@@ -581,11 +566,11 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
       </div>
 
       {/* ── SHARE GATE OVERLAY ── */}
-      {phase === "gate" && (
+      {phase === "gate" && showGateModal && (
         <div
           className="fixed inset-0 z-[500] flex items-center justify-center p-4"
           style={{ background: "rgba(10,10,10,0.88)", backdropFilter: "blur(14px)" }}
-          onClick={unlock}
+          onClick={() => setShowGateModal(false)}
         >
           <div
             className="tmh-gate-card relative w-full max-w-lg rounded-[14px] p-8 sm:p-10 space-y-5"
@@ -594,7 +579,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
           >
             {/* Close hint */}
             <button
-              onClick={unlock}
+              onClick={() => setShowGateModal(false)}
               className="absolute top-4 right-4 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground font-serif"
             >
               {shareGate?.skipText || "Skip →"}
@@ -709,6 +694,16 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
         <ShareToMajlisModal
           shareString={`[share:debate:${poll.id}|${poll.question}|${localTotal} votes|${poll.category}]`}
           onClose={() => setShowMajlisShare(false)}
+        />
+      )}
+
+      {showShareModal && (
+        <ShareModal
+          url={getPollUrl(poll.id)}
+          title={poll.question}
+          heading="Share to Unlock Full Results"
+          body="We keep The Tribunal free by making opinion data shareable. Share this debate to see the full breakdown."
+          onClose={() => setShowShareModal(false)}
         />
       )}
     </>
