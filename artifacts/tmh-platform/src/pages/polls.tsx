@@ -8,6 +8,8 @@ import { Search, X } from "lucide-react";
 import { usePageConfig } from "@/hooks/use-cms-data";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { motion, useInView, useReducedMotion } from "motion/react";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { LoadingDots } from "@/components/ui/loading-dots";
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
@@ -81,6 +83,8 @@ export default function Polls() {
       .sort((a, b) => b.score - a.score)
       .map(({ poll }) => poll);
   }, [pollsData?.polls, searchQuery]);
+
+  const { sentinelRef, visibleItems: visiblePolls, hasMore } = useInfiniteScroll(filteredPolls, 10);
 
   const tabs = [
     { id: "latest", label: "Latest" },
@@ -368,12 +372,17 @@ export default function Polls() {
                 animate="visible"
                 variants={staggerContainer}
               >
-                {filteredPolls.map((poll) => (
+                {visiblePolls.map((poll) => (
                   <motion.div key={poll.id} variants={staggerItem}>
                     <PollCard poll={poll} />
                   </motion.div>
                 ))}
               </motion.div>
+              {hasMore && (
+                <div ref={sentinelRef} className="flex justify-center py-8">
+                  <LoadingDots />
+                </div>
+              )}
             </>
           )}
         </div>

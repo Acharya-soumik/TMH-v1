@@ -4,6 +4,7 @@ import { Search, X, Share2, CheckCircle2, MessageSquare } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useToast } from "@/hooks/use-toast";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { LoadingDots } from "@/components/ui/loading-dots";
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
@@ -1643,8 +1644,7 @@ export default function Predictions() {
               <motion.div
                 className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8"
                 initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.05 }}
+                animate="visible"
                 variants={staggerContainer}
               >
                 {visibleCards.map((card, index, arr) => (
@@ -1661,7 +1661,7 @@ export default function Predictions() {
               </motion.div>
               {hasMore && (
                 <div ref={sentinelRef} className="flex justify-center py-8">
-                  <div className="w-6 h-6 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+                  <LoadingDots />
                 </div>
               )}
             </>

@@ -15,7 +15,7 @@ export function Navbar() {
   const [isHidden, setIsHidden] = useState(false)
   const lastScrollY = useRef(0)
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { data: settings } = useSiteSettings()
+  const { data: settings, isLoading: settingsLoading } = useSiteSettings()
 
   useEffect(() => {
     const clearIdleTimer = () => {
@@ -108,7 +108,7 @@ export function Navbar() {
 
           </div>
 
-          <nav className="hidden md:flex items-center gap-3 lg:gap-8">
+          <nav className={cn("hidden md:flex items-center gap-3 lg:gap-8 transition-opacity duration-300", settingsLoading ? "opacity-0" : "opacity-100")}>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -127,7 +127,7 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-3">
-            {ctaButton && (
+            {ctaButton && !settingsLoading && (
             <Link
               href={ctaButton.href}
               className="hidden lg:flex items-center gap-2 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.15em] px-4 py-2 hover:bg-primary/90 transition-colors font-serif"
@@ -159,7 +159,7 @@ export function Navbar() {
         </div>
       </div>
 
-      {mobileMenuOpen && (
+      {mobileMenuOpen && !settingsLoading && (
         <div className="md:hidden absolute top-full left-0 w-full bg-background border-b border-border shadow-xl z-50">
           <div className="px-6 py-6 flex flex-col gap-1">
             {navLinks.map((link) => (

@@ -8,6 +8,8 @@ import { Link } from "wouter";
 import { usePageConfig } from "@/hooks/use-cms-data";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { motion, useReducedMotion } from "motion/react";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { LoadingDots } from "@/components/ui/loading-dots";
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
@@ -195,6 +197,8 @@ export default function Profiles() {
     if (country === "all") return data.profiles;
     return data.profiles.filter((p) => p.country === country);
   }, [data?.profiles, country]);
+
+  const { sentinelRef, visibleItems: visibleProfiles, hasMore } = useInfiniteScroll(filtered, 12);
 
   const filteredCountries = useMemo(() => {
     const set = new Set(filtered.map((p) => p.country).filter(Boolean));
@@ -483,18 +487,25 @@ export default function Profiles() {
             </p>
           </motion.div>
         ) : (
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-          >
-            {filtered.map((profile) => (
-              <motion.div key={profile.id} variants={staggerItem} whileHover={{ y: -4 }}>
-                <ProfileCard profile={profile} />
-              </motion.div>
-            ))}
-          </motion.div>
+          <>
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              initial="hidden"
+              animate="visible"
+              variants={staggerContainer}
+            >
+              {visibleProfiles.map((profile) => (
+                <motion.div key={profile.id} variants={staggerItem} whileHover={{ y: -4 }}>
+                  <ProfileCard profile={profile} />
+                </motion.div>
+              ))}
+            </motion.div>
+            {hasMore && (
+              <div ref={sentinelRef} className="flex justify-center py-8">
+                <LoadingDots />
+              </div>
+            )}
+          </>
         )}
       </div>
     </Layout>

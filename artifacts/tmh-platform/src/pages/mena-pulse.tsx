@@ -10,6 +10,8 @@ import {
   type ApiPulseTopic,
 } from "@/hooks/use-cms-data";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { LoadingDots } from "@/components/ui/loading-dots";
 
 const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
 const BASE_DATE = new Date("2026-01-01T00:00:00Z").getTime();
@@ -1806,6 +1808,8 @@ export default function MenaPulse() {
     return result;
   }, [activeCategory, searchQuery, allTopics]);
 
+  const { sentinelRef, visibleItems: visibleTopics, hasMore } = useInfiniteScroll(filtered, 10);
+
   return (
     <Layout>
       <style>{`
@@ -2136,10 +2140,15 @@ export default function MenaPulse() {
                 gap: 12,
               }}
             >
-              {filtered.map((topic, i) => (
+              {visibleTopics.map((topic, i) => (
                 <TopicCardComponent key={topic.id} topic={topic} index={i} highlighted={highlightedId === topic.id} />
               ))}
             </div>
+            {hasMore && (
+              <div ref={sentinelRef} className="flex justify-center py-8">
+                <LoadingDots />
+              </div>
+            )}
           </div>
 
           <div
