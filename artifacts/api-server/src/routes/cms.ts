@@ -1280,10 +1280,11 @@ router.post("/cms/applications/:id/invite-majlis", requireCmsAuth, async (req, r
     });
 
     // Send invite email via Resend
+    let emailSent = false;
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
     if (RESEND_API_KEY) {
       try {
-        await fetch("https://api.resend.com/emails", {
+        const emailRes = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -1293,6 +1294,7 @@ router.post("/cms/applications/:id/invite-majlis", requireCmsAuth, async (req, r
             text: `Hi ${app.name},\n\nYou've been approved to join The Majlis — our private chat room for verified voices across MENA.\n\nYour invite code: ${token}\n\nUse it to register at: https://themiddleeasthustle.com/majlis/register\n\nThis code expires in 30 days.\n\nThe Tribunal, by The Middle East Hustle`,
           }),
         });
+        emailSent = emailRes.ok;
         console.log(`[CMS] Majlis invite email sent to ${app.email} | Code: ${token}`);
       } catch (err) {
         console.error("[CMS] Majlis invite email failed:", err);
@@ -1300,7 +1302,7 @@ router.post("/cms/applications/:id/invite-majlis", requireCmsAuth, async (req, r
     }
 
     console.log(`[CMS] Majlis invite created for ${app.email} | Code: ${token} | ProfileId: ${profile.id}`);
-    return res.json({ success: true, token, profileId: profile.id });
+    return res.json({ success: true, token, profileId: profile.id, emailSent });
   } catch (err) {
     console.error("Invite Majlis error:", err);
     return res.status(500).json({ error: "Failed to create Majlis invite" });

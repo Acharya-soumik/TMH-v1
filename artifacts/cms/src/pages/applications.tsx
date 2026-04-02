@@ -52,7 +52,7 @@ export default function ApplicationsPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
   const [inviting, setInviting] = useState(false);
-  const [inviteResult, setInviteResult] = useState<{ token?: string; error?: string } | null>(null);
+  const [inviteResult, setInviteResult] = useState<{ token?: string; error?: string; alreadyInvited?: boolean; emailSent?: boolean } | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -93,7 +93,7 @@ export default function ApplicationsPage() {
     setInviteResult(null);
     try {
       const data = await api.inviteToMajlis(id);
-      setInviteResult({ token: data.token });
+      setInviteResult({ token: data.token, alreadyInvited: !!data.alreadyInvited, emailSent: !!data.emailSent });
     } catch (err) {
       setInviteResult({ error: err instanceof Error ? err.message : "Failed to invite" });
     } finally {
@@ -244,18 +244,21 @@ export default function ApplicationsPage() {
                   {app.wantsMajlis && (
                     <button
                       onClick={() => handleInviteMajlis(app.id)}
-                      disabled={inviting}
+                      disabled={inviting || !!(inviteResult && inviteResult.token && expandedId === app.id)}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white text-sm hover:bg-purple-700 transition-colors disabled:opacity-50 ml-auto"
                     >
-                      <Send className="w-3.5 h-3.5" /> {inviting ? "Inviting..." : "Invite to Majlis"}
+                      <Send className="w-3.5 h-3.5" /> {inviting ? "Inviting..." : inviteResult?.token && expandedId === app.id ? "Invited" : "Invite to Majlis"}
                     </button>
                   )}
                 </div>
                 {inviteResult && expandedId === app.id && (
                   <div className={`text-sm px-3 py-2 ${inviteResult.token ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
-                    {inviteResult.token
-                      ? `Invite sent! Code: ${inviteResult.token}`
-                      : inviteResult.error}
+                    {inviteResult.token ? (
+                      <>
+                        {inviteResult.alreadyInvited ? "Already invited." : "Invite created."} Code: <span className="font-mono font-bold">{inviteResult.token}</span>
+                        {!inviteResult.emailSent && <span className="text-yellow-400 ml-2">(email not sent — RESEND_API_KEY not configured)</span>}
+                      </>
+                    ) : inviteResult.error}
                   </div>
                 )}
               </div>
