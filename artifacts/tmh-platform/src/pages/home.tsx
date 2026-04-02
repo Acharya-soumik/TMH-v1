@@ -1324,7 +1324,7 @@ export default function Home() {
   const { data: apiPulseTopics } = usePulseTopics();
   const { data: liveCounts } = useLiveCounts();
   const { data: homepageConfig } = useHomepageConfig<{
-    masthead?: { basePopulation?: number; growthRate?: number };
+    masthead?: { basePopulation?: number; growthRate?: number; countries?: string[] };
     populationBase?: number;
     populationBaseDate?: string;
     growthRate?: number;
@@ -1597,6 +1597,16 @@ export default function Home() {
                 >
                   {t("Voices connecting globally")}
                 </motion.p>
+                {(homepageConfig?.masthead?.countries?.length ?? 0) > 0 && (
+                  <motion.p
+                    className="text-[10px] font-serif tracking-[0.2em] uppercase text-muted-foreground mt-2 hidden lg:block"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 1.3 }}
+                  >
+                    {homepageConfig!.masthead!.countries!.length} {t("countries")}
+                  </motion.p>
+                )}
               </div>
 
               {/* Right: Globe */}

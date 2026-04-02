@@ -74,6 +74,23 @@ export function ResultsBreakdown({ pollId, totalVotes, userCountry }: ResultsBre
 
   if (!loaded) return null
 
+  // Hide the entire section when no real country data exists (geo IP not yet implemented)
+  if (isFallback) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7, duration: 0.4 }}
+        className="border-t-2 border-foreground mt-6 pt-5"
+      >
+        <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-muted-foreground mb-2">
+          By Country
+        </p>
+        <p className="text-xs text-muted-foreground italic">Geographic breakdown available after launch.</p>
+      </motion.div>
+    )
+  }
+
   const topPct = Math.max(...countries.map(c => c.percentage), 1)
 
   return (
@@ -87,11 +104,6 @@ export function ResultsBreakdown({ pollId, totalVotes, userCountry }: ResultsBre
         <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-muted-foreground">
           By Country
         </p>
-        {isFallback && (
-          <span className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-serif">
-            Estimated
-          </span>
-        )}
       </div>
 
       <div className="space-y-3">
@@ -134,13 +146,13 @@ export function ResultsBreakdown({ pollId, totalVotes, userCountry }: ResultsBre
                     className={cn("h-full", i === 0 ? "bg-primary" : "bg-foreground/30")}
                   />
                 </div>
-                {!isFallback && country.topOptionText && (
+                {country.topOptionText && (
                   <p className="text-[9px] text-muted-foreground font-sans mt-1 truncate">
                     Most voted: <span className="text-foreground/70 font-medium">"{country.topOptionText}"</span>
                   </p>
                 )}
               </div>
-              {!isFallback && country.count > 0 && (
+              {country.count > 0 && (
                 <span className="text-[9px] text-muted-foreground font-sans flex-shrink-0 w-10 text-right mt-0.5">
                   {country.count.toLocaleString()}
                 </span>
@@ -151,9 +163,7 @@ export function ResultsBreakdown({ pollId, totalVotes, userCountry }: ResultsBre
       </div>
 
       <p className="text-[9px] text-muted-foreground mt-4 font-sans">
-        {isFallback
-          ? `Based on ${totalVotes.toLocaleString()} votes · Country breakdown unlocks as more votes arrive`
-          : `Based on ${totalVotes.toLocaleString()} votes with location data`}
+        {`Based on ${totalVotes.toLocaleString()} votes with location data`}
       </p>
     </motion.div>
   )
