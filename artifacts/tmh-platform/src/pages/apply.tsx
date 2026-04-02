@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef, useEffect } from "react"
 import { Layout } from "@/components/layout/Layout"
 import { CheckCircle2, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -15,9 +15,10 @@ const FALLBACK_CRITERIA = [
 ]
 
 const FALLBACK_COUNTRIES = [
-  "UAE", "Saudi Arabia", "Egypt", "Jordan", "Lebanon", "Kuwait",
-  "Bahrain", "Qatar", "Oman", "Morocco", "Tunisia", "Iraq",
-  "Palestine", "Other MENA", "Diaspora"
+  "Algeria", "Bahrain", "Djibouti", "Egypt", "Iran", "Iraq",
+  "Jordan", "Kuwait", "Lebanon", "Libya", "Mauritania", "Morocco",
+  "Oman", "Palestine", "Qatar", "Saudi Arabia", "Somalia", "Sudan",
+  "Syria", "Tunisia", "Turkey", "UAE", "Yemen", "Diaspora"
 ]
 
 const FALLBACK_SECTORS = [
@@ -47,6 +48,10 @@ export default function Apply() {
     bio: "", quote: "", linkedin: "", impact: "",
   })
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [countrySearch, setCountrySearch] = useState("")
+  const [countryOpen, setCountryOpen] = useState(false)
+  const [isOtherCountry, setIsOtherCountry] = useState(false)
+  const countryRef = useRef<HTMLDivElement>(null)
   const { data: pageConfig } = usePageConfig<ApplyConfig>("apply")
 
   const hero = pageConfig?.hero
@@ -55,6 +60,21 @@ export default function Apply() {
   const sectors = useMemo(() => pageConfig?.sectors?.length ? pageConfig.sectors : FALLBACK_SECTORS, [pageConfig])
   const successMsg = pageConfig?.successMessage
   const disclaimer = pageConfig?.disclaimer
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (countryRef.current && !countryRef.current.contains(e.target as Node)) {
+        setCountryOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  const filteredCountries = useMemo(() => {
+    if (!countrySearch.trim()) return countries
+    return countries.filter(c => c.toLowerCase().includes(countrySearch.toLowerCase()))
+  }, [countries, countrySearch])
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm(prev => ({ ...prev, [k]: e.target.value }))
@@ -194,10 +214,73 @@ export default function Apply() {
                     className={inputCn} />
                 </Field>
                 <Field label="Country *" required>
-                  <select required value={form.country} onChange={set("country")} className={inputCn}>
-                    <option value="">Select country…</option>
-                    {countries.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <div ref={countryRef} className="relative">
+                    {isOtherCountry ? (
+                      <>
+                        <div
+                          onClick={() => { setIsOtherCountry(false); setForm(prev => ({ ...prev, country: "" })); setCountrySearch(""); }}
+                          className={cn(inputCn, "cursor-pointer text-primary font-bold flex items-center justify-between")}
+                        >
+                          Other
+                          <span className="text-xs text-muted-foreground font-normal">click to change</span>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Type your country…"
+                          value={form.country}
+                          onChange={set("country")}
+                          className={cn(inputCn, "mt-2")}
+                          autoFocus
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          placeholder="Search country…"
+                          value={countrySearch}
+                          onChange={(e) => {
+                            setCountrySearch(e.target.value)
+                            setCountryOpen(true)
+                            setForm(prev => ({ ...prev, country: "" }))
+                          }}
+                          onFocus={() => setCountryOpen(true)}
+                          className={inputCn}
+                        />
+                        {countryOpen && (
+                          <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-background border border-border">
+                            {filteredCountries.map(c => (
+                              <button
+                                key={c}
+                                type="button"
+                                onClick={() => {
+                                  setForm(prev => ({ ...prev, country: c }))
+                                  setCountrySearch(c)
+                                  setCountryOpen(false)
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm font-sans text-foreground hover:bg-primary/10 transition-colors"
+                              >
+                                {c}
+                              </button>
+                            ))}
+                            {filteredCountries.length === 0 && countrySearch.trim() && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsOtherCountry(true)
+                                  setCountryOpen(false)
+                                  setForm(prev => ({ ...prev, country: "" }))
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm font-sans text-primary font-bold hover:bg-primary/10 transition-colors"
+                              >
+                                Other — type your country
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                   {fieldErrors.country && <p className="text-xs text-primary mt-1">{fieldErrors.country}</p>}
                 </Field>
                 <Field label="Sector *" required className="sm:col-span-2">

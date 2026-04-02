@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Layout } from "@/components/layout/Layout"
 import { useLocation, Link } from "wouter"
-import { Send, Users, LogOut, ChevronDown, Shield, ArrowDown, MessageSquare, Hash, Mail, Plus, X, Menu, BarChart3, TrendingUp, Activity } from "lucide-react"
+import { Send, Users, LogOut, ChevronDown, Shield, ArrowDown, ArrowRight, MessageSquare, Hash, Mail, Plus, X, Menu, Lock, BarChart3, TrendingUp, Activity } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePageTitle } from "@/hooks/use-page-title"
 
@@ -739,12 +739,15 @@ export default function Majlis() {
   if (!user) {
     return (
       <Layout>
-        <div className="text-center py-20">
+        <div className="text-center py-20 max-w-md mx-auto px-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 border-2 border-primary/30 mb-6">
+            <Lock className="w-6 h-6 text-primary" />
+          </div>
           <h2 className="font-display font-black text-2xl uppercase tracking-tight text-foreground mb-2">
             The Majlis is Invite-Only
           </h2>
           {hasApplied ? (
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            <p className="text-sm text-muted-foreground">
               Your application is being reviewed. You'll hear back within 48 hours.{" "}
               Need help?{" "}
               <a href="mailto:hello@themiddleeasthustle.com" className="text-primary underline">
@@ -752,11 +755,21 @@ export default function Majlis() {
               </a>.
             </p>
           ) : (
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            <p className="text-sm text-muted-foreground">
               A private space for verified voices across MENA.{" "}
               <a href="/apply" className="text-primary underline">Apply to join</a>.
             </p>
           )}
+
+          <div className="mt-8 pt-6 border-t border-border">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-serif mb-3">Already a member?</p>
+            <a
+              href="/majlis/login"
+              className="inline-flex items-center gap-2 bg-primary text-white font-serif font-bold uppercase tracking-[0.2em] text-xs px-8 py-3 hover:bg-primary/90 transition-colors"
+            >
+              Login <ArrowRight className="w-3 h-3" />
+            </a>
+          </div>
         </div>
       </Layout>
     )
