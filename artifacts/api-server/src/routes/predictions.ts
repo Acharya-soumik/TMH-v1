@@ -21,12 +21,12 @@ router.post("/:id/vote", voteRateLimit, async (req, res) => {
     if (!choice || !voterToken) {
       return res.status(400).json({ error: "choice and voterToken are required" });
     }
-    if (choice !== "yes" && choice !== "no") {
-      return res.status(400).json({ error: "choice must be 'yes' or 'no'" });
-    }
 
     const [prediction] = await db
-      .select({ editorialStatus: predictionsTable.editorialStatus })
+      .select({
+        editorialStatus: predictionsTable.editorialStatus,
+        options: predictionsTable.options,
+      })
       .from(predictionsTable)
       .where(eq(predictionsTable.id, predictionId));
 
@@ -35,6 +35,11 @@ router.post("/:id/vote", voteRateLimit, async (req, res) => {
     }
     if (prediction.editorialStatus !== "approved") {
       return res.status(403).json({ error: "Voting is not open for this prediction" });
+    }
+
+    const validOptions = prediction.options || ["yes", "no"];
+    if (!validOptions.includes(choice)) {
+      return res.status(400).json({ error: `choice must be one of: ${validOptions.join(", ")}` });
     }
 
     const [existing] = await db
@@ -58,28 +63,25 @@ router.post("/:id/vote", voteRateLimit, async (req, res) => {
       country: null,
     });
 
-    const [yesCount] = await db
-      .select({ count: count() })
+    // Calculate per-option percentages
+    const allVotes = await db
+      .select({ choice: predictionVotesTable.choice, count: count() })
       .from(predictionVotesTable)
-      .where(
-        and(
-          eq(predictionVotesTable.predictionId, predictionId),
-          eq(predictionVotesTable.choice, "yes")
-        )
-      );
-    const [noCount] = await db
-      .select({ count: count() })
-      .from(predictionVotesTable)
-      .where(
-        and(
-          eq(predictionVotesTable.predictionId, predictionId),
-          eq(predictionVotesTable.choice, "no")
-        )
-      );
+      .where(eq(predictionVotesTable.predictionId, predictionId))
+      .groupBy(predictionVotesTable.choice);
 
-    const total = yesCount.count + noCount.count;
-    const yesPercentage = total > 0 ? Math.round((yesCount.count / total) * 100) : 50;
-    const noPercentage = 100 - yesPercentage;
+    const total = allVotes.reduce((sum, v) => sum + v.count, 0);
+    const optionResults: Record<string, number> = {};
+    for (const opt of validOptions) {
+      const voteRow = allVotes.find(v => v.choice === opt);
+      optionResults[opt] = total > 0 ? Math.round(((voteRow?.count ?? 0) / total) * 100) : 0;
+    }
+
+    // Keep yesPercentage/noPercentage for backward compat
+    const yesPercentage = optionResults["yes"] ?? optionResults[validOptions[0]] ?? 50;
+    const noPercentage = prediction.options
+      ? (optionResults[validOptions[1]] ?? 50)
+      : (100 - yesPercentage);
 
     await db
       .update(predictionsTable)
@@ -87,6 +89,7 @@ router.post("/:id/vote", voteRateLimit, async (req, res) => {
         yesPercentage,
         noPercentage,
         totalCount: total,
+        optionResults,
         updatedAt: new Date(),
       })
       .where(eq(predictionsTable.id, predictionId));
@@ -95,6 +98,7 @@ router.post("/:id/vote", voteRateLimit, async (req, res) => {
       success: true,
       yesPercentage,
       noPercentage,
+      optionResults,
       totalCount: total,
     });
   } catch (err) {

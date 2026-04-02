@@ -457,7 +457,7 @@ router.post("/cms/ideation/ideas/:id/publish-draft", requireCmsAuth, async (req,
           category: (content.category as string) || "General",
           categorySlug,
           tags: (content.tags as string[]) || ["ai-generated"],
-          pollType: "binary",
+          pollType: "multiple_choice",
           editorialStatus: "draft",
         }).returning();
 
@@ -465,7 +465,7 @@ router.post("/cms/ideation/ideas/:id/publish-draft", requireCmsAuth, async (req,
           throw new Error("Failed to create poll");
         }
 
-        const options = (content.options as string[]) || ["Yes", "No"];
+        const options = (content.options as string[]) || ["Strongly agree — this is undeniable", "Disagree — the data is misleading", "It's complicated — both sides have a point", "Asking the wrong question entirely"];
         for (const opt of options) {
           await tx.insert(pollOptionsTable).values({
             pollId: createdPoll.id,
@@ -491,6 +491,13 @@ router.post("/cms/ideation/ideas/:id/publish-draft", requireCmsAuth, async (req,
       const newId = incrementPredictionId();
       const now = new Date().toISOString();
 
+      const predOptions = (content.options as string[]) || ["Confident this will happen", "Possible but timeline is too aggressive", "Unlikely — too many obstacles", "The question itself is flawed"];
+      const equalPct = Math.floor(100 / predOptions.length);
+      const optionResults: Record<string, number> = {};
+      predOptions.forEach((opt, i) => {
+        optionResults[opt] = i === 0 ? 100 - equalPct * (predOptions.length - 1) : equalPct;
+      });
+
       mockPredictions.push({
         id: newId,
         question: (content.question as string) || idea.title,
@@ -507,6 +514,8 @@ router.post("/cms/ideation/ideas/:id/publish-draft", requireCmsAuth, async (req,
         editorialStatus: "draft",
         isFeatured: false,
         tags: (content.tags as string[]) || ["ai-generated"],
+        options: predOptions,
+        optionResults,
         createdAt: now,
         updatedAt: now,
       });

@@ -9,6 +9,8 @@ export interface PredictionCard {
   momentum: number
   up: boolean
   data: number[]
+  options?: string[]
+  optionResults?: Record<string, number>
 }
 
 function spark(base: number, trend: "up" | "down" | "flat", volatility = 2): number[] {

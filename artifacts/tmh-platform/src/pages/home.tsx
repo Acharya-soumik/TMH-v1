@@ -250,6 +250,8 @@ function apiToPredCard(p: ApiPrediction): PredictionCard {
     data: p.trendData?.length
       ? p.trendData
       : Array.from({ length: 12 }, () => p.yesPercentage),
+    options: p.options,
+    optionResults: p.optionResults,
   };
 }
 
@@ -305,24 +307,16 @@ function ShareMenu({
     setOpen(false);
   };
 
-  const handleNativeShare = async (e: React.MouseEvent) => {
+  const handleToggleMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (navigator.share) {
-      try {
-        await navigator.share({ url: shareUrl, title });
-        return;
-      } catch (err) {
-        if ((err as Error).name === "AbortError") return;
-      }
-    }
     setOpen(!open);
   };
 
   return (
     <div className="relative" ref={ref}>
       <button
-        onClick={handleNativeShare}
+        onClick={handleToggleMenu}
         className="p-1.5 rounded-sm transition-colors hover:bg-white/10"
         style={{ color }}
         title="Share"
@@ -623,6 +617,7 @@ function FeaturedPredictionCard({
   );
   const [email, setEmail] = useState("");
   const [emailDone, setEmailDone] = useState(false);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(true);
   const [hovIdx, setHovIdx] = useState<number | null>(null);
   const predUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/predictions`;
 
@@ -663,6 +658,11 @@ function FeaturedPredictionCard({
     if (!email.trim()) return;
     setEmailDone(true);
     localStorage.setItem("tmh_email_submitted", "true");
+    fetch("/api/email-subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), source: "prediction_gate", newsletterOptIn }),
+    }).catch(() => {});
     setTimeout(unlock, 800);
   };
 
@@ -1082,6 +1082,17 @@ function FeaturedPredictionCard({
                       )}
                     </button>
                   </form>
+                  <label className="flex items-center gap-2 cursor-pointer select-none mt-2">
+                    <input
+                      type="checkbox"
+                      checked={newsletterOptIn}
+                      onChange={e => setNewsletterOptIn(e.target.checked)}
+                      className="w-3 h-3 rounded-sm accent-[#3B82F6] cursor-pointer"
+                    />
+                    <span className="text-[9px] text-muted-foreground font-sans">
+                      Send me The Tribunal newsletter
+                    </span>
+                  </label>
                 </div>
               </div>
             </motion.div>
@@ -1169,6 +1180,11 @@ function FeaturedPredictionCard({
                 >
                   More Predictions <ArrowRight className="w-3 h-3" />
                 </Link>
+                <ShareMenu
+                  title={featured.question}
+                  shareUrl={predUrl}
+                  color="#3B82F6"
+                />
               </div>
             </motion.div>
           )}

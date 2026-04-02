@@ -58,6 +58,8 @@ function apiToPredictionCard(p: ApiPrediction): PredictionCard {
     data: p.trendData?.length
       ? p.trendData
       : Array.from({ length: 12 }, () => p.yesPercentage),
+    options: p.options,
+    optionResults: p.optionResults,
   };
 }
 
@@ -162,12 +164,16 @@ function ConfidenceBars({
   up,
   momentum,
   compact = false,
+  options,
+  optionResults,
 }: {
   yes: number;
   no: number;
   up: boolean;
   momentum: number;
   compact?: boolean;
+  options?: string[];
+  optionResults?: Record<string, number>;
 }) {
   const [animated, setAnimated] = useState(false);
   useEffect(() => {
@@ -175,6 +181,81 @@ function ConfidenceBars({
     return () => clearTimeout(t);
   }, []);
   const h = compact ? "h-2" : "h-3";
+
+  // Dynamic options mode
+  if (options?.length && optionResults) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        {options.map((opt, i) => {
+          const pct = optionResults[opt] ?? 0;
+          const color = OPTION_COLORS[i % OPTION_COLORS.length];
+          return (
+            <div key={opt}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: 3,
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "DM Sans, sans-serif",
+                    fontWeight: 600,
+                    fontSize: compact ? 11 : 12,
+                    color,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: "80%",
+                  }}
+                >
+                  {opt}
+                </span>
+                <span
+                  style={{
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontWeight: 700,
+                    fontSize: compact ? 12 : 13,
+                    color,
+                  }}
+                >
+                  {pct}%
+                </span>
+              </div>
+              <div
+                className={`w-full ${h} rounded-sm overflow-hidden`}
+                style={{ background: "rgba(255,255,255,0.08)" }}
+              >
+                <div
+                  className={`${h} rounded-sm transition-all duration-1000`}
+                  style={{
+                    width: animated ? `${pct}%` : "0%",
+                    background: color,
+                    opacity: 0.7,
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
+        {(compact || (!compact && options.length > 0)) && (
+          <p
+            style={{
+              fontFamily: "DM Sans, sans-serif",
+              fontSize: 11,
+              color: up ? "#10B981" : "#DC143C",
+              marginTop: 2,
+            }}
+          >
+            {up ? "\u25B2" : "\u25BC"} {up ? "Up" : "Down"} {momentum}% this week
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // Legacy YES/NO mode
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
       <div>
@@ -229,7 +310,7 @@ function ConfidenceBars({
               marginTop: 3,
             }}
           >
-            {up ? "▲" : "▼"} {up ? "Up" : "Down"} {momentum}% this week
+            {up ? "\u25B2" : "\u25BC"} {up ? "Up" : "Down"} {momentum}% this week
           </p>
         )}
       </div>
@@ -285,7 +366,7 @@ function ConfidenceBars({
               marginTop: 3,
             }}
           >
-            {up ? "▲" : "▼"} {up ? "UP" : "DOWN"} {momentum}% this week
+            {up ? "\u25B2" : "\u25BC"} {up ? "UP" : "DOWN"} {momentum}% this week
           </p>
         )}
       </div>
@@ -387,24 +468,32 @@ function PredMajlisShareBtn({ card }: { card: PredictionCard }) {
   );
 }
 
+const OPTION_COLORS = ["#10B981", "#3B82F6", "#F59E0B", "#DC143C"];
+
 function VoteButtons({
   height = 52,
   locked = false,
   predId,
+  options,
   onVote,
 }: {
   height?: number;
   locked?: boolean;
   predId?: number;
-  onVote?: (predId: number, choice: "yes" | "no") => void;
+  options?: string[];
+  onVote?: (predId: number, choice: string) => void;
 }) {
   const storageKey = predId != null ? `tmh_pred_${predId}` : null;
-  const [voted, setVoted] = useState<"yes" | "no" | null>(() => {
+  const [voted, setVoted] = useState<string | null>(() => {
     if (typeof window === "undefined" || !storageKey) return null;
-    return localStorage.getItem(storageKey) as "yes" | "no" | null;
+    return localStorage.getItem(storageKey);
   });
   if (locked) return null;
-  const handleVote = (choice: "yes" | "no") => {
+
+  const resolvedOptions = options?.length ? options : ["yes", "no"];
+  const isLegacy = !options?.length;
+
+  const handleVote = (choice: string) => {
     if (voted) return;
     setVoted(choice);
     if (storageKey) localStorage.setItem(storageKey, choice);
@@ -422,48 +511,84 @@ function VoteButtons({
       }).catch(() => {});
     }
   };
+
+  if (isLegacy) {
+    return (
+      <div style={{ display: "flex", gap: 8, width: "100%" }}>
+        <button
+          onClick={() => handleVote("yes")}
+          style={{
+            flex: 1,
+            height,
+            border: `1.5px solid #10B981`,
+            background: voted === "yes" ? "#10B981" : "transparent",
+            color: voted === "yes" ? "#fff" : "#10B981",
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontWeight: 900,
+            fontSize: "1rem",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            cursor: voted ? "default" : "pointer",
+            transition: "all 0.15s",
+            borderRadius: 4,
+          }}
+        >
+          {voted === "yes" ? "\u2713 YES \u2014 LOCKED" : "YES"}
+        </button>
+        <button
+          onClick={() => handleVote("no")}
+          style={{
+            flex: 1,
+            height,
+            border: `1.5px solid #DC143C`,
+            background: voted === "no" ? "#DC143C" : "transparent",
+            color: voted === "no" ? "#fff" : "#DC143C",
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontWeight: 900,
+            fontSize: "0.85rem",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            cursor: voted ? "default" : "pointer",
+            transition: "all 0.15s",
+            borderRadius: 4,
+          }}
+        >
+          {voted === "no" ? "\u2713 NO \u2014 LOCKED" : "NO"}
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ display: "flex", gap: 8, width: "100%" }}>
-      <button
-        onClick={() => handleVote("yes")}
-        style={{
-          flex: 1,
-          height,
-          border: `1.5px solid #10B981`,
-          background: voted === "yes" ? "#10B981" : "transparent",
-          color: voted === "yes" ? "#fff" : "#10B981",
-          fontFamily: "'Barlow Condensed', sans-serif",
-          fontWeight: 900,
-          fontSize: "1rem",
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          cursor: voted ? "default" : "pointer",
-          transition: "all 0.15s",
-          borderRadius: 4,
-        }}
-      >
-        {voted === "yes" ? "✓ YES — LOCKED" : "YES"}
-      </button>
-      <button
-        onClick={() => handleVote("no")}
-        style={{
-          flex: 1,
-          height,
-          border: `1.5px solid #DC143C`,
-          background: voted === "no" ? "#DC143C" : "transparent",
-          color: voted === "no" ? "#fff" : "#DC143C",
-          fontFamily: "'Barlow Condensed', sans-serif",
-          fontWeight: 900,
-          fontSize: "0.85rem",
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          cursor: voted ? "default" : "pointer",
-          transition: "all 0.15s",
-          borderRadius: 4,
-        }}
-      >
-        {voted === "no" ? "✓ NO — LOCKED" : "NO"}
-      </button>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
+      {resolvedOptions.map((opt, i) => {
+        const color = OPTION_COLORS[i % OPTION_COLORS.length];
+        const isSelected = voted === opt;
+        return (
+          <button
+            key={opt}
+            onClick={() => handleVote(opt)}
+            style={{
+              width: "100%",
+              minHeight: 44,
+              padding: "10px 16px",
+              border: `1.5px solid ${color}`,
+              background: isSelected ? color : "transparent",
+              color: isSelected ? "#fff" : color,
+              fontFamily: "DM Sans, sans-serif",
+              fontWeight: 600,
+              fontSize: "0.85rem",
+              textAlign: "left",
+              cursor: voted ? "default" : "pointer",
+              transition: "all 0.15s",
+              borderRadius: 4,
+              opacity: voted && !isSelected ? 0.4 : 1,
+            }}
+          >
+            {isSelected ? `\u2713 ${opt}` : opt}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -539,7 +664,7 @@ function MomentumTicker({
 
 // ─── FEATURED PREDICTION ─────────────────────────────────────────────────────
 
-function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (predId: number, choice: "yes" | "no") => void }) {
+function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (predId: number, choice: string) => void }) {
   const featuredData = useMemo(() => {
     return card.data.map((yes, i) => {
       const slice = card.data.slice(Math.max(0, i - 2), i + 1);
@@ -738,9 +863,11 @@ function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (
             up={card.up}
             momentum={card.momentum}
             compact={false}
+            options={card.options}
+            optionResults={card.optionResults}
           />
 
-          <VoteButtons height={52} predId={card.id} onVote={onVote} />
+          <VoteButtons height={52} predId={card.id} options={card.options} onVote={onVote} />
 
           <p
             style={{
@@ -772,7 +899,7 @@ function PredictionGridCard({
   highlighted?: boolean;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
-  onVote?: (predId: number, choice: "yes" | "no") => void;
+  onVote?: (predId: number, choice: string) => void;
 }) {
   const [glowing, setGlowing] = useState(!!highlighted);
 
@@ -883,6 +1010,8 @@ function PredictionGridCard({
         up={card.up}
         momentum={card.momentum}
         compact={true}
+        options={card.options}
+        optionResults={card.optionResults}
       />
 
       {/* Resolution date (always visible) */}
@@ -894,7 +1023,7 @@ function PredictionGridCard({
 
       {/* Vote buttons */}
       <div onClick={(e) => e.stopPropagation()}>
-        <VoteButtons height={44} predId={card.id} onVote={onVote} />
+        <VoteButtons height={44} predId={card.id} options={card.options} onVote={onVote} />
       </div>
 
       {/* Lock notice */}
@@ -1201,7 +1330,7 @@ export default function Predictions() {
     return FALLBACK_TICKER_DATA;
   }, [apiData]);
 
-  const handleVoteOverride = (predId: number, choice: "yes" | "no") => {
+  const handleVoteOverride = (predId: number, choice: string) => {
     setVoteOverrides((prev) => {
       const card = PREDICTIONS.find((c) => c.id === predId);
       if (!card) return prev;

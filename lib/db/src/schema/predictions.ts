@@ -18,6 +18,8 @@ export const predictionsTable = pgTable("predictions", {
   editorialStatus: text("editorial_status").notNull().default("draft"),
   isFeatured: boolean("is_featured").notNull().default(false),
   tags: jsonb("tags").$type<string[]>().notNull().default([]),
+  options: jsonb("options").$type<string[]>(),
+  optionResults: jsonb("option_results").$type<Record<string, number>>(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

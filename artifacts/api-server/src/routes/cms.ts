@@ -83,6 +83,8 @@ export interface MockPrediction {
   editorialStatus: string;
   isFeatured: boolean;
   tags: string[];
+  options?: string[];
+  optionResults?: Record<string, number>;
   createdAt: string;
   updatedAt: string;
 }

@@ -145,19 +145,19 @@ function generateMockContent(_prompt: string): string {
 
 function generateMockIdeas(config: GenerationConfig): GeneratedIdea[] {
   const debateTemplates = [
-    { title: "Lebanon's brain drain is killing the country faster than the economic crisis.", content: { question: "Lebanon's brain drain is killing the country faster than the economic crisis.", context: "Lebanon lost 50% of its physicians, 40% of engineers, 30% of academics. Skilled emigration accelerating since 2019. A country losing its future, one visa at a time.", options: ["Yes", "No"] } },
-    { title: "Libya has Africa's largest oil reserves and can't keep its lights on.", content: { question: "Libya has Africa's largest oil reserves and can't keep its lights on.", context: "1.2M barrels/day but power cuts last 12+ hours. $22B oil revenue but no transparent allocation. Wealth without welfare.", options: ["Yes", "No"] } },
-    { title: "Women in MENA are the most underutilized economic resource on earth.", content: { question: "Women in MENA are the most underutilized economic resource on earth.", context: "Saudi jumped 17% to 33% in 6 years — fastest G20 rise ever. But Yemen is at 6%. MENA's GDP could grow 57% with full parity.", options: ["Yes", "No"] } },
-    { title: "MENA's private school boom is creating education apartheid.", content: { question: "MENA's private school boom is creating education apartheid.", context: "Gulf private schools charge $30,000+/year. Public schools in Egypt spend $300/student. The class divide starts at age 5.", options: ["Yes", "No"] } },
-    { title: "Sportswashing works — that's why they keep doing it.", content: { question: "Sportswashing works — that's why they keep doing it.", context: "LIV Golf, Newcastle FC, PSG, F1, World Cup — $75B+ spent. Saudi Arabia went from pariah to vacation destination. Outrage fades. Brand value remains.", options: ["Yes", "No"] } },
+    { title: "Lebanon's brain drain is killing the country faster than the economic crisis.", content: { question: "Lebanon's brain drain is killing the country faster than the economic crisis.", context: "Lebanon lost 50% of its physicians, 40% of engineers, 30% of academics. Skilled emigration accelerating since 2019. A country losing its future, one visa at a time.", options: ["It's already too late — the talent is gone", "They'll come back when the economy stabilizes", "The diaspora IS Lebanon's economy now", "Brain drain is overhyped — resilience runs deep"] } },
+    { title: "Libya has Africa's largest oil reserves and can't keep its lights on.", content: { question: "Libya has Africa's largest oil reserves and can't keep its lights on.", context: "1.2M barrels/day but power cuts last 12+ hours. $22B oil revenue but no transparent allocation. Wealth without welfare.", options: ["Classic resource curse — seen this movie before", "Stability is coming, give it time", "Foreign interference is the real problem", "Libyans will figure it out without outside help"] } },
+    { title: "Women in MENA are the most underutilized economic resource on earth.", content: { question: "Women in MENA are the most underutilized economic resource on earth.", context: "Saudi jumped 17% to 33% in 6 years — fastest G20 rise ever. But Yemen is at 6%. MENA's GDP could grow 57% with full parity.", options: ["Absolutely — it's the region's biggest missed opportunity", "Progress is happening faster than people think", "Cultural change can't be forced by economics", "The numbers don't tell the full story"] } },
+    { title: "MENA's private school boom is creating education apartheid.", content: { question: "MENA's private school boom is creating education apartheid.", context: "Gulf private schools charge $30,000+/year. Public schools in Egypt spend $300/student. The class divide starts at age 5.", options: ["This is how inequality gets baked in for generations", "Private schools raise the bar for everyone", "Fix public schools instead of blaming private ones", "Education quality matters more than who pays for it"] } },
+    { title: "Sportswashing works — that's why they keep doing it.", content: { question: "Sportswashing works — that's why they keep doing it.", context: "LIV Golf, Newcastle FC, PSG, F1, World Cup — $75B+ spent. Saudi Arabia went from pariah to vacation destination. Outrage fades. Brand value remains.", options: ["It works and everyone knows it — that's the uncomfortable truth", "Sports investment ≠ sportswashing, stop conflating them", "Short-term PR, long-term credibility problem", "Every country does soft power — only MENA gets called out"] } },
   ];
 
   const predictionTemplates = [
-    { title: "Saudi Arabia's non-oil GDP will exceed 50% of total GDP by end of 2027", content: { question: "Saudi Arabia's non-oil GDP will exceed 50% of total GDP by end of 2027", category: "Economy & Finance", resolvesAt: "2027-12-31" } },
-    { title: "Morocco's Casablanca Finance City will host 250+ international financial firms", content: { question: "Morocco's Casablanca Finance City will host 250+ international financial firms", category: "Economy & Finance", resolvesAt: "2027-06-30" } },
-    { title: "UAE will deploy AI in 50%+ of federal government services", content: { question: "UAE will deploy AI in 50%+ of federal government services", category: "Technology & AI", resolvesAt: "2028-06-30" } },
-    { title: "Egypt's Ras El-Hekma megaproject will attract $10B+ in foreign investment", content: { question: "Egypt's Ras El-Hekma megaproject will attract $10B+ in foreign investment", category: "Infrastructure & Cities", resolvesAt: "2028-12-31" } },
-    { title: "Jordan's water deficit will exceed 50% of national demand", content: { question: "Jordan's water deficit will exceed 50% of national demand", category: "Energy & Climate", resolvesAt: "2027-12-31" } },
+    { title: "Saudi Arabia's non-oil GDP will exceed 50% of total GDP by end of 2027", content: { question: "Saudi Arabia's non-oil GDP will exceed 50% of total GDP by end of 2027", category: "Economy & Finance", resolvesAt: "2027-12-31", options: ["Already on track — Vision 2030 is delivering", "Close but they'll miss by a year or two", "Oil dependency runs too deep to shift that fast", "The numbers will say 50% but the economy won't feel it"] } },
+    { title: "Morocco's Casablanca Finance City will host 250+ international financial firms", content: { question: "Morocco's Casablanca Finance City will host 250+ international financial firms", category: "Economy & Finance", resolvesAt: "2027-06-30", options: ["Absolutely — Morocco is the gateway to Africa", "They'll get close but 250 is ambitious", "Dubai and Riyadh will keep stealing the spotlight", "Depends entirely on EU trade deals"] } },
+    { title: "UAE will deploy AI in 50%+ of federal government services", content: { question: "UAE will deploy AI in 50%+ of federal government services", category: "Technology & AI", resolvesAt: "2028-06-30", options: ["If any country can do it, it's the UAE", "Deployed yes, actually working — different question", "Government AI is mostly marketing right now", "They'll exceed 50% before the deadline"] } },
+    { title: "Egypt's Ras El-Hekma megaproject will attract $10B+ in foreign investment", content: { question: "Egypt's Ras El-Hekma megaproject will attract $10B+ in foreign investment", category: "Infrastructure & Cities", resolvesAt: "2028-12-31", options: ["The ADQ deal already proves the appetite is there", "Mega-projects in Egypt always over-promise", "Gulf money will flow but Western investors won't", "Depends on whether Egypt stabilizes the pound first"] } },
+    { title: "Jordan's water deficit will exceed 50% of national demand", content: { question: "Jordan's water deficit will exceed 50% of national demand", category: "Energy & Climate", resolvesAt: "2027-12-31", options: ["It's already a crisis — this is just making it official", "Desalination projects will close the gap in time", "Climate change makes this inevitable for the whole region", "Jordan's been managing scarcity for decades — they'll adapt"] } },
   ];
 
   const pulseTemplates = [
@@ -267,10 +267,10 @@ export async function runGeneration(config: GenerationConfig): Promise<Generated
   const researchContext = `Research data:\n${JSON.stringify(config.researchData, null, 2)}`;
 
   const pillarInstructions: Record<string, string> = {
-    debates: `Generate debate ideas. Each must have: title (string, 8-15 words, a DECLARATIVE ASSERTION using superlatives or comparison — NOT a neutral question), content with {question (string — same as title), context (string, EXACTLY 2-4 sentences: [shocking stat with hard number] + [comparative number showing disparity] + [poetic kicker 3-7 words]. Target ~150 chars. Every sentence must contain a specific number, name, or date. End with a gut-punch fragment, not a full sentence.), options (array of exactly 2 strings: ["Yes", "No"])}.
-QUALITY GATES: Reject any idea where (1) context has no specific numbers, (2) title is a neutral question rather than a provocative assertion, (3) context exceeds 200 characters, or (4) the kicker is missing.`,
-    predictions: `Generate prediction market questions. Each must have: title (string, same as question), content with {question (string, a SPECIFIC MILESTONE with a threshold number and named entity — e.g., "Morocco's Casablanca Finance City will host 250+ international financial firms"), category (string from: Economy & Finance, Technology & AI, Energy & Climate, Geopolitics & Governance, Infrastructure & Cities, Education & Workforce, Health & Demographics, Culture & Society, Sports & Entertainment), resolvesAt (ISO date string, 12-36 months from now)}.
-QUALITY GATES: Reject any prediction where (1) there's no specific threshold number, (2) the entity is vague ("a MENA country" instead of naming it), or (3) resolution is obvious (>90% or <10% probability).`,
+    debates: `Generate debate ideas. Each must have: title (string, 8-15 words, a DECLARATIVE ASSERTION using superlatives or comparison — NOT a neutral question), content with {question (string — same as title), context (string, EXACTLY 2-4 sentences: [shocking stat with hard number] + [comparative number showing disparity] + [poetic kicker 3-7 words]. Target ~150 chars. Every sentence must contain a specific number, name, or date. End with a gut-punch fragment, not a full sentence.), options (array of EXACTLY 4 strings — NOT "Yes"/"No". Each option must be a relatable, opinionated stance that feels personal. Think first-person reactions people actually have: "It's already too late", "Progress is happening faster than people think", "The numbers don't tell the full story". Options should cover: a strong agree, a strong disagree, a nuanced middle, and a contrarian/unexpected take. Keep each option under 12 words.)}.
+QUALITY GATES: Reject any idea where (1) context has no specific numbers, (2) title is a neutral question rather than a provocative assertion, (3) context exceeds 200 characters, (4) the kicker is missing, or (5) options are generic "Yes"/"No"/"Maybe"/"I don't know".`,
+    predictions: `Generate prediction market questions. Each must have: title (string, same as question), content with {question (string, a SPECIFIC MILESTONE with a threshold number and named entity — e.g., "Morocco's Casablanca Finance City will host 250+ international financial firms"), category (string from: Economy & Finance, Technology & AI, Energy & Climate, Geopolitics & Governance, Infrastructure & Cities, Education & Workforce, Health & Demographics, Culture & Society, Sports & Entertainment), resolvesAt (ISO date string, 12-36 months from now), options (array of EXACTLY 4 strings — NOT "Yes"/"No". Each option must be a nuanced position on the prediction's likelihood. Think informed takes people actually hold: "Already on track — it's inevitable", "Close but they'll miss the deadline", "The whole premise is flawed", "Depends entirely on X factor". Cover: confident yes, conditional yes, skeptical no, and a wildcard/contrarian take. Keep each under 12 words.)}.
+QUALITY GATES: Reject any prediction where (1) there's no specific threshold number, (2) the entity is vague ("a MENA country" instead of naming it), (3) resolution is obvious (>90% or <10% probability), or (4) options are generic "Yes"/"No"/"Maybe".`,
     pulse: `Generate pulse/stat cards. Each must have: title (string, max 5 words — punchy label like "Billionaire Wealth vs. GDP" or "Press Freedom Collapse"), content with {title (string, same), stat (string — a specific number/ratio: "$4.8B" or "17 of 19 countries" or "1 in 5 girls"), delta (string — change indicator: "+62% since 2021" or "Highest globally" or "Death penalty in 6"), direction ("up"|"down"), blurb (string, ONE sentence max ~20 words — editorial interpretation with juxtaposition or benchmark comparison, ending with punch), source (string — named institutional source with year)}.
 QUALITY GATES: Reject any card where (1) the stat is vague ("millions" instead of "42 Million"), (2) the blurb just restates the stat, or (3) the source is generic ("reports" instead of a named institution).`,
   };
@@ -301,6 +301,7 @@ CRITICAL QUALITY STANDARDS:
 - Titles are DECLARATIVE ASSERTIONS, not neutral questions
 - Cover the full MENA region: Gulf, North Africa, Levant, Turkey, Iran — not just UAE and Saudi
 - NO generic filler: "this raises important questions", "time will tell", "remains to be seen"
+- OPTIONS must be dynamic, relatable, opinionated stances — NEVER "Yes"/"No"/"Maybe". Write options as things real people would actually say.
 
 Return ONLY a valid JSON array.`;
 
@@ -364,7 +365,7 @@ export async function runRefinement(config: RefinementConfig): Promise<RefinedCo
       return {
         question: base.question || config.idea.title,
         context: base.context || "A pivotal question dividing MENA's business and policy elite. The stakes are real, the clock is ticking.",
-        options: base.options || ["Position A", "Position B"],
+        options: base.options || ["Strongly agree — this is undeniable", "Disagree — the data is misleading", "It's complicated — both sides have a point", "Asking the wrong question entirely"],
         category: "Technology & AI",
         tags: ["ai-generated", "mena"],
       };
@@ -388,8 +389,8 @@ export async function runRefinement(config: RefinementConfig): Promise<RefinedCo
   }
 
   const fieldSchemas: Record<string, string> = {
-    debates: `{question: string (8-15 words — declarative assertion with superlative or comparison, NOT a neutral question), context: string (2-4 sentences, ~150 chars: [shocking stat] + [comparative number] + [poetic kicker 3-7 words]), options: string[] (exactly ["Yes", "No"]), category: string, tags: string[]}`,
-    predictions: `{question: string (specific milestone with threshold number and named entity), category: string, resolvesAt: string (ISO date, 12-36 months out), tags: string[]}`,
+    debates: `{question: string (8-15 words — declarative assertion with superlative or comparison, NOT a neutral question), context: string (2-4 sentences, ~150 chars: [shocking stat] + [comparative number] + [poetic kicker 3-7 words]), options: string[] (exactly 4 relatable opinionated stances — NOT "Yes"/"No", each under 12 words, covering: strong agree, strong disagree, nuanced middle, contrarian take), category: string, tags: string[]}`,
+    predictions: `{question: string (specific milestone with threshold number and named entity), category: string, resolvesAt: string (ISO date, 12-36 months out), options: string[] (exactly 4 nuanced positions — NOT "Yes"/"No", each under 12 words, covering: confident yes, conditional yes, skeptical no, contrarian wildcard), tags: string[]}`,
     pulse: `{title: string (max 5 words — punchy stat label), stat: string (specific number/ratio), delta: string (change indicator with timeframe), direction: "up"|"down", blurb: string (1 sentence, ~20 words — editorial punch with juxtaposition), source: string (named institution + year)}`,
   };
 
@@ -472,16 +473,28 @@ CONTEXT RULES:
 - Final fragment: Poetic/emotional kicker (3-7 words)
 - NO filler, NO hedging, NO "this raises questions"
 
+OPTIONS RULES:
+- EXACTLY 4 options per debate — NEVER "Yes" / "No" / "Maybe" / "I don't know"
+- Each option is a relatable, opinionated STANCE that feels personal and first-person
+- Options must cover 4 positions: (1) strong agree, (2) strong disagree, (3) nuanced middle ground, (4) contrarian/unexpected take
+- Keep each option under 12 words
+- Write them as things real people would actually say in conversation
+- Good examples: "It's already too late — the talent is gone", "Progress is faster than people think", "Every country does this — only MENA gets called out"
+- Bad examples: "Yes", "No", "Maybe", "I agree", "I disagree", "Not sure"
+
 GOLD-STANDARD EXAMPLES:
 
 1. Title: "Lebanon's brain drain is killing the country faster than the economic crisis."
    Context: "Lebanon lost 50% of its physicians, 40% of engineers, 30% of academics. Skilled emigration accelerating since 2019. A country losing its future, one visa at a time."
+   Options: ["It's already too late — the talent is gone", "They'll come back when the economy stabilizes", "The diaspora IS Lebanon's economy now", "Brain drain is overhyped — resilience runs deep"]
 
 2. Title: "Libya has Africa's largest oil reserves and can't keep its lights on."
    Context: "1.2M barrels/day but power cuts last 12+ hours. $22B oil revenue but no transparent allocation. Wealth without welfare."
+   Options: ["Classic resource curse — seen this movie before", "Stability is coming, give it time", "Foreign interference is the real problem", "Libyans will figure it out without outside help"]
 
 3. Title: "Women in MENA are the most underutilized economic resource on earth."
-   Context: "Saudi jumped 17% to 33% in 6 years — fastest G20 rise ever. But Yemen is at 6%. MENA's GDP could grow 57% with full parity."`,
+   Context: "Saudi jumped 17% to 33% in 6 years — fastest G20 rise ever. But Yemen is at 6%. MENA's GDP could grow 57% with full parity."
+   Options: ["Absolutely — it's the region's biggest missed opportunity", "Progress is happening faster than people think", "Cultural change can't be forced by economics", "The numbers don't tell the full story"]`,
 
   predictions: `You are the ideation engine for "The Middle East Hustle" — Predictions pillar.
 
@@ -496,16 +509,31 @@ PREDICTION RULES:
 
 CATEGORIES: Economy & Finance, Technology & AI, Energy & Climate, Geopolitics & Governance, Infrastructure & Cities, Education & Workforce, Health & Demographics, Culture & Society, Sports & Entertainment
 
+OPTIONS RULES:
+- EXACTLY 4 options per prediction — NEVER "Yes" / "No" / "Maybe"
+- Each option is a nuanced POSITION on the prediction's likelihood
+- Options must cover 4 angles: (1) confident it will happen, (2) conditional/qualified yes, (3) skeptical/no, (4) contrarian wildcard or reframing
+- Keep each option under 12 words
+- Write them as informed takes, not generic poll answers
+- Good examples: "Already on track — it's inevitable", "Close but they'll miss the deadline", "The whole premise is flawed", "Depends entirely on oil prices"
+- Bad examples: "Yes", "No", "Probably", "I think so", "Not sure"
+
 GOLD-STANDARD EXAMPLES:
 
 1. "Morocco's Casablanca Finance City will host 250+ international financial firms" — resolves Jun 2027
+   Options: ["Absolutely — Morocco is the gateway to Africa", "They'll get close but 250 is ambitious", "Dubai and Riyadh will keep stealing the spotlight", "Depends entirely on EU trade deals"]
+
 2. "Tunisia's youth emigration rate will exceed 50% of university graduates within 5 years of graduation" — resolves Jun 2028
+   Options: ["It's probably already past 50% — we just don't count", "New startup incentives will slow the bleed", "Brain drain is a feature, not a bug, for MENA", "The question is where they go, not whether they leave"]
+
 3. "Iraq's Kurdistan Region will hold an independence referendum or formal autonomy vote" — resolves Dec 2027
+   Options: ["Inevitable — the question is when, not if", "Baghdad will never allow it peacefully", "They have de facto autonomy already — why risk it", "Regional geopolitics will decide, not Erbil"]
 
 ANTI-PATTERNS (never do these):
 - Vague predictions: "AI will transform MENA" (no threshold, no entity)
 - Obvious outcomes: predictions with >90% certainty are boring
-- Western-centric framing: don't compare everything to Silicon Valley`,
+- Western-centric framing: don't compare everything to Silicon Valley
+- Generic options: "Yes", "No", "Maybe", "I don't know"`,
 
   pulse: `You are the ideation engine for "The Middle East Hustle" — Pulse pillar.
 
