@@ -95,7 +95,7 @@ export function Footer() {
               href="/about"
               className="inline-block bg-primary text-white text-[10px] font-bold uppercase tracking-[0.2em] px-5 py-2.5 hover:bg-primary/90 transition-colors font-serif"
             >
-              {t("Learn More →")}
+              {t("Get Updates")}
             </Link>
           </div>
         </div>

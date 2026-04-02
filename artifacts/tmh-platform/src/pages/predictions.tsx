@@ -1651,8 +1651,8 @@ export default function Predictions() {
                 viewport={{ once: true, amount: 0.05 }}
                 variants={staggerContainer}
               >
-                {filteredCards.slice(0, visibleCount).map((card) => (
-                  <motion.div key={card.id} variants={staggerItem}>
+                {filteredCards.slice(0, visibleCount).map((card, index, arr) => (
+                  <motion.div key={card.id} variants={staggerItem} className={index === arr.length - 1 && arr.length % 2 !== 0 ? "md:col-span-2" : ""}>
                     <PredictionGridCard
                       card={card}
                       highlighted={highlightedId === String(card.id)}

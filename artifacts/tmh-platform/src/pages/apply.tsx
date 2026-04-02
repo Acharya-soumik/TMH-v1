@@ -141,7 +141,7 @@ export default function Apply() {
               {successMsg?.title || "Application Received."}
             </h2>
             <p className="text-lg text-muted-foreground font-sans max-w-md mx-auto mb-2">
-              {successMsg?.subtitle || "Our AI review runs in minutes. You'll hear back within 48 hours."}
+              {successMsg?.subtitle || "We are reviewing your application. You'll hear back within 48 hours."}
             </p>
             <p className="text-sm text-muted-foreground font-sans">
               In the meantime — go vote on something that matters.
@@ -161,7 +161,7 @@ export default function Apply() {
               </h2>
               <div className="grid sm:grid-cols-2 gap-5">
                 <Field label="Full Name *" required>
-                  <input required type="text" placeholder="Kareem Kaddoura" value={form.name} onChange={set("name")}
+                  <input required type="text" placeholder="Your full name" value={form.name} onChange={set("name")}
                     className={inputCn} />
                   {fieldErrors.name && <p className="text-xs text-primary mt-1">{fieldErrors.name}</p>}
                 </Field>
@@ -171,17 +171,17 @@ export default function Apply() {
                   {fieldErrors.email && <p className="text-xs text-primary mt-1">{fieldErrors.email}</p>}
                 </Field>
                 <Field label="Title / Role *" required>
-                  <input required type="text" placeholder="Founder & CEO" value={form.title} onChange={set("title")}
+                  <input required type="text" placeholder="Your title" value={form.title} onChange={set("title")}
                     className={inputCn} />
                   {fieldErrors.title && <p className="text-xs text-primary mt-1">{fieldErrors.title}</p>}
                 </Field>
                 <Field label="Company / Organisation *" required>
-                  <input required type="text" placeholder="Your Company" value={form.company} onChange={set("company")}
+                  <input required type="text" placeholder="Your company" value={form.company} onChange={set("company")}
                     className={inputCn} />
                   {fieldErrors.company && <p className="text-xs text-primary mt-1">{fieldErrors.company}</p>}
                 </Field>
                 <Field label="City">
-                  <input type="text" placeholder="Dubai" value={form.city} onChange={set("city")}
+                  <input type="text" placeholder="Your city" value={form.city} onChange={set("city")}
                     className={inputCn} />
                 </Field>
                 <Field label="Country *" required>

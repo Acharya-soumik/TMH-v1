@@ -277,7 +277,7 @@ export default function About() {
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
             {countries.map(c => (
-              <div key={c.name} className="border border-border px-3 py-2.5 text-xs font-serif uppercase tracking-widest text-foreground/80 text-center hover:border-primary hover:text-primary transition-colors flex flex-col items-center gap-1">
+              <div key={c.name} className="border border-border px-3 py-2.5 text-xs font-serif uppercase tracking-widest text-foreground/80 text-center flex flex-col items-center gap-1">
                 <span className="text-xl not-italic" style={{ fontFamily: "system-ui" }}>{c.flag}</span>
                 <span>{t(c.name)}</span>
                 <span className="text-[9px] tracking-normal normal-case text-muted-foreground font-sans">{c.pop}</span>

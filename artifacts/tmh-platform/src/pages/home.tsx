@@ -1500,6 +1500,13 @@ export default function Home() {
     day: "numeric",
   });
 
+  const issueNumber = (() => {
+    const now = new Date()
+    const start = new Date(2026, 0, 1)
+    const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth()) + 1
+    return String(Math.max(1, months)).padStart(3, "0")
+  })()
+
   return (
     <Layout>
       <style>{`
@@ -1531,7 +1538,7 @@ export default function Home() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-2 text-[9px] uppercase tracking-[0.18em] text-muted-foreground border-b border-border font-serif">
-            <span>{t("EST. 2026 · ISSUE NO. 001")}</span>
+            <span>{t(`EST. 2026 · ISSUE NO. ${issueNumber}`)}</span>
             <span className="hidden sm:block">{issueDate}</span>
             <span className="text-primary font-bold">
               {t("Opinion of Record")}
