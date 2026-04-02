@@ -33,6 +33,13 @@ const FALLBACK_PILLARS = [
     link: "/voices",
     cta: "Meet The Voices",
   },
+  {
+    num: "05",
+    title: "The Majlis",
+    body: "A private, members-only forum for the region's verified founders, operators, and changemakers. Real-time conversations across curated channels — no algorithms, no noise. Where the people shaping MENA actually talk to each other.",
+    link: "/majlis/login",
+    cta: "Enter The Majlis",
+  },
 ]
 
 const FALLBACK_BELIEFS = [
