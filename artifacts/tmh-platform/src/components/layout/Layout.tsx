@@ -3,6 +3,7 @@ import { useLocation } from "wouter"
 import { Navbar } from "./Navbar"
 import { Footer } from "./Footer"
 import { CookieConsent } from "@/components/ui/CookieConsent"
+import { ScrollToTop } from "./ScrollToTop"
 
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation()
@@ -18,6 +19,7 @@ export function Layout({ children }: { children: ReactNode }) {
         {children}
       </main>
       <Footer />
+      <ScrollToTop />
       <CookieConsent />
     </div>
   )
