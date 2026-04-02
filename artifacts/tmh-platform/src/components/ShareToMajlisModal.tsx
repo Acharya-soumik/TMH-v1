@@ -22,6 +22,8 @@ export function ShareToMajlisModal({ shareString, onClose }: ShareToMajlisModalP
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+  const [userMessage, setUserMessage] = useState("");
 
   const token = localStorage.getItem("majlis_token");
 
@@ -36,22 +38,26 @@ export function ShareToMajlisModal({ shareString, onClose }: ShareToMajlisModalP
       .finally(() => setLoading(false));
   }, [token]);
 
-  const handleSend = async (channel: Channel) => {
-    if (!token || sending) return;
+  const handleSend = async () => {
+    if (!token || sending || !selectedChannel) return;
     setSending(true);
     setError("");
 
+    const content = userMessage.trim()
+      ? `${userMessage.trim()} ${shareString}`
+      : shareString;
+
     try {
-      const res = await fetch(`${API_BASE}/api/majlis/channels/${channel.id}/messages`, {
+      const res = await fetch(`${API_BASE}/api/majlis/channels/${selectedChannel.id}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-majlis-token": token },
-        body: JSON.stringify({ content: shareString }),
+        body: JSON.stringify({ content }),
       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to send");
       }
-      setSent(channel.displayName);
+      setSent(selectedChannel.displayName);
       setTimeout(onClose, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send");
@@ -87,14 +93,38 @@ export function ShareToMajlisModal({ shareString, onClose }: ShareToMajlisModalP
             <p className="text-sm text-red-400 text-center py-4">{error}</p>
           ) : channels.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">No channels found</p>
+          ) : selectedChannel ? (
+            <div className="space-y-3">
+              <button
+                onClick={() => setSelectedChannel(null)}
+                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ← {selectedChannel.displayName}
+              </button>
+              <textarea
+                value={userMessage}
+                onChange={e => setUserMessage(e.target.value)}
+                placeholder="Add a message (optional)"
+                rows={2}
+                maxLength={500}
+                className="w-full bg-muted/20 border border-border text-sm text-foreground placeholder:text-muted-foreground px-3 py-2 resize-none focus:outline-none focus:border-muted-foreground"
+              />
+              <button
+                onClick={handleSend}
+                disabled={sending}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                <Send className="w-3.5 h-3.5" />
+                {sending ? "Sending..." : "Send"}
+              </button>
+            </div>
           ) : (
             <div className="space-y-1 max-h-64 overflow-y-auto">
               {channels.map(ch => (
                 <button
                   key={ch.id}
-                  onClick={() => handleSend(ch)}
-                  disabled={sending}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/30 transition-colors disabled:opacity-50"
+                  onClick={() => setSelectedChannel(ch)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/30 transition-colors"
                 >
                   {ch.type === "dm" ? (
                     <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />

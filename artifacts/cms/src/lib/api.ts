@@ -125,6 +125,8 @@ export const api = {
   getApplication: (id: number) => request(`/applications/${id}`),
   updateApplication: (id: number, data: Record<string, unknown>) =>
     request(`/applications/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  inviteToMajlis: (id: number) =>
+    request(`/applications/${id}/invite-majlis`, { method: "POST" }),
 
   getAnalytics: () => request("/analytics"),
 

@@ -757,7 +757,7 @@ export default function Majlis() {
           ) : (
             <p className="text-sm text-muted-foreground">
               A private space for verified voices across MENA.{" "}
-              <a href="/apply" className="text-primary underline">Apply to join</a>.
+              <a href="/apply?ref=majlis" className="text-primary underline">Apply to join</a>.
             </p>
           )}
 

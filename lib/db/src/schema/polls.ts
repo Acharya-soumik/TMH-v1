@@ -75,6 +75,7 @@ export const hustlerApplicationsTable = pgTable("hustler_applications", {
   aiChecklist: jsonb("ai_checklist"),
   editorialStatus: text("editorial_status").notNull().default("pending"),
   editorNotes: text("editor_notes"),
+  wantsMajlis: boolean("wants_majlis").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   reviewedAt: timestamp("reviewed_at"),
 });

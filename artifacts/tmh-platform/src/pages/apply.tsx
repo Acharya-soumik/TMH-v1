@@ -42,6 +42,10 @@ export default function Apply() {
   usePageTitle("Join The Voices");
   const [status, setStatus] = useState<Status>("idle")
   const [refNumber, setRefNumber] = useState("")
+  const [wantsMajlis, setWantsMajlis] = useState(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get("ref") === "majlis"
+  })
   const [form, setForm] = useState({
     name: "", email: "", title: "", company: "",
     city: "", country: "", sector: "",
@@ -108,7 +112,7 @@ export default function Apply() {
       const res = await fetch("/api/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, wantsMajlis }),
       })
       if (!res.ok) throw new Error("Server error")
       const data = await res.json()
@@ -328,6 +332,23 @@ export default function Apply() {
                   className={inputCn} />
                 {fieldErrors.linkedin && <p className="text-xs text-primary mt-1">{fieldErrors.linkedin}</p>}
               </Field>
+            </div>
+
+            <div className="border border-border bg-card p-5">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={wantsMajlis}
+                  onChange={e => setWantsMajlis(e.target.checked)}
+                  className="mt-1 w-4 h-4 accent-primary flex-shrink-0"
+                />
+                <div>
+                  <span className="text-sm font-bold text-foreground">Join The Majlis</span>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Get access to our private chat room for verified voices across MENA. If approved, you'll receive an invite via email.
+                  </p>
+                </div>
+              </label>
             </div>
 
             <div className="pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-6">

@@ -142,7 +142,7 @@ async function sendApplicationEmail(email: string, name: string, status: string,
 }
 
 router.post("/apply", async (req, res) => {
-  const { name, email, title, company, bio, linkedin, quote, impact, city, country, sector } = req.body
+  const { name, email, title, company, bio, linkedin, quote, impact, city, country, sector, wantsMajlis } = req.body
 
   if (!name || !email || !title || !company || !bio || !linkedin) {
     return res.status(400).json({ error: "Missing required fields" })
@@ -165,6 +165,7 @@ router.post("/apply", async (req, res) => {
       linkedin,
       quote: quote ?? null,
       impact: impact ?? null,
+      wantsMajlis: !!wantsMajlis,
       aiScore: aiResult.score,
       aiStatus: aiResult.status,
       aiReasoning: aiResult.reasoning,
@@ -181,10 +182,7 @@ router.post("/apply", async (req, res) => {
   return res.json({
     success: true,
     referenceNumber: refNumber,
-    message: "Application received. Our AI review runs in minutes.",
-    aiScore: aiResult.score,
-    aiStatus: aiResult.status,
-    reasoning: aiResult.reasoning,
+    message: "Application received. We'll review it and get back to you within 48 hours.",
   })
 })
 

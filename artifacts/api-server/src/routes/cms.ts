@@ -6,7 +6,7 @@ import path from "path";
 import fs from "fs";
 import { r2Client, R2_BUCKET, R2_PUBLIC_URL, isR2Available } from "../utils/r2";
 import crypto from "crypto";
-import { db, pollsTable, pollOptionsTable, votesTable, newsletterSubscribersTable, hustlerApplicationsTable, profilesTable, predictionsTable, pulseTopicsTable, cmsConfigsTable, designTokensTable } from "@workspace/db";
+import { db, pollsTable, pollOptionsTable, votesTable, newsletterSubscribersTable, hustlerApplicationsTable, profilesTable, predictionsTable, pulseTopicsTable, cmsConfigsTable, designTokensTable, majlisInvitesTable } from "@workspace/db";
 import { eq, desc, sql, count, like, or, inArray, and, asc } from "drizzle-orm";
 
 const router = Router();
@@ -1235,6 +1235,75 @@ router.patch("/cms/applications/:id", requireCmsAuth, async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Failed to update application" });
+  }
+});
+
+router.post("/cms/applications/:id/invite-majlis", requireCmsAuth, async (req, res) => {
+  try {
+    const [app] = await db.select().from(hustlerApplicationsTable).where(eq(hustlerApplicationsTable.id, Number(req.params.id)));
+    if (!app) return res.status(404).json({ error: "Application not found" });
+
+    // Check if invite already exists for this email
+    const [existingInvite] = await db.select().from(majlisInvitesTable)
+      .where(eq(majlisInvitesTable.email, app.email.toLowerCase().trim()));
+    if (existingInvite && !existingInvite.isUsed && new Date(existingInvite.expiresAt) > new Date()) {
+      return res.json({ success: true, token: existingInvite.token, alreadyInvited: true });
+    }
+
+    // Create a verified profile for the applicant
+    const [profile] = await db.insert(profilesTable).values({
+      name: app.name,
+      headline: `${app.title} at ${app.company}`,
+      role: app.title,
+      company: app.company,
+      sector: app.sector || "Technology",
+      country: app.country || "",
+      city: app.city || "",
+      summary: app.bio,
+      story: app.impact || "",
+      quote: app.quote || "",
+      isVerified: true,
+    }).returning();
+
+    // Generate invite token
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const bytes = crypto.randomBytes(12);
+    let token = "";
+    for (let i = 0; i < 12; i++) token += chars[bytes[i] % chars.length];
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+    await db.insert(majlisInvitesTable).values({
+      profileId: profile.id,
+      email: app.email.toLowerCase().trim(),
+      token,
+      expiresAt,
+    });
+
+    // Send invite email via Resend
+    const RESEND_API_KEY = process.env.RESEND_API_KEY;
+    if (RESEND_API_KEY) {
+      try {
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "The Tribunal <noreply@themiddleeasthustle.com>",
+            to: app.email,
+            subject: "You're invited to The Majlis",
+            text: `Hi ${app.name},\n\nYou've been approved to join The Majlis — our private chat room for verified voices across MENA.\n\nYour invite code: ${token}\n\nUse it to register at: https://themiddleeasthustle.com/majlis/register\n\nThis code expires in 30 days.\n\nThe Tribunal, by The Middle East Hustle`,
+          }),
+        });
+        console.log(`[CMS] Majlis invite email sent to ${app.email} | Code: ${token}`);
+      } catch (err) {
+        console.error("[CMS] Majlis invite email failed:", err);
+      }
+    }
+
+    console.log(`[CMS] Majlis invite created for ${app.email} | Code: ${token} | ProfileId: ${profile.id}`);
+    return res.json({ success: true, token, profileId: profile.id });
+  } catch (err) {
+    console.error("Invite Majlis error:", err);
+    return res.status(500).json({ error: "Failed to create Majlis invite" });
   }
 });
 
