@@ -316,7 +316,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
               <button
                 onClick={handleCardShareIcon}
                 className="text-muted-foreground hover:text-foreground transition-colors p-2"
-                aria-label="Copy poll link"
+                aria-label="Share debate"
               >
                 <Share2 className="w-4 h-4" />
               </button>

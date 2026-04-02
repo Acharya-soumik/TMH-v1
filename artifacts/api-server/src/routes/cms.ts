@@ -1338,7 +1338,7 @@ router.put("/cms/pages/:page", requireCmsAuth, async (req, res) => {
 router.get("/public/predictions", async (req, res) => {
   try {
     const category = req.query.category as string | undefined;
-    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 50));
     const offset = Math.max(0, Number(req.query.offset) || 0);
 
     const conditions = [eq(predictionsTable.editorialStatus, "approved")];

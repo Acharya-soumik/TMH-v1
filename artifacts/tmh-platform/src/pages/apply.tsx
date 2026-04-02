@@ -40,6 +40,7 @@ type Status = "idle" | "submitting" | "success" | "error"
 export default function Apply() {
   usePageTitle("Join The Voices");
   const [status, setStatus] = useState<Status>("idle")
+  const [refNumber, setRefNumber] = useState("")
   const [form, setForm] = useState({
     name: "", email: "", title: "", company: "",
     city: "", country: "", sector: "",
@@ -90,7 +91,9 @@ export default function Apply() {
         body: JSON.stringify(form),
       })
       if (!res.ok) throw new Error("Server error")
+      const data = await res.json()
       localStorage.setItem("tmh_applied", "1")
+      if (data.referenceNumber) setRefNumber(data.referenceNumber)
       setStatus("success")
     } catch {
       setStatus("error")
@@ -141,6 +144,11 @@ export default function Apply() {
             <h2 className="font-display font-black text-4xl uppercase tracking-tight text-foreground mb-4">
               {successMsg?.title || "Application Received."}
             </h2>
+            {refNumber && (
+              <p className="text-xs uppercase tracking-[0.2em] font-bold text-primary font-serif mb-4">
+                Reference: {refNumber}
+              </p>
+            )}
             <p className="text-lg text-muted-foreground font-sans max-w-md mx-auto mb-2">
               {successMsg?.subtitle || "We are reviewing your application. You'll hear back within 48 hours."}
             </p>
