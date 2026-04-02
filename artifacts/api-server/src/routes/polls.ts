@@ -337,7 +337,7 @@ router.post("/polls/:id/vote", voteRateLimit, async (req, res) => {
 router.post("/polls/:id/email-unlock", async (req, res) => {
   try {
     const pollId = parseInt(req.params.id as string);
-    const { email } = req.body;
+    const { email, newsletterOptIn = true } = req.body;
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: "Valid email required" });
     }
@@ -348,10 +348,13 @@ router.post("/polls/:id/email-unlock", async (req, res) => {
       source: "share_gate",
       pollId,
       countryCode: geoData?.code ?? null,
+      newsletterOptIn: !!newsletterOptIn,
     }).onConflictDoNothing();
-    console.log(`[NEWSLETTER] New subscriber: ${email} (poll ${pollId}, ${geoData?.name ?? "unknown"})`);
-    // Sync to Beehiiv non-blocking
-    syncToBeehiiv(email.trim(), "share_gate").catch(() => {})
+    console.log(`[NEWSLETTER] New subscriber: ${email} (poll ${pollId}, ${geoData?.name ?? "unknown"}, optIn: ${newsletterOptIn})`);
+    // Sync to Beehiiv only if opted in
+    if (newsletterOptIn) {
+      syncToBeehiiv(email.trim(), "share_gate").catch(() => {})
+    }
     return res.json({ success: true });
   } catch (err) {
     console.error(err);

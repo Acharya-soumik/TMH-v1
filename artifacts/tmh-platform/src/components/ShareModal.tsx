@@ -31,9 +31,18 @@ export function ShareModal({ url, title, heading, body, onClose }: ShareModalPro
   const [linkCopied, setLinkCopied] = useState(false)
   const [email, setEmail] = useState("")
   const [emailSubmitted, setEmailSubmitted] = useState(false)
+  const [newsletterOptIn, setNewsletterOptIn] = useState(true)
   const { toast } = useToast()
 
   const hasEmail = typeof window !== "undefined" && !!localStorage.getItem("tmh_email_submitted")
+
+  // When user already submitted email, show share-focused copy (not "unlock")
+  const displayHeading = hasEmail
+    ? "Share This"
+    : (heading || "Share to Unlock Full Results")
+  const displayBody = hasEmail
+    ? "See what others have to say — share and spark a conversation."
+    : (body || "We keep The Tribunal free by making opinion data shareable. Share this to see the full breakdown.")
 
   const handleWhatsApp = () => {
     const msg = `${title} — cast your vote 👇 ${url}`
@@ -76,7 +85,7 @@ export function ShareModal({ url, title, heading, body, onClose }: ShareModalPro
     fetch(`${baseUrl}/api/email-subscribe`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim(), source: "share_modal" }),
+      body: JSON.stringify({ email: email.trim(), source: "share_modal", newsletterOptIn }),
     }).catch(() => {})
     setTimeout(onClose, 800)
   }
@@ -103,10 +112,10 @@ export function ShareModal({ url, title, heading, body, onClose }: ShareModalPro
         {/* Header */}
         <div>
           <p className="font-serif font-black uppercase text-2xl tracking-tight text-foreground" style={{ fontSize: "2.1rem", lineHeight: 1.05 }}>
-            {heading || "Share to Unlock Full Results"}
+            {displayHeading}
           </p>
           <p className="text-[13px] text-muted-foreground font-sans mt-2 leading-relaxed">
-            {body || "We keep The Tribunal free by making opinion data shareable. Share this to see the full breakdown."}
+            {displayBody}
           </p>
         </div>
 
@@ -188,6 +197,17 @@ export function ShareModal({ url, title, heading, body, onClose }: ShareModalPro
               </form>
             )}
 
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={newsletterOptIn}
+                onChange={e => setNewsletterOptIn(e.target.checked)}
+                className="w-3.5 h-3.5 rounded-sm accent-primary cursor-pointer"
+              />
+              <span className="text-[10px] text-muted-foreground font-sans">
+                Send me The Tribunal newsletter with insights & results
+              </span>
+            </label>
             <p className="text-[10px] text-muted-foreground font-sans">No spam. Unsubscribe anytime.</p>
           </>
         )}

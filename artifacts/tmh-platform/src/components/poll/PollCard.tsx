@@ -77,6 +77,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
   const [linkCopied, setLinkCopied] = useState(false)
   const [email, setEmail] = useState("")
   const [emailSubmitted, setEmailSubmitted] = useState(false)
+  const [newsletterOptIn, setNewsletterOptIn] = useState(true)
   const [wasFirstTimer, setWasFirstTimer] = useState(false)
   const [showShareTooltip, setShowShareTooltip] = useState(false)
   const [showMajlisShare, setShowMajlisShare] = useState(false)
@@ -221,7 +222,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
     fetch(`${baseUrl}/api/polls/${poll.id}/email-unlock`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim() }),
+      body: JSON.stringify({ email: email.trim(), newsletterOptIn }),
     }).catch(() => {})
     setTimeout(unlock, 1000)
   }
@@ -543,17 +544,15 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                 {/* Share Your Stance */}
                 <div className="space-y-3">
                   <button
-                    onClick={handleShareStance}
-                    disabled={isSharing}
+                    onClick={() => setShowShareModal(true)}
                     className={cn(
                       "w-full flex items-center justify-center gap-2.5 px-5 py-3.5",
                       "bg-foreground text-background text-[11px] font-black uppercase tracking-[0.2em]",
                       "hover:bg-primary hover:text-white transition-colors duration-150",
-                      "disabled:opacity-60 disabled:cursor-not-allowed"
                     )}
                   >
                     <Share2 className="w-3.5 h-3.5 flex-shrink-0" />
-                    {isSharing ? "Generating…" : "Share Your Result"}
+                    Share Your Result
                   </button>
                 </div>
 
@@ -685,6 +684,17 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
               </form>
             )}
 
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={newsletterOptIn}
+                onChange={e => setNewsletterOptIn(e.target.checked)}
+                className="w-3.5 h-3.5 rounded-sm accent-primary cursor-pointer"
+              />
+              <span className="text-[10px] text-muted-foreground font-sans">
+                Send me The Tribunal newsletter with insights & results
+              </span>
+            </label>
             <p className="text-[10px] text-muted-foreground font-sans">No spam. Unsubscribe anytime.</p>
           </div>
         </div>
@@ -701,8 +711,11 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
         <ShareModal
           url={getPollUrl(poll.id)}
           title={poll.question}
-          heading="Share to Unlock Full Results"
-          body="We keep The Tribunal free by making opinion data shareable. Share this debate to see the full breakdown."
+          heading={phase === "results" ? "Share This" : "Share to Unlock Full Results"}
+          body={phase === "results"
+            ? "See what others have to say — share and spark a conversation."
+            : "We keep The Tribunal free by making opinion data shareable. Share this debate to see the full breakdown."
+          }
           onClose={() => setShowShareModal(false)}
         />
       )}

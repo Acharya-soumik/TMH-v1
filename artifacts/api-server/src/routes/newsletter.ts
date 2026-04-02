@@ -37,7 +37,7 @@ export async function syncToBeehiiv(email: string, source: string) {
 
 router.post("/newsletter/subscribe", async (req, res) => {
   try {
-    const { email, source = "homepage" } = req.body
+    const { email, source = "homepage", newsletterOptIn = true } = req.body
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: "Valid email required" })
     }
@@ -45,9 +45,12 @@ router.post("/newsletter/subscribe", async (req, res) => {
     await db.insert(newsletterSubscribersTable).values({
       email: clean,
       source,
+      newsletterOptIn: !!newsletterOptIn,
     }).onConflictDoNothing()
-    console.log(`[NEWSLETTER] Subscriber added: ${clean} (source: ${source})`)
-    syncToBeehiiv(clean, source).catch(() => {})
+    console.log(`[NEWSLETTER] Subscriber added: ${clean} (source: ${source}, optIn: ${newsletterOptIn})`)
+    if (newsletterOptIn) {
+      syncToBeehiiv(clean, source).catch(() => {})
+    }
     return res.json({ success: true })
   } catch (err) {
     console.error(err)

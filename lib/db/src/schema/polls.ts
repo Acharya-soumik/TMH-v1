@@ -52,6 +52,7 @@ export const newsletterSubscribersTable = pgTable("newsletter_subscribers", {
   source: text("source").notNull().default("share_gate"),
   pollId: integer("poll_id"),
   countryCode: text("country_code"),
+  newsletterOptIn: boolean("newsletter_opt_in").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
