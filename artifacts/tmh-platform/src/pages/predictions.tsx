@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Search, X, Share2, CheckCircle2, MessageSquare } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useToast } from "@/hooks/use-toast";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
@@ -1170,7 +1171,6 @@ export default function Predictions() {
   usePageTitle("Predictions");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("ALL");
-  const [visibleCount, setVisibleCount] = useState(20);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [voteOverrides, setVoteOverrides] = useState<Record<number, { yes: number; no: number }>>({});
   const [highlightedId, setHighlightedId] = useState<string | null>(() => {
@@ -1242,15 +1242,14 @@ export default function Predictions() {
     return result;
   }, [searchQuery, activeCategory, PREDICTIONS, voteOverrides]);
 
+  const { sentinelRef, visibleItems: visibleCards, hasMore, expandTo } = useInfiniteScroll(filteredCards, 10);
+
   // When shared param is present, ensure the card is visible and scroll to it
   useEffect(() => {
     if (!highlightedId || !filteredCards.length) return;
     const idx = filteredCards.findIndex((c) => String(c.id) === highlightedId);
     if (idx === -1) return;
-    // Ensure enough cards are rendered to include the shared one
-    if (idx >= visibleCount) {
-      setVisibleCount(idx + 5);
-    }
+    expandTo(idx);
     // Wait for DOM to render, then scroll
     requestAnimationFrame(() => {
       setTimeout(() => {
@@ -1329,7 +1328,6 @@ export default function Predictions() {
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setActiveCategory("ALL");
-                setVisibleCount(20);
               }}
               className="text-text2"
               style={{
@@ -1466,7 +1464,6 @@ export default function Predictions() {
               onClick={() => {
                 setActiveCategory("ALL");
                 setSearchQuery("");
-                setVisibleCount(20);
               }}
               style={{
                 padding: "5px 14px",
@@ -1499,7 +1496,6 @@ export default function Predictions() {
                   onClick={() => {
                     setActiveCategory(cat);
                     setSearchQuery("");
-                    setVisibleCount(20);
                   }}
                   style={{
                     padding: "5px 14px",
@@ -1651,7 +1647,7 @@ export default function Predictions() {
                 viewport={{ once: true, amount: 0.05 }}
                 variants={staggerContainer}
               >
-                {filteredCards.slice(0, visibleCount).map((card, index, arr) => (
+                {visibleCards.map((card, index, arr) => (
                   <motion.div key={card.id} variants={staggerItem} className={index === arr.length - 1 && arr.length % 2 !== 0 ? "md:col-span-2" : ""}>
                     <PredictionGridCard
                       card={card}
@@ -1663,35 +1659,10 @@ export default function Predictions() {
                   </motion.div>
                 ))}
               </motion.div>
-              {visibleCount < filteredCards.length && (
-                <motion.div
-                  className="text-center mb-16"
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
-                >
-                  <motion.button
-                    onClick={() => setVisibleCount((v) => v + 20)}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{
-                      fontFamily: "'Barlow Condensed', sans-serif",
-                      fontWeight: 800,
-                      fontSize: "0.78rem",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.15em",
-                      color: "#DC143C",
-                      background: "none",
-                      border: "1px solid rgba(220,20,60,0.3)",
-                      padding: "12px 32px",
-                      cursor: "pointer",
-                      transition: "color 0.2s",
-                    }}
-                  >
-                    Load More ({filteredCards.length - visibleCount} remaining)
-                  </motion.button>
-                </motion.div>
+              {hasMore && (
+                <div ref={sentinelRef} className="flex justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+                </div>
               )}
             </>
           )}
