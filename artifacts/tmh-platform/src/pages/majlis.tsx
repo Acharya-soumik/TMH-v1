@@ -734,6 +734,8 @@ export default function Majlis() {
   const activeChannel = channels.find(c => c.id === activeChannelId)
   const onlineCount = members.filter(m => m.isOnline).length
 
+  const hasApplied = typeof window !== "undefined" && localStorage.getItem("tmh_applied") === "1"
+
   if (!user) {
     return (
       <Layout>
@@ -741,10 +743,20 @@ export default function Majlis() {
           <h2 className="font-display font-black text-2xl uppercase tracking-tight text-foreground mb-2">
             The Majlis is Invite-Only
           </h2>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            A private space for verified voices across MENA.{" "}
-            <a href="/apply" className="text-primary underline">Apply to join</a>.
-          </p>
+          {hasApplied ? (
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Your application is being reviewed. You'll hear back within 48 hours.{" "}
+              Need help?{" "}
+              <a href="mailto:hello@themiddleeasthustle.com" className="text-primary underline">
+                Contact support
+              </a>.
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              A private space for verified voices across MENA.{" "}
+              <a href="/apply" className="text-primary underline">Apply to join</a>.
+            </p>
+          )}
         </div>
       </Layout>
     )

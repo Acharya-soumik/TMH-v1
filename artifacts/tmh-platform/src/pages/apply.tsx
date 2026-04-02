@@ -90,6 +90,7 @@ export default function Apply() {
         body: JSON.stringify(form),
       })
       if (!res.ok) throw new Error("Server error")
+      localStorage.setItem("tmh_applied", "1")
       setStatus("success")
     } catch {
       setStatus("error")
