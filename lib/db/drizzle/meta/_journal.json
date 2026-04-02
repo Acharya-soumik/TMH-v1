@@ -15,6 +15,13 @@
       "when": 1774560892675,
       "tag": "0001_ideation_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774647292675,
+      "tag": "0002_snapshot_unique_index",
+      "breakpoints": true
     }
   ]
 }

@@ -298,6 +298,24 @@ router.post("/polls/:id/vote", voteRateLimit, async (req, res) => {
     const updatedOptions = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
     const updatedTotal = updatedOptions.reduce((s: number, o: any) => s + o.voteCount, 0);
 
+    // Upsert today's snapshot for all options so the trend chart reflects real votes
+    if (updatedTotal > 0) {
+      try {
+        const snapshotValues = updatedOptions.map((o) => {
+          const pct = Math.round((o.voteCount / updatedTotal) * 1000) / 10;
+          return sql`(${pollId}, ${o.id}, DATE(NOW()), ${pct}, ${o.voteCount})`;
+        });
+        await db.execute(sql`
+          INSERT INTO poll_snapshots (poll_id, option_id, snapshot_date, percentage, vote_count)
+          VALUES ${sql.join(snapshotValues, sql`, `)}
+          ON CONFLICT (poll_id, option_id, (DATE(snapshot_date)))
+          DO UPDATE SET percentage = EXCLUDED.percentage, vote_count = EXCLUDED.vote_count
+        `);
+      } catch (snapshotErr) {
+        console.error("[SNAPSHOT] Failed to upsert snapshot:", snapshotErr);
+      }
+    }
+
     return res.json({
       success: true,
       alreadyVoted: false,
