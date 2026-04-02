@@ -63,7 +63,7 @@ export function Navbar() {
     { label: t("Pulse"), href: "/mena-pulse" },
     { label: t("Debates"), href: "/debates" },
     { label: t("Predictions"), href: "/predictions" },
-    { label: t("Voices"), href: "/profiles" },
+    { label: t("Voices"), href: "/voices" },
     { label: t("The Majlis"), href: "/majlis", icon: "lock" },
   ]
 

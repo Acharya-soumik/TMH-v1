@@ -1665,7 +1665,7 @@ export default function Home() {
                 accent: "#10B981",
               },
               {
-                href: "/profiles",
+                href: "/voices",
                 label: t("Voices"),
                 desc: "The people shaping the region",
                 count: String(
@@ -2498,7 +2498,7 @@ export default function Home() {
               <SlideReveal color="#DC143C" height={4} className="mt-3" delay={0.3} />
             </div>
             <Link
-              href="/profiles"
+              href="/voices"
               className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-widest text-background/70 hover:text-background font-serif"
             >
               {t("View All →")}
@@ -2540,7 +2540,7 @@ export default function Home() {
           <div className="mt-8 flex items-center gap-4 flex-wrap">
             <motion.div whileTap={{ scale: 0.97 }} className="inline-flex">
             <Link
-              href="/profiles"
+              href="/voices"
               className="inline-flex items-center gap-2 bg-primary text-white font-bold uppercase tracking-widest text-xs px-8 py-3 hover:bg-primary/90 transition-colors font-serif"
             >
               {t("View All Voices")} <ArrowRight className="w-3 h-3" />

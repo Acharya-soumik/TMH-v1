@@ -30,7 +30,7 @@ const FALLBACK_PILLARS = [
     num: "04",
     title: "The Voices",
     body: "94 founders, operators, and changemakers from 10 countries — curated, not applied-for. Each Voice has a story, a lesson, and a quote. This is the region's leadership index, built one profile at a time.",
-    link: "/profiles",
+    link: "/voices",
     cta: "Meet The Voices",
   },
 ]
@@ -336,7 +336,7 @@ export default function About() {
               {t("Read The Pulse")}
             </Link>
             <Link
-              href="/profiles"
+              href="/voices"
               className="border border-primary text-primary px-8 py-3 font-bold uppercase tracking-widest text-xs hover:bg-primary hover:text-white transition-colors font-serif"
             >
               {t("Meet The Voices")}

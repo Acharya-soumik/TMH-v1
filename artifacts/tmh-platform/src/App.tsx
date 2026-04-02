@@ -38,8 +38,8 @@ function Router() {
       <Route path="/debates" component={Polls} />
       <Route path="/debates/archive" component={PollArchive} />
       <Route path="/debates/:id" component={PollDetail} />
-      <Route path="/profiles" component={Profiles} />
-      <Route path="/profiles/:id" component={ProfileDetail} />
+      <Route path="/voices" component={Profiles} />
+      <Route path="/voices/:id" component={ProfileDetail} />
       <Route path="/predictions" component={Predictions} />
       <Route path="/about" component={About} />
       <Route path="/apply" component={Apply} />
@@ -52,7 +52,8 @@ function Router() {
       <Route path="/contact" component={Contact} />
       <Route path="/admin" component={Admin} />
       {/* URL redirects */}
-      <Route path="/voices"><Redirect to="/profiles" /></Route>
+      <Route path="/profiles"><Redirect to="/voices" /></Route>
+      <Route path="/profiles/:id">{(params: { id: string }) => <Redirect to={`/voices/${params.id}`} />}</Route>
       <Route path="/pulse"><Redirect to="/mena-pulse" /></Route>
       <Route component={NotFound} />
     </Switch>

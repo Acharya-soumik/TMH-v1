@@ -46,7 +46,7 @@ export default function Join() {
         </Link>
         <div className="flex items-center gap-6">
           <Link href="/debates" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">Debates</Link>
-          <Link href="/profiles" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">Voices</Link>
+          <Link href="/voices" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">Voices</Link>
           <Link href="/about" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">About</Link>
         </div>
       </div>

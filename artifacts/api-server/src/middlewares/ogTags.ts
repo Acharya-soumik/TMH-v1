@@ -111,7 +111,7 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
     return
   }
 
-  const profileMatch = req.path.match(/^\/profiles\/(\d+)/)
+  const profileMatch = req.path.match(/^\/voices\/(\d+)/)
   if (profileMatch) {
     const profileId = profileMatch[1]
     fetch(`http://localhost:${process.env.PORT ?? 8080}/api/profiles/${profileId}`)
@@ -151,7 +151,7 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
       title: "All Debates | The Tribunal",
       description: "Browse every debate. 135+ questions about the future of the Arab world.",
     },
-    "/profiles": {
+    "/voices": {
       title: "The Voices | The Tribunal",
       description: "100+ curated founders, operators, and change-makers shaping MENA.",
     },

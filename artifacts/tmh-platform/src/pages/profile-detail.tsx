@@ -64,7 +64,7 @@ function CompanyLink({ company }: { company: string }) {
 }
 
 export default function ProfileDetail() {
-  const [, params] = useRoute("/profiles/:id")
+  const [, params] = useRoute("/voices/:id")
   const id = params?.id ? parseInt(params.id) : 0
   const [imgError, setImgError] = useState(false)
 
@@ -88,7 +88,7 @@ export default function ProfileDetail() {
       <Layout>
         <div className="max-w-4xl mx-auto px-4 py-24 text-center">
           <h1 className="text-4xl font-serif font-black uppercase tracking-tight mb-4 text-foreground">Profile not found</h1>
-          <Link href="/profiles" className="text-primary hover:underline font-bold text-xs uppercase tracking-widest">
+          <Link href="/voices" className="text-primary hover:underline font-bold text-xs uppercase tracking-widest">
             Back to Directory
           </Link>
         </div>
@@ -103,7 +103,7 @@ export default function ProfileDetail() {
       {/* Header: portrait photo + name/meta */}
       <div className="bg-background border-b border-border">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <Link href="/profiles" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground font-bold mb-8 transition-colors">
+          <Link href="/voices" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground font-bold mb-8 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to Directory
           </Link>
 

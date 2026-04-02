@@ -67,7 +67,7 @@ export function ProfileCard({ profile }: { profile: Profile }) {
     name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
 
   const companyUrl = getCompanyUrl(profile.company)
-  const profileUrl = `/profiles/${profile.id}`
+  const profileUrl = `/voices/${profile.id}`
 
   return (
     <div

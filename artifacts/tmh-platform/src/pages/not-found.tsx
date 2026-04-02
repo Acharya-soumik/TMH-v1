@@ -66,7 +66,7 @@ export default function NotFound() {
             <Link href="/predictions" className="text-[10px] uppercase tracking-widest font-bold font-serif text-muted-foreground hover:text-foreground transition-colors">
               {t("Predictions")} {isAr ? "←" : "→"}
             </Link>
-            <Link href="/profiles" className="text-[10px] uppercase tracking-widest font-bold font-serif text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/voices" className="text-[10px] uppercase tracking-widest font-bold font-serif text-muted-foreground hover:text-foreground transition-colors">
               {t("Voices")} {isAr ? "←" : "→"}
             </Link>
             <Link href="/faq" className="text-[10px] uppercase tracking-widest font-bold font-serif text-muted-foreground hover:text-foreground transition-colors">
