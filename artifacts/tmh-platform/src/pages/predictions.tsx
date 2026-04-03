@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ShareModal } from "@/components/ShareModal";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
+import { PredictionGridSkeleton } from "@/components/skeletons/PredictionCardSkeleton";
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
@@ -1942,16 +1943,7 @@ export default function Predictions() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Loading skeletons */}
           {isLoading && PREDICTIONS.length === 0 && (
-            <>
-              <div className="mb-12">
-                <div className="animate-pulse bg-card border border-border h-64 w-full" />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="animate-pulse bg-card border border-border p-6 h-48" />
-                ))}
-              </div>
-            </>
+            <PredictionGridSkeleton />
           )}
 
           {/* Featured prediction */}

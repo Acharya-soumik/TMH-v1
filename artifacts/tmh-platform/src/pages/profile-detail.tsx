@@ -110,18 +110,17 @@ export default function ProfileDetail() {
           <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
             {/* Portrait photo */}
             {profile.imageUrl && !imgError ? (
-                  <img
-                    src={profile.imageUrl}
-                    alt={profile.name}
-                    className="w-full h-full object-contain grayscale"
-                    onError={() => setImgError(true)}
-                  />
+              <div className="flex-shrink-0 w-48 md:w-56 overflow-hidden" style={{ aspectRatio: '3/4' }}>
+                <img
+                  src={profile.imageUrl}
+                  alt={profile.name}
+                  className="w-full h-full object-cover object-top grayscale"
+                  onError={() => setImgError(true)}
+                />
+              </div>
             ) : (
-              <div className="relative flex-shrink-0 w-48 md:w-56 bg-secondary text-foreground flex items-center justify-center font-serif font-black text-5xl border border-border" style={{ aspectRatio: '3/4' }}>
+              <div className="flex-shrink-0 w-48 md:w-56 bg-secondary text-foreground flex items-center justify-center font-serif font-black text-5xl" style={{ aspectRatio: '3/4' }}>
                 {profile.name.substring(0, 2).toUpperCase()}
-                {profile.isVerified && (
-                  <div className="absolute bottom-3 right-3 bg-primary w-3 h-3 border-2 border-background" title="Verified Voice" />
-                )}
               </div>
             )}
 

@@ -11,6 +11,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { motion } from "motion/react";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
+import { DebateGridSkeleton } from "@/components/skeletons/DebateCardSkeleton";
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
@@ -423,14 +424,7 @@ export default function Polls() {
 
         <div className="flex-1">
           {isLoading ? (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="h-80 bg-secondary animate-pulse border border-border"
-                />
-              ))}
-            </div>
+            <DebateGridSkeleton />
           ) : filteredPolls.length === 0 ? (
             <motion.div
               className="text-center py-20 border border-border border-dashed bg-secondary/30"

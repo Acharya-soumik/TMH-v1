@@ -10,6 +10,7 @@ import { usePageTitle } from "@/hooks/use-page-title";
 import { motion } from "motion/react";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
+import { ProfileGridSkeleton } from "@/components/skeletons/ProfileCardSkeleton";
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
@@ -444,37 +445,7 @@ export default function Profiles() {
         </motion.div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div
-                key={i}
-                className="bg-card border border-border overflow-hidden"
-              >
-                {/* Image shimmer */}
-                <div className="h-56 bg-secondary relative overflow-hidden">
-                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-background/20 to-transparent" />
-                </div>
-                {/* Text shimmer */}
-                <div className="p-5 space-y-3">
-                  <div className="h-5 w-3/4 bg-secondary rounded relative overflow-hidden">
-                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-background/20 to-transparent" />
-                  </div>
-                  <div className="h-3 w-full bg-secondary rounded relative overflow-hidden">
-                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-background/20 to-transparent" />
-                  </div>
-                  <div className="h-3 w-1/2 bg-secondary rounded relative overflow-hidden">
-                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-background/20 to-transparent" />
-                  </div>
-                  <div className="h-3 w-2/3 bg-secondary rounded relative overflow-hidden">
-                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-background/20 to-transparent" />
-                  </div>
-                  <div className="mt-4 h-9 w-full bg-secondary border border-border relative overflow-hidden">
-                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-background/20 to-transparent" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ProfileGridSkeleton />
         ) : filtered.length === 0 ? (
           <motion.div
             className="text-center py-20 border border-border border-dashed bg-secondary/30"
@@ -492,7 +463,7 @@ export default function Profiles() {
         ) : (
           <>
             <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
               initial="hidden"
               animate="visible"
               variants={staggerContainer}
