@@ -114,6 +114,10 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
   const [confirmChoice, setConfirmChoice] = useState<string | null>(null)
   const [isDeselecting, setIsDeselecting] = useState(false)
   const [changing, setChanging] = useState(false)
+  const [localYes, setLocalYes] = useState(prediction.yesPercentage)
+  const [localNo, setLocalNo] = useState(prediction.noPercentage)
+  const [localTotal, setLocalTotal] = useState(prediction.totalCount)
+  const [localOptionResults, setLocalOptionResults] = useState(prediction.optionResults ?? {})
 
   const options = prediction.options?.length ? prediction.options : ["yes", "no"]
   const isLegacy = !prediction.options?.length
@@ -124,6 +128,8 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
     setChanging(false)
     setIsDeselecting(false)
     localStorage.setItem(storageKey, choice)
+    // Optimistic update
+    setLocalTotal(prev => prev + 1)
     onVoteUpdate(choice)
     let token = localStorage.getItem("tmh_voter_token")
     if (!token) { token = crypto.randomUUID(); localStorage.setItem("tmh_voter_token", token) }
@@ -131,7 +137,15 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ choice, voterToken: token }),
-    }).catch(() => {})
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.yesPercentage != null) setLocalYes(data.yesPercentage)
+        if (data.noPercentage != null) setLocalNo(data.noPercentage)
+        if (data.totalCount != null) setLocalTotal(data.totalCount)
+        if (data.optionResults) setLocalOptionResults(data.optionResults)
+      })
+      .catch(() => {})
   }
 
   const removeVote = () => {
@@ -174,25 +188,25 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
             <div>
               <div className="flex justify-between text-xs mb-1">
                 <span className="font-bold uppercase tracking-wider">Yes</span>
-                <span className="text-emerald-500 font-bold">{prediction.yesPercentage}%</span>
+                <span className="text-emerald-500 font-bold">{localYes}%</span>
               </div>
               <div className="h-3 bg-foreground/5 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${prediction.yesPercentage}%` }} />
+                <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${localYes}%` }} />
               </div>
             </div>
             <div>
               <div className="flex justify-between text-xs mb-1">
                 <span className="font-bold uppercase tracking-wider">No</span>
-                <span className="text-red-500 font-bold">{prediction.noPercentage}%</span>
+                <span className="text-red-500 font-bold">{localNo}%</span>
               </div>
               <div className="h-3 bg-foreground/5 rounded-full overflow-hidden">
-                <div className="h-full bg-red-500 rounded-full transition-all duration-1000" style={{ width: `${prediction.noPercentage}%` }} />
+                <div className="h-full bg-red-500 rounded-full transition-all duration-1000" style={{ width: `${localNo}%` }} />
               </div>
             </div>
           </>
         ) : (
           options.map((opt, i) => {
-            const pct = prediction.optionResults?.[opt] ?? 0
+            const pct = localOptionResults[opt] ?? 0
             const color = OPTION_COLORS[i % OPTION_COLORS.length]
             return (
               <div key={opt}>
@@ -267,7 +281,7 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
 
       <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border text-xs text-muted-foreground">
         <Users className="w-3.5 h-3.5" />
-        <span>{prediction.totalCount.toLocaleString()} votes cast</span>
+        <span>{localTotal.toLocaleString()} votes cast</span>
       </div>
 
       {/* Confirmation overlay */}
@@ -306,6 +320,7 @@ export default function PredictionDetail() {
 
   const { data: prediction, isLoading, error } = usePrediction(id)
   const { data: relatedData } = usePredictions(prediction?.category)
+  const { data: allData } = usePredictions()
 
   usePageTitle(prediction ? {
     title: prediction.question,
@@ -342,6 +357,15 @@ export default function PredictionDetail() {
   }
 
   const related = (relatedData?.items ?? []).filter(p => p.id !== prediction.id).slice(0, 5)
+  // Cross-category picks for "People also voted on" — mix of popular from other categories
+  const alsoVotedOn = (allData?.items ?? [])
+    .filter(p => p.id !== prediction.id && p.category !== prediction.category)
+    .sort((a, b) => b.totalCount - a.totalCount)
+    .slice(0, 5)
+  // If not enough cross-category, fill with same-category
+  const bottomCards = alsoVotedOn.length >= 4
+    ? alsoVotedOn
+    : [...alsoVotedOn, ...(relatedData?.items ?? []).filter(p => p.id !== prediction.id && !alsoVotedOn.some(a => a.id === p.id))].slice(0, 5)
   const shareUrl = `${window.location.origin}/predictions/${prediction.id}`
   const shareTitle = prediction.question
 
@@ -408,6 +432,65 @@ export default function PredictionDetail() {
 
             {/* Vote section */}
             <VoteSection prediction={prediction} onVoteUpdate={() => {}} />
+
+            {/* People also voted on */}
+            {bottomCards.length > 0 && (
+              <div className="mt-4">
+                <div className="border-l-4 border-primary pl-4 mb-6">
+                  <h3 className="font-serif font-black uppercase text-2xl tracking-tight">People Also Voted On</h3>
+                  <p className="text-[11px] uppercase tracking-widest text-muted-foreground mt-1">Popular predictions across categories</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {bottomCards.map(card => (
+                    <Link
+                      key={card.id}
+                      href={`/predictions/${card.id}`}
+                      className="group border border-border bg-card hover:border-primary/40 transition-all duration-200 p-6 flex flex-col"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 bg-primary/10 text-primary border border-primary/20">
+                          {card.category}
+                        </span>
+                        <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold ml-auto">
+                          Resolves {card.resolvesAt ?? "TBD"}
+                        </span>
+                      </div>
+                      <h4 className="font-serif font-black uppercase text-sm tracking-tight leading-snug line-clamp-3 group-hover:text-primary transition-colors mb-4 flex-1">
+                        {card.question}
+                      </h4>
+                      <div className="space-y-2 mb-3">
+                        <div>
+                          <div className="flex justify-between text-[10px] mb-0.5">
+                            <span className="font-bold uppercase">Yes</span>
+                            <span className="text-emerald-500 font-bold">{card.yesPercentage}%</span>
+                          </div>
+                          <div className="h-1.5 bg-foreground/5 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${card.yesPercentage}%` }} />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-[10px] mb-0.5">
+                            <span className="font-bold uppercase">No</span>
+                            <span className="text-red-500 font-bold">{card.noPercentage}%</span>
+                          </div>
+                          <div className="h-1.5 bg-foreground/5 rounded-full overflow-hidden">
+                            <div className="h-full bg-red-500 rounded-full" style={{ width: `${card.noPercentage}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-3 border-t border-border">
+                        <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">
+                          {card.totalCount.toLocaleString()} votes
+                        </span>
+                        <span className="text-[9px] uppercase tracking-widest text-primary font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          Vote <ArrowRight className="w-2.5 h-2.5" />
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right sidebar */}
