@@ -65,7 +65,7 @@ export default function Polls() {
   const { data: pollsData, isLoading } = useListPolls({
     filter,
     category,
-    limit: 50,
+    limit: 500,
   });
   const { data: categoriesData } = useListCategories();
   const { data: config } = usePageConfig<PollsConfig>("polls");
@@ -102,6 +102,15 @@ export default function Polls() {
   const { sentinelRef, visibleItems: visiblePolls, hasMore } = useInfiniteScroll(filteredPolls, 10);
 
   const pollCount = pollsData?.polls?.length ?? 0;
+  // Compute actual loaded counts per category slug
+  const loadedCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of (pollsData?.polls ?? [])) {
+      const slug = p.categorySlug ?? "";
+      counts[slug] = (counts[slug] ?? 0) + 1;
+    }
+    return counts;
+  }, [pollsData]);
   const tabs = [
     { id: "trending", label: "Trending" },
     { id: "latest", label: "Latest" },
@@ -330,11 +339,9 @@ export default function Polls() {
                 )}
               >
                 <span>All Topics</span>
-                {categoriesData?.categories && (
-                  <span className="opacity-60">
-                    ({categoriesData.categories.reduce((sum, c) => sum + (c.pollCount ?? 0), 0)})
-                  </span>
-                )}
+                <span className="opacity-60">
+                  ({pollCount})
+                </span>
               </button>
               {(() => {
                 const allCats = categoriesData?.categories ?? [];
@@ -357,7 +364,7 @@ export default function Polls() {
                         )}
                       >
                         <span>{cat.name}</span>
-                        <span className="opacity-60">({cat.pollCount ?? 0})</span>
+                        <span className="opacity-60">({loadedCategoryCounts[cat.slug] ?? 0})</span>
                       </button>
                     ))}
                     {hasMore && (
