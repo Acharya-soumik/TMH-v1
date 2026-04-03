@@ -16,14 +16,14 @@ export function Chatbot() {
     {
       id: "welcome",
       role: "assistant",
-      content:
-        "Welcome to The Tribunal. I can help you learn about our platform \u2014 debates, predictions, pulse, voices, and more. What would you like to know?",
+      content: "hey! ask me anything about The Tribunal \u2014 debates, predictions, pulse, voices",
     },
   ])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -43,54 +43,76 @@ export function Chatbot() {
     const text = input.trim()
     if (!text || isLoading) return
 
-    const userMsg: Message = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: text,
-    }
-
-    setMessages((prev) => [...prev, userMsg])
+    const userMsg: Message = { id: `user-${Date.now()}`, role: "user", content: text }
+    setMessages(prev => [...prev, userMsg])
     setInput("")
     setIsLoading(true)
 
-    try {
-      // Build history from existing messages (exclude welcome)
-      const history = messages
-        .filter((m) => m.id !== "welcome")
-        .map((m) => ({ role: m.role, content: m.content }))
+    const botId = `bot-${Date.now()}`
+    // Add empty bot message that we'll stream into
+    setMessages(prev => [...prev, { id: botId, role: "assistant", content: "" }])
 
+    try {
+      const history = messages.filter(m => m.id !== "welcome").map(m => ({ role: m.role, content: m.content }))
+
+      abortRef.current = new AbortController()
       const res = await fetch(`${API_BASE}/api/chatbot/message`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, history }),
+        body: JSON.stringify({ message: text, history, stream: true }),
+        signal: abortRef.current.signal,
       })
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(
-          (err as { error?: string }).error || "Failed to get response"
-        )
+        throw new Error((err as { error?: string }).error || "Failed to get response")
       }
 
-      const data = (await res.json()) as { response: string }
+      const reader = res.body?.getReader()
+      if (!reader) throw new Error("No stream")
 
-      const botMsg: Message = {
-        id: `bot-${Date.now()}`,
-        role: "assistant",
-        content: data.response,
+      const decoder = new TextDecoder()
+      let accumulated = ""
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split("\n")
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6)
+            if (data === "[DONE]") continue
+            try {
+              const parsed = JSON.parse(data)
+              if (parsed.text) {
+                accumulated += parsed.text
+                const current = accumulated
+                setMessages(prev => prev.map(m => m.id === botId ? { ...m, content: current } : m))
+              }
+            } catch {}
+          }
+        }
       }
 
-      setMessages((prev) => [...prev, botMsg])
+      // If stream returned nothing, show fallback
+      if (!accumulated) {
+        setMessages(prev => prev.map(m => m.id === botId ? { ...m, content: "hmm, couldn't get a response. try again?" } : m))
+      }
     } catch (err) {
-      const botMsg: Message = {
-        id: `error-${Date.now()}`,
-        role: "assistant",
-        content:
-          "Sorry, I'm having trouble responding right now. Please try again in a moment.",
-      }
-      setMessages((prev) => [...prev, botMsg])
+      if ((err as Error).name === "AbortError") return
+      setMessages(prev => {
+        const last = prev[prev.length - 1]
+        if (last?.id === botId && !last.content) {
+          return prev.map(m => m.id === botId ? { ...m, content: "sorry, something went wrong. try again in a sec" } : m)
+        }
+        return prev
+      })
     } finally {
       setIsLoading(false)
+      abortRef.current = null
     }
   }
 
@@ -105,7 +127,7 @@ export function Chatbot() {
     <>
       {/* Floating chat bubble */}
       <button
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => setIsOpen(prev => !prev)}
         className={cn(
           "fixed bottom-6 right-6 z-[600] flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-300 cursor-pointer",
           "bg-[#DC143C] hover:bg-[#B01030] text-white",
@@ -122,9 +144,7 @@ export function Chatbot() {
         className={cn(
           "fixed bottom-6 right-6 z-[600] w-[min(400px,calc(100vw-3rem))] flex flex-col rounded-xl shadow-2xl overflow-hidden transition-all duration-300 origin-bottom-right",
           "border border-border bg-background",
-          isOpen
-            ? "scale-100 opacity-100 pointer-events-auto"
-            : "scale-75 opacity-0 pointer-events-none"
+          isOpen ? "scale-100 opacity-100 pointer-events-auto" : "scale-75 opacity-0 pointer-events-none"
         )}
         style={{ height: "min(500px, calc(100vh - 6rem))" }}
       >
@@ -133,12 +153,8 @@ export function Chatbot() {
           <div className="flex items-center gap-3">
             <MessageCircle className="w-5 h-5 text-white" />
             <div>
-              <h3 className="font-serif font-black text-sm uppercase tracking-wide text-white">
-                Ask The Tribunal
-              </h3>
-              <p className="text-[10px] text-white/70 font-sans">
-                AI-powered assistant
-              </p>
+              <h3 className="font-serif font-black text-sm uppercase tracking-wide text-white">Ask The Tribunal</h3>
+              <p className="text-[10px] text-white/70 font-sans">AI-powered assistant</p>
             </div>
           </div>
           <button
@@ -152,36 +168,24 @@ export function Chatbot() {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={cn(
-                "flex",
-                msg.role === "user" ? "justify-end" : "justify-start"
-              )}
-            >
+          {messages.map(msg => (
+            <div key={msg.id} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
               <div
                 className={cn(
-                  "max-w-[85%] px-4 py-2.5 rounded-xl text-sm leading-relaxed font-sans",
+                  "max-w-[85%] px-4 py-2.5 rounded-xl text-sm leading-relaxed font-sans whitespace-pre-line",
                   msg.role === "user"
                     ? "bg-[#DC143C] text-white rounded-br-sm"
                     : "bg-secondary text-foreground rounded-bl-sm border border-border"
                 )}
               >
-                {msg.content}
+                {msg.content || (isLoading && msg.id.startsWith("bot-") ? (
+                  <span className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> typing...
+                  </span>
+                ) : msg.content)}
               </div>
             </div>
           ))}
-
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-secondary text-muted-foreground px-4 py-2.5 rounded-xl rounded-bl-sm border border-border flex items-center gap-2 text-sm">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Thinking...</span>
-              </div>
-            </div>
-          )}
-
           <div ref={messagesEndRef} />
         </div>
 
@@ -192,7 +196,7 @@ export function Chatbot() {
               ref={inputRef}
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ask about The Tribunal..."
               disabled={isLoading}

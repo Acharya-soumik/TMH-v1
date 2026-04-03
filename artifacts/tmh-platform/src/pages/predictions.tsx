@@ -416,7 +416,7 @@ function PredShareBtn({ question, id }: { question: string; id: number }) {
           border: "none",
           cursor: "pointer",
           padding: "4px",
-          color: "rgba(250,250,250,0.4)",
+          color: "var(--muted-foreground)",
           transition: "color 0.15s",
         }}
       >
@@ -453,7 +453,7 @@ function PredMajlisShareBtn({ card }: { card: PredictionCard }) {
           border: "none",
           cursor: "pointer",
           padding: "4px",
-          color: "rgba(250,250,250,0.4)",
+          color: "var(--muted-foreground)",
           transition: "color 0.15s",
         }}
       >
@@ -1169,10 +1169,10 @@ function PredictionGridCard({
               title="Prediction details"
               style={{
                 background: "none",
-                border: "1px solid rgba(250,250,250,0.2)",
+                border: "1px solid var(--border)",
                 cursor: "pointer",
                 padding: "4px",
-                color: "rgba(250,250,250,0.4)",
+                color: "var(--muted-foreground)",
                 transition: "color 0.15s",
                 fontSize: 13,
                 fontFamily: "'Barlow Condensed', sans-serif",
