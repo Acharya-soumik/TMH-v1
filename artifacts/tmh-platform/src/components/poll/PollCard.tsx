@@ -484,9 +484,9 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                         onClick={() => handleVote(option.id)}
                         disabled={!isLive}
                         className={cn(
-                          "group w-full text-left px-5 py-4 border border-border transition-all duration-150 font-medium text-sm font-sans",
+                          "tmh-vote-option group w-full text-left px-5 py-4 border border-border transition-colors duration-150 font-medium text-sm font-sans",
                           "bg-background text-foreground",
-                          "hover:bg-foreground hover:text-background hover:border-foreground hover:border-l-4 hover:border-l-primary",
+                          "hover:bg-foreground hover:text-background hover:border-foreground",
                           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                           !isLive && "opacity-50 cursor-not-allowed"
                         )}

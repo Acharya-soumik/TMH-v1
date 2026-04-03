@@ -369,6 +369,43 @@
   animation: gateSlideIn 0.3s ease-out both;
 }
 
+/* ── Cast Your Vote: red slide-back on hover ── */
+@keyframes voteRedSlide {
+  from { width: 15%; }
+  to   { width: 4px; }
+}
+.tmh-vote-option {
+  position: relative;
+  overflow: hidden;
+  border-left: 0 !important;
+}
+.tmh-vote-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 4px;
+  background: hsl(var(--primary));
+  z-index: 0;
+  opacity: 1;
+  will-change: width, opacity;
+}
+.tmh-vote-option:hover::before {
+  animation: voteRedSlide 0.35s ease-out forwards;
+}
+.tmh-vote-option > * {
+  position: relative;
+  z-index: 1;
+}
+[dir="rtl"] .tmh-vote-option::before {
+  left: auto;
+  right: 0;
+}
+[dir="rtl"] .tmh-vote-option:hover::before {
+  animation-name: voteRedSlide;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tmh-ticker-scroll,
   .tmh-ticker-scroll-slow { animation-play-state: paused; }
