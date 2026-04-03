@@ -12,7 +12,10 @@ const SORT_OPTIONS = [
 ]
 
 export default function PollArchive() {
-  usePageTitle("Debate Archive");
+  usePageTitle({
+    title: "Debate Archive",
+    description: "Browse past debates and see how MENA voted on the questions that shaped the conversation.",
+  });
   const [category, setCategory] = useState("")
   const [sort, setSort] = useState("recent")
   const [page, setPage] = useState(0)

@@ -1,9 +1,16 @@
-import { useEffect } from "react"
+import { useMetaTags, type MetaTagsConfig } from "./use-meta-tags"
 
-const SITE_NAME = "The Tribunal"
+/**
+ * Sets the page title and Open Graph / Twitter meta tags.
+ *
+ * Accepts either a plain title string (backwards-compatible) or a full
+ * MetaTagsConfig object for pages that need custom descriptions / images.
+ */
+export function usePageTitle(titleOrConfig?: string | MetaTagsConfig) {
+  const config: MetaTagsConfig =
+    typeof titleOrConfig === "string"
+      ? { title: titleOrConfig }
+      : titleOrConfig ?? {}
 
-export function usePageTitle(title?: string) {
-  useEffect(() => {
-    document.title = title ? `${title} | ${SITE_NAME}` : SITE_NAME
-  }, [title])
+  useMetaTags(config)
 }

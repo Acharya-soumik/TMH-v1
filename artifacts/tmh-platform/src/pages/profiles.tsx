@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import { usePageConfig } from "@/hooks/use-cms-data";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
 
@@ -164,7 +164,10 @@ function VoicesTicker({
 }
 
 export default function Profiles() {
-  usePageTitle("Voices");
+  usePageTitle({
+    title: "Voices",
+    description: "Profiles and perspectives from founders, operators, and leaders shaping MENA's future.",
+  });
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<
     "all" | "featured" | "newest" | "most_viewed"

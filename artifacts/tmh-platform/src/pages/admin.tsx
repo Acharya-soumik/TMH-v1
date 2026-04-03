@@ -2,8 +2,7 @@ import { useState, useEffect } from "react"
 import { Link } from "wouter"
 import { cn } from "@/lib/utils"
 import { CheckCircle2, XCircle, Clock, ChevronDown, ChevronUp, BarChart2, Users, FileText, PlusCircle, ExternalLink } from "lucide-react"
-
-const ADMIN_KEY = "tmh-admin-2026"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 function useAdminKey() {
   const [key, setKey] = useState(() => localStorage.getItem("tmh_admin_key") ?? "")
@@ -284,6 +283,7 @@ function CreatePollForm({ adminKey, onCreated }: { adminKey: string; onCreated: 
 }
 
 export default function Admin() {
+  usePageTitle("Admin") // No SEO needed for admin page
   const { key, save } = useAdminKey()
   const [inputKey, setInputKey] = useState("")
   const [authed, setAuthed] = useState(false)

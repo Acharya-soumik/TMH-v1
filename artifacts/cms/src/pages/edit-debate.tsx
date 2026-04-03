@@ -6,6 +6,7 @@ import TagInput from "@/components/tag-input";
 import ComboSelect from "@/components/combo-select";
 import PreviewPanel from "@/components/preview-panel";
 import { Save, Send, Check, Archive, RotateCcw, Eye, Flag, XCircle, FileEdit } from "lucide-react";
+import { toast } from "sonner";
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   draft: ["in_review", "approved", "rejected"],
@@ -66,6 +67,13 @@ export default function EditDebatePage() {
   const update = (field: string, value: unknown) => setForm(f => ({ ...f, [field]: value }));
 
   const save = async (status?: string) => {
+    const errors: string[] = [];
+    if (!form.question?.trim()) errors.push("Question is required");
+    if (!form.category?.trim()) errors.push("Category is required");
+    if (errors.length > 0) {
+      errors.forEach(e => toast.error(e));
+      return;
+    }
     setSaving(true);
     try {
       const data = { ...form, editorialStatus: status || form.editorialStatus, endsAt: form.endsAt || null };
@@ -75,7 +83,7 @@ export default function EditDebatePage() {
         await api.updateDebate(Number(params.id), data);
       }
       navigate("/debates");
-    } catch (e: unknown) { alert(e instanceof Error ? e.message : "Save failed"); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Save failed"); }
     finally { setSaving(false); }
   };
 
@@ -117,8 +125,9 @@ export default function EditDebatePage() {
           <Field label="Poll Type">
             <select value={form.pollType} onChange={e => update("pollType", e.target.value)} className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary">
               <option value="binary">Binary (Yes/No)</option>
-              <option value="multiple">Multiple Choice</option>
-              <option value="scale">Scale</option>
+              <option value="multiple_choice">Multiple Choice</option>
+              <option value="scale">Scale (Rating)</option>
+              <option value="hot_take">Hot Take (Agree/Disagree)</option>
             </select>
           </Field>
           <Field label="Card Layout">

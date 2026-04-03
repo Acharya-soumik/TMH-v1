@@ -49,6 +49,7 @@ async function toPollResponse(poll: any, options: any[]) {
     categorySlug: poll.categorySlug,
     tags: poll.tags ?? [],
     pollType: poll.pollType,
+    cardLayout: poll.cardLayout ?? "standard",
     options: options.map((o) => ({
       id: o.id,
       text: o.text,
@@ -102,9 +103,21 @@ router.get("/polls", async (req, res) => {
       polls = await db.select().from(pollsTable).where(baseWhere).orderBy(desc(pollsTable.createdAt)).limit(lim).offset(off);
     }
 
+    // Batch-fetch all options in ONE query to avoid N+1
+    const pollIds = polls.map((p: any) => p.id);
+    const allOptions = pollIds.length > 0
+      ? await db.select().from(pollOptionsTable).where(inArray(pollOptionsTable.pollId, pollIds))
+      : [];
+
+    const optionsByPoll = new Map<number, typeof allOptions>();
+    for (const opt of allOptions) {
+      if (!optionsByPoll.has(opt.pollId)) optionsByPoll.set(opt.pollId, []);
+      optionsByPoll.get(opt.pollId)!.push(opt);
+    }
+
     const result = await Promise.all(
       polls.map(async (poll: any) => {
-        const options = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, poll.id));
+        const options = optionsByPoll.get(poll.id) ?? [];
         return await toPollResponse(poll, options);
       })
     );
@@ -264,19 +277,34 @@ router.post("/polls/:id/vote", voteRateLimit, async (req, res) => {
     const ip = getClientIp(req);
     const geoData = await getCountryFromIp(ip);
 
-    const inserted = await db.insert(votesTable).values({
-      pollId,
-      optionId,
-      voterToken,
-      countryCode: geoData?.code ?? null,
-      countryName: geoData?.name ?? null,
-    }).onConflictDoNothing().returning({ id: votesTable.id });
+    let voteInserted = false;
 
-    const options = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
-    const total = options.reduce((s: number, o: any) => s + o.voteCount, 0);
+    await db.transaction(async (tx) => {
+      const [vote] = await tx.insert(votesTable).values({
+        pollId,
+        optionId,
+        voterToken,
+        countryCode: geoData?.code ?? null,
+        countryName: geoData?.name ?? null,
+      }).onConflictDoNothing().returning({ id: votesTable.id });
 
-    // Race condition: another vote slipped in between our pre-check and insert
-    if (!inserted.length) {
+      if (!vote) {
+        // already voted — race condition caught by unique constraint
+        return;
+      }
+
+      voteInserted = true;
+
+      // Increment count atomically within the same transaction
+      await tx
+        .update(pollOptionsTable)
+        .set({ voteCount: sql`vote_count + 1` })
+        .where(eq(pollOptionsTable.id, optionId));
+    });
+
+    if (!voteInserted) {
+      const options = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
+      const total = options.reduce((s: number, o: any) => s + o.voteCount, 0);
       return res.json({
         success: false,
         alreadyVoted: true,
@@ -289,11 +317,6 @@ router.post("/polls/:id/vote", voteRateLimit, async (req, res) => {
         totalVotes: total,
       });
     }
-
-    await db
-      .update(pollOptionsTable)
-      .set({ voteCount: sql`vote_count + 1` })
-      .where(eq(pollOptionsTable.id, optionId));
 
     const updatedOptions = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
     const updatedTotal = updatedOptions.reduce((s: number, o: any) => s + o.voteCount, 0);
@@ -350,15 +373,15 @@ router.post("/polls/:id/email-unlock", async (req, res) => {
       countryCode: geoData?.code ?? null,
       newsletterOptIn: !!newsletterOptIn,
     }).onConflictDoNothing();
-    console.log(`[NEWSLETTER] New subscriber: ${email} (poll ${pollId}, ${geoData?.name ?? "unknown"}, optIn: ${newsletterOptIn})`);
+    console.log(`[NEWSLETTER] New subscriber: ${email.substring(0, 3)}*** (poll ${pollId}, ${geoData?.name ?? "unknown"}, optIn: ${newsletterOptIn})`);
     // Sync to Beehiiv only if opted in
     if (newsletterOptIn) {
       syncToBeehiiv(email.trim(), "share_gate").catch(() => {})
     }
     return res.json({ success: true });
   } catch (err) {
-    console.error(err);
-    return res.json({ success: true });
+    console.error("[NEWSLETTER] Email-unlock subscribe failed:", (err as Error).message);
+    return res.status(500).json({ success: false, error: "Failed to subscribe. Please try again." });
   }
 });
 

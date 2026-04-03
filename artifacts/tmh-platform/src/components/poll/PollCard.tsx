@@ -21,9 +21,11 @@ interface PollCardProps {
 
 type Phase = "vote" | "gate" | "results"
 
-function getInitialPhase(pollId: number, hasVoted: (id: number) => boolean): Phase {
+function getInitialPhase(pollId: number, hasVoted: (id: number) => boolean, shareGateEnabled?: boolean): Phase {
   if (typeof window === "undefined") return "vote"
   if (!hasVoted(pollId)) return "vote"
+  // If share gate is disabled in CMS, skip straight to results
+  if (!shareGateEnabled) return "results"
   if (localStorage.getItem(`tmh_unlocked_${pollId}`)) return "results"
   if (localStorage.getItem("tmh_email_submitted")) return "results"
   return "gate"
@@ -72,7 +74,8 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
   const voteMutation = useVotePoll()
   const [localOptions, setLocalOptions] = useState<PollOption[]>(poll.options ?? [])
   const [localTotal, setLocalTotal] = useState(poll.totalVotes ?? 0)
-  const [phase, setPhase] = useState<Phase>(() => getInitialPhase(poll.id, hasVoted))
+  const shareGateEnabled = !!shareGate?.enabled
+  const [phase, setPhase] = useState<Phase>(() => getInitialPhase(poll.id, hasVoted, shareGateEnabled))
   const [isSharing, setIsSharing] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
   const [email, setEmail] = useState("")
@@ -89,12 +92,24 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
   const isVoted = hasVoted(poll.id)
   const votedOptionId = getVotedOption(poll.id)
 
+  // Re-evaluate phase when vote status changes or shareGate setting loads from CMS
   useEffect(() => {
     if (isVoted && phase === "vote") {
-      const unlocked = localStorage.getItem("tmh_email_submitted") || localStorage.getItem(`tmh_unlocked_${poll.id}`)
-      setPhase(unlocked ? "results" : "gate")
+      if (!shareGateEnabled) {
+        setPhase("results")
+      } else {
+        const unlocked = localStorage.getItem("tmh_email_submitted") || localStorage.getItem(`tmh_unlocked_${poll.id}`)
+        setPhase(unlocked ? "results" : "gate")
+      }
     }
-  }, [isVoted, phase, poll.id])
+  }, [isVoted, phase, poll.id, shareGateEnabled])
+
+  // When shareGate loads asynchronously and is disabled, transition gate -> results
+  useEffect(() => {
+    if (phase === "gate" && !shareGateEnabled) {
+      setPhase("results")
+    }
+  }, [shareGateEnabled, phase])
 
   const unlock = () => {
     localStorage.setItem(`tmh_unlocked_${poll.id}`, "true")
@@ -121,7 +136,14 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
       {
         onSuccess: (data) => {
           if (data.success) {
-            setLocalOptions(data.options)
+            // Preserve the original option order to prevent voted option from jumping positions
+            const serverMap = new Map(data.options.map((o: PollOption) => [o.id, o]))
+            setLocalOptions(prev =>
+              prev.map(opt => {
+                const updated = serverMap.get(opt.id)
+                return updated ? { ...opt, voteCount: updated.voteCount, percentage: updated.percentage } : opt
+              })
+            )
             setLocalTotal(data.totalVotes)
           }
         },
@@ -133,7 +155,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
 
     const alreadyUnlocked = localStorage.getItem("tmh_email_submitted") || localStorage.getItem(`tmh_unlocked_${poll.id}`)
     setTimeout(() => {
-      if (alreadyUnlocked) { unlock() } else { setShowGateModal(true); setPhase("gate") }
+      if (!shareGateEnabled || alreadyUnlocked) { unlock() } else { setShowGateModal(true); setPhase("gate") }
     }, 500)
   }
 
@@ -372,35 +394,113 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
           <AnimatePresence mode="wait">
 
             {/* PHASE: VOTE */}
-            {phase === "vote" && (
+            {phase === "vote" && (() => {
+              const ptype = poll.pollType as string
+              const isBinaryPair = ptype === "binary" && localOptions.length === 2
+              return (
               <motion.div key="voting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <div className="flex items-center gap-3 mb-4 border-l-4 border-primary pl-3">
                   <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
-                    Cast Your Vote
+                    {ptype === "hot_take" ? "What Do You Think?" : ptype === "scale" ? "Rate This" : "Cast Your Vote"}
                   </span>
                 </div>
-                <div className="space-y-3">
-                  {localOptions.map((option) => (
-                    <button
-                      key={option.id}
-                      onClick={() => handleVote(option.id)}
-                      disabled={!isLive}
-                      className={cn(
-                        "group w-full text-left px-5 py-4 border border-border transition-all duration-150 font-medium text-sm font-sans",
-                        "bg-background text-foreground",
-                        "hover:bg-foreground hover:text-background hover:border-foreground hover:border-l-4 hover:border-l-primary",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                        !isLive && "opacity-50 cursor-not-allowed"
-                      )}
-                    >
-                      <span className="block transition-transform duration-150 group-hover:translate-x-1">
+
+                {/* BINARY: Two prominent YES/NO buttons side by side */}
+                {isBinaryPair && (
+                  <div className="flex gap-3">
+                    {localOptions.map((option, i) => {
+                      const isYes = i === 0
+                      return (
+                        <button
+                          key={option.id}
+                          onClick={() => handleVote(option.id)}
+                          disabled={!isLive}
+                          className={cn(
+                            "flex-1 py-5 text-center font-bold text-sm uppercase tracking-widest border-2 transition-all duration-150",
+                            isYes
+                              ? "border-emerald-500 text-emerald-500 hover:bg-emerald-500 hover:text-white"
+                              : "border-red-500 text-red-500 hover:bg-red-500 hover:text-white",
+                            !isLive && "opacity-50 cursor-not-allowed"
+                          )}
+                        >
+                          {option.text}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* HOT TAKE: Agree/Disagree with colored emphasis */}
+                {ptype === "hot_take" && (
+                  <div className="space-y-3">
+                    {localOptions.map((option, i) => {
+                      const colors = ["border-emerald-500 text-emerald-500 hover:bg-emerald-500 hover:text-white", "border-red-500 text-red-500 hover:bg-red-500 hover:text-white", "border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white", "border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"]
+                      return (
+                        <button
+                          key={option.id}
+                          onClick={() => handleVote(option.id)}
+                          disabled={!isLive}
+                          className={cn(
+                            "group w-full text-left px-5 py-4 border-2 transition-all duration-150 font-bold text-sm uppercase tracking-wider",
+                            colors[i % colors.length],
+                            !isLive && "opacity-50 cursor-not-allowed"
+                          )}
+                        >
+                          <span className="block transition-transform duration-150 group-hover:translate-x-1">
+                            {option.text}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* SCALE: Horizontal rating buttons */}
+                {ptype === "scale" && (
+                  <div className="flex gap-2 flex-wrap">
+                    {localOptions.map((option) => (
+                      <button
+                        key={option.id}
+                        onClick={() => handleVote(option.id)}
+                        disabled={!isLive}
+                        className={cn(
+                          "flex-1 min-w-[3rem] py-4 text-center border border-border transition-all duration-150 font-bold text-sm",
+                          "hover:bg-primary hover:text-primary-foreground hover:border-primary",
+                          !isLive && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
                         {option.text}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* MULTIPLE CHOICE + DEFAULT: Standard stacked option buttons */}
+                {!isBinaryPair && ptype !== "hot_take" && ptype !== "scale" && (
+                  <div className="space-y-3">
+                    {localOptions.map((option) => (
+                      <button
+                        key={option.id}
+                        onClick={() => handleVote(option.id)}
+                        disabled={!isLive}
+                        className={cn(
+                          "group w-full text-left px-5 py-4 border border-border transition-all duration-150 font-medium text-sm font-sans",
+                          "bg-background text-foreground",
+                          "hover:bg-foreground hover:text-background hover:border-foreground hover:border-l-4 hover:border-l-primary",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                          !isLive && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
+                        <span className="block transition-transform duration-150 group-hover:translate-x-1">
+                          {option.text}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </motion.div>
-            )}
+              )
+            })()}
 
             {/* PHASE: SHARE GATE — blurred placeholder in panel */}
             {phase === "gate" && (
@@ -603,7 +703,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
             {/* WhatsApp — full width */}
             <button
               onClick={handleShareWhatsApp}
-              className="w-full flex items-center justify-center gap-3 px-5 py-4 font-black uppercase tracking-[0.15em] text-[11px] transition-colors duration-150 rounded-sm"
+              className="w-full flex items-center justify-center gap-3 px-5 py-4 font-black uppercase tracking-[0.15em] text-[11px] transition-colors duration-150 rounded-sm cursor-pointer"
               style={{ background: "rgba(37,211,102,0.1)", border: "1px solid rgba(37,211,102,0.28)", color: "#25D366" }}
             >
               <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
@@ -635,7 +735,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                 <button
                   key={btn.label}
                   onClick={btn.onClick}
-                  className="flex flex-col items-center gap-1.5 px-2 py-3 border border-border hover:border-primary/40 hover:bg-primary/5 transition-all duration-150 rounded-sm"
+                  className="flex flex-col items-center gap-1.5 px-2 py-3 border border-border hover:border-primary/40 hover:bg-primary/5 transition-all duration-150 rounded-sm cursor-pointer"
                 >
                   {btn.icon}
                   <span className="text-[9px] uppercase tracking-[0.1em] font-bold text-muted-foreground font-serif">{btn.label}</span>
@@ -709,7 +809,13 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
             ? "See what others have to say — share and spark a conversation."
             : "We keep The Tribunal free by making opinion data shareable. Share this debate to see the full breakdown."
           }
-          onClose={() => setShowShareModal(false)}
+          onClose={() => {
+            setShowShareModal(false)
+            // After modal closes, check if email was submitted and unlock if so
+            if (phase === "gate" && localStorage.getItem("tmh_email_submitted")) {
+              unlock()
+            }
+          }}
         />
       )}
     </>

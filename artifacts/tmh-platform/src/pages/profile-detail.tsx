@@ -110,19 +110,12 @@ export default function ProfileDetail() {
           <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
             {/* Portrait photo */}
             {profile.imageUrl && !imgError ? (
-              <div className="relative flex-shrink-0 w-48 md:w-56 lg:w-64">
-                <div className="relative overflow-hidden border border-border bg-secondary flex items-center justify-center" style={{ aspectRatio: '3/4' }}>
                   <img
                     src={profile.imageUrl}
                     alt={profile.name}
                     className="w-full h-full object-contain grayscale"
                     onError={() => setImgError(true)}
                   />
-                  {profile.isVerified && (
-                    <div className="absolute bottom-3 right-3 w-3 h-3 rounded-full bg-primary border-2 border-background" title="Verified Voice" />
-                  )}
-                </div>
-              </div>
             ) : (
               <div className="relative flex-shrink-0 w-48 md:w-56 bg-secondary text-foreground flex items-center justify-center font-serif font-black text-5xl border border-border" style={{ aspectRatio: '3/4' }}>
                 {profile.name.substring(0, 2).toUpperCase()}
@@ -245,7 +238,7 @@ export default function ProfileDetail() {
           {/* Related Polls */}
           {profile.relatedPolls && profile.relatedPolls.length > 0 && (
             <section>
-              <h2 className="font-serif text-3xl font-black uppercase tracking-tight border-b-2 border-foreground pb-4 mb-8">Associated Polls</h2>
+              <h2 className="font-serif text-3xl font-black uppercase tracking-tight border-b-2 border-foreground pb-4 mb-8">Associated Debates</h2>
               <div className="grid gap-10">
                 {profile.relatedPolls.map(poll => (
                   <div key={poll.id}>

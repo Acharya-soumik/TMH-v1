@@ -70,14 +70,6 @@ export interface SiteSettings {
     links?: Array<{ label: string; href: string }>
     socialLinks?: Array<{ platform: string; icon: string; url: string }>
   }
-  cookieConsent?: {
-    enabled?: boolean
-    message?: string
-    linkText?: string
-    linkHref?: string
-    acceptLabel?: string
-    dismissLabel?: string
-  }
   shareGate?: {
     enabled?: boolean
     heading?: string
@@ -103,6 +95,15 @@ export function usePredictions(category?: string) {
       const qs = params.toString()
       return fetchJson(`/api/public/predictions${qs ? `?${qs}` : ""}`)
     },
+    staleTime: 60_000,
+  })
+}
+
+export function usePrediction(id: number) {
+  return useQuery<ApiPrediction>({
+    queryKey: ["prediction", id],
+    queryFn: () => fetchJson(`/api/public/predictions/${id}`),
+    enabled: id > 0,
     staleTime: 60_000,
   })
 }

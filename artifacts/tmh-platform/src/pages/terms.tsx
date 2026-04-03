@@ -1,3 +1,4 @@
+import { Link } from "wouter"
 import { Layout } from "@/components/layout/Layout"
 import { usePageTitle } from "@/hooks/use-page-title"
 
@@ -70,7 +71,10 @@ const SECTIONS = [
 ]
 
 export default function Terms() {
-  usePageTitle("Terms");
+  usePageTitle({
+    title: "Terms of Service",
+    description: "Terms of service and usage policies for The Tribunal platform.",
+  });
   return (
     <Layout>
       <div className="bg-foreground text-background py-16 border-b border-border">
@@ -102,9 +106,9 @@ export default function Terms() {
         </div>
 
         <div className="mt-16 pt-8 border-t border-border flex flex-wrap gap-6 text-[10px] uppercase tracking-widest font-bold font-serif text-muted-foreground">
-          <a href="/faq" className="hover:text-foreground transition-colors">FAQ</a>
-          <a href="/about" className="hover:text-foreground transition-colors">About The Tribunal</a>
-          <a href="/" className="hover:text-foreground transition-colors">Home</a>
+          <Link href="/faq" className="hover:text-foreground transition-colors">FAQ</Link>
+          <Link href="/about" className="hover:text-foreground transition-colors">About The Tribunal</Link>
+          <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
         </div>
       </div>
     </Layout>

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Search, X, Share2, CheckCircle2, MessageSquare } from "lucide-react";
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { Link } from "wouter";
+import { motion } from "motion/react";
 import { useToast } from "@/hooks/use-toast";
 import { ShareModal } from "@/components/ShareModal";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
@@ -488,14 +489,19 @@ function VoteButtons({
     if (typeof window === "undefined" || !storageKey) return null;
     return localStorage.getItem(storageKey);
   });
+  const [confirmChoice, setConfirmChoice] = useState<string | null>(null);
+  const [isDeselecting, setIsDeselecting] = useState(false);
+  const [changing, setChanging] = useState(false);
   if (locked) return null;
 
   const resolvedOptions = options?.length ? options : ["yes", "no"];
   const isLegacy = !options?.length;
 
-  const handleVote = (choice: string) => {
-    if (voted) return;
+  const submitVote = (choice: string) => {
     setVoted(choice);
+    setConfirmChoice(null);
+    setChanging(false);
+    setIsDeselecting(false);
     if (storageKey) localStorage.setItem(storageKey, choice);
     if (predId != null) {
       onVote?.(predId, choice);
@@ -512,84 +518,244 @@ function VoteButtons({
     }
   };
 
+  const removeVote = () => {
+    setVoted(null);
+    setConfirmChoice(null);
+    setIsDeselecting(false);
+    setChanging(false);
+    if (storageKey) localStorage.removeItem(storageKey);
+    if (predId != null) {
+      let token = localStorage.getItem("tmh_voter_token");
+      if (!token) {
+        token = crypto.randomUUID();
+        localStorage.setItem("tmh_voter_token", token);
+      }
+      fetch(`/api/predictions/${predId}/vote`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voterToken: token }),
+      }).catch(() => {});
+    }
+  };
+
+  const handleVote = (choice: string) => {
+    // Clicking the already-voted option triggers deselect confirmation
+    if (voted === choice && !changing) {
+      setIsDeselecting(true);
+      setConfirmChoice(choice);
+      return;
+    }
+    if (voted && !changing) return;
+    setIsDeselecting(false);
+    setConfirmChoice(choice);
+  };
+
+  const confirmOverlay = confirmChoice && (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.6)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 9999,
+      }}
+      onClick={() => { setConfirmChoice(null); setIsDeselecting(false); }}
+    >
+      <div
+        style={{
+          background: "#1A1A1A",
+          border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: 8,
+          padding: "24px 28px",
+          maxWidth: 340,
+          width: "90%",
+          textAlign: "center",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p
+          style={{
+            color: "#fff",
+            fontFamily: "DM Sans, sans-serif",
+            fontSize: "0.95rem",
+            margin: "0 0 6px",
+            fontWeight: 600,
+          }}
+        >
+          {isDeselecting
+            ? "Remove your vote?"
+            : changing
+              ? "Change your vote?"
+              : "Confirm your vote"}
+        </p>
+        <p
+          style={{
+            color: "rgba(255,255,255,0.55)",
+            fontFamily: "DM Sans, sans-serif",
+            fontSize: "0.8rem",
+            margin: "0 0 20px",
+          }}
+        >
+          {isDeselecting
+            ? `Are you sure you want to remove your vote for "${confirmChoice}"?`
+            : changing
+              ? `Switch from "${voted}" to "${confirmChoice}"?`
+              : `Are you sure you want to vote for "${confirmChoice}"?`}
+        </p>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={() => { setConfirmChoice(null); setIsDeselecting(false); }}
+            style={{
+              flex: 1,
+              padding: "10px 0",
+              border: "1px solid rgba(255,255,255,0.2)",
+              background: "transparent",
+              color: "#fff",
+              fontFamily: "DM Sans, sans-serif",
+              fontWeight: 600,
+              fontSize: "0.85rem",
+              borderRadius: 4,
+              cursor: "pointer",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => isDeselecting ? removeVote() : submitVote(confirmChoice)}
+            style={{
+              flex: 1,
+              padding: "10px 0",
+              border: "none",
+              background: isDeselecting ? "#DC143C" : "#C8A864",
+              color: isDeselecting ? "#fff" : "#0D0D0D",
+              fontFamily: "DM Sans, sans-serif",
+              fontWeight: 700,
+              fontSize: "0.85rem",
+              borderRadius: 4,
+              cursor: "pointer",
+            }}
+          >
+            {isDeselecting ? "Remove" : "Confirm"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const changeBtn = voted && !changing && (
+    <button
+      onClick={() => setChanging(true)}
+      style={{
+        marginTop: 6,
+        padding: "4px 12px",
+        border: "none",
+        background: "transparent",
+        color: "rgba(255,255,255,0.4)",
+        fontFamily: "DM Sans, sans-serif",
+        fontSize: "0.7rem",
+        cursor: "pointer",
+        textDecoration: "underline",
+        alignSelf: "center",
+      }}
+    >
+      Change vote
+    </button>
+  );
+
+  const canClick = !voted || changing;
+
   if (isLegacy) {
     return (
-      <div style={{ display: "flex", gap: 8, width: "100%" }}>
-        <button
-          onClick={() => handleVote("yes")}
-          style={{
-            flex: 1,
-            height,
-            border: `1.5px solid #10B981`,
-            background: voted === "yes" ? "#10B981" : "transparent",
-            color: voted === "yes" ? "#fff" : "#10B981",
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontWeight: 900,
-            fontSize: "1rem",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            cursor: voted ? "default" : "pointer",
-            transition: "all 0.15s",
-            borderRadius: 4,
-          }}
-        >
-          {voted === "yes" ? "\u2713 YES \u2014 LOCKED" : "YES"}
-        </button>
-        <button
-          onClick={() => handleVote("no")}
-          style={{
-            flex: 1,
-            height,
-            border: `1.5px solid #DC143C`,
-            background: voted === "no" ? "#DC143C" : "transparent",
-            color: voted === "no" ? "#fff" : "#DC143C",
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontWeight: 900,
-            fontSize: "0.85rem",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            cursor: voted ? "default" : "pointer",
-            transition: "all 0.15s",
-            borderRadius: 4,
-          }}
-        >
-          {voted === "no" ? "\u2713 NO \u2014 LOCKED" : "NO"}
-        </button>
-      </div>
+      <>
+        {confirmOverlay}
+        <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+          <div style={{ display: "flex", gap: 8, width: "100%" }}>
+            <button
+              onClick={() => handleVote("yes")}
+              style={{
+                flex: 1,
+                height,
+                border: `1.5px solid #10B981`,
+                background: voted === "yes" ? "#10B981" : "transparent",
+                color: voted === "yes" ? "#fff" : "#10B981",
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: 900,
+                fontSize: "1rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                cursor: canClick || voted === "yes" ? "pointer" : "default",
+                transition: "all 0.15s",
+                borderRadius: 4,
+                opacity: changing && voted !== "yes" ? 1 : undefined,
+              }}
+            >
+              {voted === "yes" && !changing ? "\u2713 YES" : "YES"}
+            </button>
+            <button
+              onClick={() => handleVote("no")}
+              style={{
+                flex: 1,
+                height,
+                border: `1.5px solid #DC143C`,
+                background: voted === "no" ? "#DC143C" : "transparent",
+                color: voted === "no" ? "#fff" : "#DC143C",
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: 900,
+                fontSize: "0.85rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                cursor: canClick || voted === "no" ? "pointer" : "default",
+                transition: "all 0.15s",
+                borderRadius: 4,
+                opacity: changing && voted !== "no" ? 1 : undefined,
+              }}
+            >
+              {voted === "no" && !changing ? "\u2713 NO" : "NO"}
+            </button>
+          </div>
+          {changeBtn}
+        </div>
+      </>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
-      {resolvedOptions.map((opt, i) => {
-        const color = OPTION_COLORS[i % OPTION_COLORS.length];
-        const isSelected = voted === opt;
-        return (
-          <button
-            key={opt}
-            onClick={() => handleVote(opt)}
-            style={{
-              width: "100%",
-              minHeight: 44,
-              padding: "10px 16px",
-              border: `1.5px solid ${color}`,
-              background: isSelected ? color : "transparent",
-              color: isSelected ? "#fff" : color,
-              fontFamily: "DM Sans, sans-serif",
-              fontWeight: 600,
-              fontSize: "0.85rem",
-              textAlign: "left",
-              cursor: voted ? "default" : "pointer",
-              transition: "all 0.15s",
-              borderRadius: 4,
-              opacity: voted && !isSelected ? 0.4 : 1,
-            }}
-          >
-            {isSelected ? `\u2713 ${opt}` : opt}
-          </button>
-        );
-      })}
-    </div>
+    <>
+      {confirmOverlay}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
+        {resolvedOptions.map((opt, i) => {
+          const color = OPTION_COLORS[i % OPTION_COLORS.length];
+          const isSelected = voted === opt;
+          return (
+            <button
+              key={opt}
+              onClick={() => handleVote(opt)}
+              style={{
+                width: "100%",
+                minHeight: 44,
+                padding: "10px 16px",
+                border: `1.5px solid ${color}`,
+                background: isSelected ? color : "transparent",
+                color: isSelected ? "#fff" : color,
+                fontFamily: "DM Sans, sans-serif",
+                fontWeight: 600,
+                fontSize: "0.85rem",
+                textAlign: "left",
+                cursor: canClick || isSelected ? "pointer" : "default",
+                transition: "all 0.15s",
+                borderRadius: 4,
+                opacity: voted && !isSelected && !changing ? 0.4 : 1,
+              }}
+            >
+              {isSelected && !changing ? `\u2713 ${opt}` : opt}
+            </button>
+          );
+        })}
+        {changeBtn}
+      </div>
+    </>
   );
 }
 
@@ -805,13 +971,13 @@ function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (
             </span>
             <span
               style={{
-                padding: "2px 8px",
+                padding: "3px 9px",
                 background: "rgba(251,191,36,0.15)",
                 border: "1px solid rgba(251,191,36,0.3)",
                 color: "#F59E0B",
                 fontFamily: "'Barlow Condensed', sans-serif",
                 fontWeight: 700,
-                fontSize: 9,
+                fontSize: 15,
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
                 borderRadius: 2,
@@ -819,6 +985,10 @@ function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (
             >
               Resolves: {card.resolves}
             </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <PredMajlisShareBtn card={card} />
+              <PredShareBtn question={card.question} id={card.id} />
+            </div>
           </div>
 
           <p
@@ -833,19 +1003,26 @@ function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (
             prediction on it.
           </p>
 
-          <p
-            style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontWeight: 900,
-              fontSize: "1.2rem",
-              textTransform: "uppercase",
-              lineHeight: 1.2,
-              color: "var(--foreground)",
-              letterSpacing: "0.02em",
-            }}
+          <Link
+            href={`/predictions/${card.id}`}
+            style={{ textDecoration: "none" }}
           >
-            {card.question}
-          </p>
+            <p
+              data-testid="featured-prediction-title"
+              style={{
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: 900,
+                fontSize: "1.2rem",
+                textTransform: "uppercase",
+                lineHeight: 1.2,
+                color: "var(--foreground)",
+                letterSpacing: "0.02em",
+                cursor: "pointer",
+              }}
+            >
+              {card.question}
+            </p>
+          </Link>
 
           <p
             style={{
@@ -891,17 +1068,15 @@ function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (
 function PredictionGridCard({
   card,
   highlighted,
-  isExpanded,
-  onToggleExpand,
   onVote,
 }: {
   card: PredictionCard;
   highlighted?: boolean;
-  isExpanded?: boolean;
-  onToggleExpand?: () => void;
   onVote?: (predId: number, choice: string) => void;
 }) {
   const [glowing, setGlowing] = useState(!!highlighted);
+  const [showInfo, setShowInfo] = useState(false);
+  const infoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!highlighted) return;
@@ -910,12 +1085,22 @@ function PredictionGridCard({
     return () => clearTimeout(timer);
   }, [highlighted]);
 
+  // Close tooltip on outside click
+  useEffect(() => {
+    if (!showInfo) return;
+    const handler = (e: MouseEvent) => {
+      if (infoRef.current && !infoRef.current.contains(e.target as Node)) {
+        setShowInfo(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showInfo]);
+
   return (
     <div
       id={`pred-${card.id}`}
-      onClick={() => onToggleExpand?.()}
       style={{
-        cursor: "pointer",
         background: glowing ? "rgba(220,20,60,0.08)" : "var(--card)",
         border: `1.5px solid ${glowing ? "rgba(220,20,60,0.7)" : "rgba(220,20,60,0.15)"}`,
         boxShadow: glowing ? "0 0 0 2px rgba(220,20,60,0.35), 0 0 28px rgba(220,20,60,0.25)" : undefined,
@@ -956,14 +1141,15 @@ function PredictionGridCard({
           {card.category}
         </span>
         <span
+          data-testid="grid-resolves-badge"
           style={{
-            padding: "2px 7px",
+            padding: "3px 9px",
             background: "rgba(251,191,36,0.15)",
             border: "1px solid rgba(251,191,36,0.3)",
             color: "#F59E0B",
             fontFamily: "'Barlow Condensed', sans-serif",
             fontWeight: 700,
-            fontSize: 9,
+            fontSize: 15,
             textTransform: "uppercase",
             letterSpacing: "0.1em",
             borderRadius: 2,
@@ -974,23 +1160,113 @@ function PredictionGridCard({
         <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
           <PredMajlisShareBtn card={card} />
           <PredShareBtn question={card.question} id={card.id} />
+          {/* Info tooltip button */}
+          <div ref={infoRef} style={{ position: "relative", display: "inline-flex" }}>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowInfo(!showInfo); }}
+              onMouseEnter={() => setShowInfo(true)}
+              onMouseLeave={() => setShowInfo(false)}
+              title="Prediction details"
+              style={{
+                background: "none",
+                border: "1px solid rgba(250,250,250,0.2)",
+                cursor: "pointer",
+                padding: "4px",
+                color: "rgba(250,250,250,0.4)",
+                transition: "color 0.15s",
+                fontSize: 13,
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: 700,
+                lineHeight: 1,
+                width: 22,
+                height: 22,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "50%",
+              }}
+            >
+              i
+            </button>
+            {showInfo && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "calc(100% + 8px)",
+                  right: 0,
+                  background: "#1A1A1A",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: 6,
+                  padding: "10px 14px",
+                  minWidth: 220,
+                  zIndex: 50,
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p style={{
+                  fontFamily: "DM Sans, sans-serif",
+                  fontSize: "0.75rem",
+                  color: "rgba(255,255,255,0.7)",
+                  margin: "0 0 4px",
+                }}>
+                  Category: {card.category}
+                </p>
+                <p style={{
+                  fontFamily: "DM Sans, sans-serif",
+                  fontSize: "0.75rem",
+                  color: "rgba(255,255,255,0.7)",
+                  margin: "0 0 4px",
+                }}>
+                  Resolves: {card.resolves !== "TBD" ? new Date(card.resolves).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "To be determined"}
+                </p>
+                <p style={{
+                  fontFamily: "DM Sans, sans-serif",
+                  fontSize: "0.75rem",
+                  color: "rgba(255,255,255,0.7)",
+                  margin: 0,
+                }}>
+                  {card.count} predictions locked in
+                </p>
+                <div style={{
+                  position: "absolute",
+                  bottom: -5,
+                  right: 8,
+                  width: 10,
+                  height: 10,
+                  background: "#1A1A1A",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderTop: "none",
+                  borderLeft: "none",
+                  transform: "rotate(45deg)",
+                }} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Question */}
-      <p
-        style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
-          fontWeight: 900,
-          fontSize: "0.95rem",
-          textTransform: "uppercase",
-          lineHeight: 1.2,
-          color: "var(--foreground)",
-          letterSpacing: "0.02em",
-        }}
+      <Link
+        href={`/predictions/${card.id}`}
+        style={{ textDecoration: "none" }}
       >
-        {card.question}
-      </p>
+        <p
+          data-testid="grid-prediction-title"
+          style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontWeight: 900,
+            fontSize: "0.95rem",
+            textTransform: "uppercase",
+            lineHeight: 1.2,
+            color: "var(--foreground)",
+            letterSpacing: "0.02em",
+            cursor: "pointer",
+          }}
+        >
+          {card.question}
+        </p>
+      </Link>
 
       {/* Participation */}
       <p
@@ -1016,13 +1292,23 @@ function PredictionGridCard({
 
       {/* Resolution date (always visible) */}
       {card.resolves && card.resolves !== "TBD" && (
-        <span className="text-[9px] uppercase tracking-widest text-muted-foreground">
+        <span
+          data-testid="grid-resolves-date"
+          style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontWeight: 700,
+            fontSize: "0.82rem",
+            textTransform: "uppercase",
+            letterSpacing: "0.12em",
+            color: "var(--muted-foreground)",
+          }}
+        >
           Resolves {new Date(card.resolves).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
         </span>
       )}
 
       {/* Vote buttons */}
-      <div onClick={(e) => e.stopPropagation()}>
+      <div>
         <VoteButtons height={44} predId={card.id} options={card.options} onVote={onVote} />
       </div>
 
@@ -1037,18 +1323,6 @@ function PredictionGridCard({
       >
         Your prediction is locked until the resolution date.
       </p>
-
-      {/* Expanded details */}
-      {isExpanded && (
-        <div className="mt-4 pt-4 border-t border-border">
-          <p className="text-xs text-muted-foreground mb-2">
-            Resolves: {card.resolves !== "TBD" ? new Date(card.resolves).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "To be determined"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Category: {card.category} · {card.count} predictions locked in
-          </p>
-        </div>
-      )}
     </div>
   );
 }
@@ -1290,10 +1564,13 @@ function ClosedPredictionCard() {
 // ─── PAGE ────────────────────────────────────────────────────────────────────
 
 export default function Predictions() {
-  usePageTitle("Predictions");
+  usePageTitle({
+    title: "Predictions",
+    description: "A prediction market for MENA's biggest questions. Track confidence, watch consensus shift, and see where the region is headed.",
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("ALL");
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+
   const [voteOverrides, setVoteOverrides] = useState<Record<number, { yes: number; no: number }>>({});
   const [highlightedId, setHighlightedId] = useState<string | null>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1768,17 +2045,18 @@ export default function Predictions() {
                 animate="visible"
                 variants={staggerContainer}
               >
-                {visibleCards.map((card, index, arr) => (
-                  <motion.div key={card.id} variants={staggerItem} className={index === arr.length - 1 && arr.length % 2 !== 0 ? "md:col-span-2" : ""}>
+                {visibleCards.map((card, index, arr) => {
+                  const isLastOdd = index === arr.length - 1 && arr.length % 2 !== 0;
+                  return (
+                  <motion.div key={card.id} variants={staggerItem} className={isLastOdd ? "md:col-span-2 md:max-w-[calc(50%-0.625rem)] md:justify-self-center" : ""}>
                     <PredictionGridCard
                       card={card}
                       highlighted={highlightedId === String(card.id)}
-                      isExpanded={expandedId === card.id}
-                      onToggleExpand={() => setExpandedId(expandedId === card.id ? null : card.id)}
                       onVote={handleVoteOverride}
                     />
                   </motion.div>
-                ))}
+                  );
+                })}
               </motion.div>
               {hasMore && (
                 <div ref={sentinelRef} className="flex justify-center py-8">

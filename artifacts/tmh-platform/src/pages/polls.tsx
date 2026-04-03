@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Search, X } from "lucide-react";
 import { usePageConfig } from "@/hooks/use-cms-data";
 import { usePageTitle } from "@/hooks/use-page-title";
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
 
@@ -27,16 +27,16 @@ const staggerItem = {
 };
 
 const FALLBACK_DEBATE_TICKER = [
-  { topic: "Brain Drain", votes: "18,421" },
-  { topic: "AI & Jobs", votes: "12,847" },
-  { topic: "Gender Leadership", votes: "9,203" },
-  { topic: "Income Tax UAE", votes: "15,609" },
-  { topic: "Vision 2030", votes: "11,002" },
-  { topic: "Arab Identity", votes: "8,441" },
-  { topic: "Expat Rights", votes: "7,810" },
-  { topic: "Cannabis Reform", votes: "6,290" },
-  { topic: "Arranged Marriage", votes: "5,433" },
-  { topic: "Gulf Wealth Gap", votes: "10,117" },
+  { topic: "Brain Drain", votes: "0" },
+  { topic: "AI & Jobs", votes: "0" },
+  { topic: "Gender Leadership", votes: "0" },
+  { topic: "Income Tax UAE", votes: "0" },
+  { topic: "Vision 2030", votes: "0" },
+  { topic: "Arab Identity", votes: "0" },
+  { topic: "Expat Rights", votes: "0" },
+  { topic: "Cannabis Reform", votes: "0" },
+  { topic: "Arranged Marriage", votes: "0" },
+  { topic: "Gulf Wealth Gap", votes: "0" },
 ];
 
 interface PollsConfig {
@@ -46,16 +46,21 @@ interface PollsConfig {
 }
 
 export default function Polls() {
-  usePageTitle("Debates");
+  usePageTitle({
+    title: "Debates",
+    description: "Anonymous debates on the questions that matter across MENA. Vote, see results, and watch opinion shift in real time.",
+  });
   const [location] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   const initialCategory = searchParams.get("category") || undefined;
 
   const [filter, setFilter] = useState<"latest" | "trending" | "most_voted">(
-    "latest",
+    "trending",
   );
   const [category, setCategory] = useState<string | undefined>(initialCategory);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const CATEGORY_LIMIT = 5;
 
   const { data: pollsData, isLoading } = useListPolls({
     filter,
@@ -68,15 +73,25 @@ export default function Polls() {
   const filteredPolls = useMemo(() => {
     if (!pollsData?.polls) return [];
     if (!searchQuery.trim()) return pollsData.polls;
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase().trim();
+    const words = q.split(/\s+/).filter(Boolean);
     return pollsData.polls
       .map(p => {
         let score = 0;
+        const question = p.question?.toLowerCase() ?? "";
+        // Exact question match
+        if (question === q) score += 15;
+        // Question contains full query
+        if (question.includes(q)) score += 8;
+        // Individual words match in question
+        const wordMatches = words.filter(w => question.includes(w)).length;
+        if (wordMatches > 0) score += wordMatches * 3;
+        // Category matches
         if (p.category?.toLowerCase() === q) score += 10;
         if (p.category?.toLowerCase().includes(q)) score += 5;
+        // Tag matches
         if ((p.tags as string[])?.some(t => t.toLowerCase() === q)) score += 8;
         if ((p.tags as string[])?.some(t => t.toLowerCase().includes(q))) score += 3;
-        if (p.question?.toLowerCase().includes(q)) score += 2;
         return { poll: p, score };
       })
       .filter(({ score }) => score > 0)
@@ -86,9 +101,10 @@ export default function Polls() {
 
   const { sentinelRef, visibleItems: visiblePolls, hasMore } = useInfiniteScroll(filteredPolls, 10);
 
+  const pollCount = pollsData?.polls?.length ?? 0;
   const tabs = [
-    { id: "latest", label: "Latest" },
     { id: "trending", label: "Trending" },
+    { id: "latest", label: "Latest" },
     { id: "most_voted", label: "Most Voted" },
   ] as const;
 
@@ -229,7 +245,7 @@ export default function Polls() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col lg:flex-row gap-12">
         <motion.div
-          className="lg:w-64 flex-shrink-0 space-y-12"
+          className="lg:w-64 flex-shrink-0 space-y-12 lg:sticky lg:top-20 lg:self-start"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.15 }}
@@ -264,15 +280,29 @@ export default function Polls() {
             <h3 className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-4 border-b border-border pb-2">
               Sort By
             </h3>
-            <div className="flex flex-col gap-1">
+            <div className="relative flex bg-secondary border border-border p-1">
+              {/* Sliding highlight pill */}
+              <motion.div
+                className="absolute top-1 bottom-1 bg-foreground"
+                initial={false}
+                animate={{
+                  left: `calc(${tabs.findIndex(t => t.id === filter) * (100 / tabs.length)}% + 4px)`,
+                  width: `calc(${100 / tabs.length}% - 8px)`,
+                }}
+                transition={{
+                  type: "tween",
+                  duration: 0.4,
+                  ease: [0.22, 1.0, 0.36, 1],
+                }}
+              />
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setFilter(tab.id)}
                   className={cn(
-                    "text-left px-3 py-2 text-xs uppercase tracking-widest font-bold transition-colors",
+                    "relative z-10 flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-bold transition-colors duration-300 text-center",
                     filter === tab.id
-                      ? "bg-foreground text-background"
+                      ? "text-background"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -299,25 +329,50 @@ export default function Polls() {
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                All Topics
+                <span>All Topics</span>
+                {categoriesData?.categories && (
+                  <span className="opacity-60">
+                    ({categoriesData.categories.reduce((sum, c) => sum + (c.pollCount ?? 0), 0)})
+                  </span>
+                )}
               </button>
-              {categoriesData?.categories?.map((cat) => (
-                <button
-                  key={cat.slug}
-                  onClick={() => {
-                    setCategory(cat.slug);
-                    setSearchQuery("");
-                  }}
-                  className={cn(
-                    "text-left px-3 py-2 text-xs uppercase tracking-widest font-bold transition-colors flex justify-between items-center",
-                    category === cat.slug
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <span>{cat.name}</span>
-                </button>
-              ))}
+              {(() => {
+                const allCats = categoriesData?.categories ?? [];
+                const hasMore = allCats.length > CATEGORY_LIMIT;
+                const visibleCats = showAllCategories ? allCats : allCats.slice(0, CATEGORY_LIMIT);
+                return (
+                  <>
+                    {visibleCats.map((cat) => (
+                      <button
+                        key={cat.slug}
+                        onClick={() => {
+                          setCategory(cat.slug);
+                          setSearchQuery("");
+                        }}
+                        className={cn(
+                          "text-left px-3 py-2 text-xs uppercase tracking-widest font-bold transition-colors flex justify-between items-center",
+                          category === cat.slug
+                            ? "bg-foreground text-background"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        <span>{cat.name}</span>
+                        <span className="opacity-60">({cat.pollCount ?? 0})</span>
+                      </button>
+                    ))}
+                    {hasMore && (
+                      <button
+                        onClick={() => setShowAllCategories(!showAllCategories)}
+                        className="text-left px-3 py-2 text-xs uppercase tracking-widest font-bold text-primary hover:text-foreground transition-colors"
+                      >
+                        {showAllCategories
+                          ? "View Less"
+                          : `View More (${allCats.length - CATEGORY_LIMIT})`}
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         </motion.div>
@@ -349,7 +404,7 @@ export default function Polls() {
               </p>
               <button
                 onClick={() => {
-                  setFilter("latest");
+                  setFilter("trending");
                   setCategory(undefined);
                   setSearchQuery("");
                 }}

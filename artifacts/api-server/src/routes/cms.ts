@@ -6,14 +6,16 @@ import path from "path";
 import fs from "fs";
 import { r2Client, R2_BUCKET, R2_PUBLIC_URL, isR2Available } from "../utils/r2";
 import crypto from "crypto";
-import { db, pollsTable, pollOptionsTable, votesTable, newsletterSubscribersTable, hustlerApplicationsTable, profilesTable, predictionsTable, pulseTopicsTable, cmsConfigsTable, designTokensTable, majlisInvitesTable } from "@workspace/db";
-import { eq, desc, sql, count, like, or, inArray, and, asc } from "drizzle-orm";
+import { db, pollsTable, pollOptionsTable, votesTable, newsletterSubscribersTable, hustlerApplicationsTable, profilesTable, predictionsTable, pulseTopicsTable, cmsConfigsTable, designTokensTable, majlisInvitesTable, cmsSessionsTable } from "@workspace/db";
+import { eq, desc, sql, count, like, or, inArray, and, asc, gt } from "drizzle-orm";
 
 const router = Router();
 
 const CMS_USERNAME = process.env.CMS_USERNAME ?? "admin";
 const CMS_PIN = process.env.CMS_PIN ?? "1234";
-const IS_DEFAULT_CREDS = CMS_USERNAME === "admin" && CMS_PIN === "1234";
+const isDefaultUsername = CMS_USERNAME === "admin";
+const isDefaultPin = CMS_PIN === "1234";
+const hasAnyDefaultCred = isDefaultUsername || isDefaultPin;
 
 if (process.env.NODE_ENV === "production") {
   if (!process.env.CMS_USERNAME || !process.env.CMS_PIN) {
@@ -21,8 +23,9 @@ if (process.env.NODE_ENV === "production") {
   }
 }
 
+/** @deprecated Kept as write-through cache for backward compat with majlis.ts / ideation.ts.
+ *  Primary session storage is now the cms_sessions DB table. */
 export const cmsSessions = new Map<string, { username: string; createdAt: number }>();
-const sessions = cmsSessions;
 
 function generateToken(): string {
   return crypto.randomBytes(32).toString("hex");
@@ -46,19 +49,24 @@ function isValidStatusTransition(from: string | null, to: string): boolean {
   return ALLOWED_TRANSITIONS[from]?.includes(to) ?? false;
 }
 
-function requireCmsAuth(req: Request, res: Response, next: NextFunction): void {
+async function requireCmsAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const token = req.headers["x-cms-token"] as string;
-  if (!token || !sessions.has(token)) {
+  if (!token) {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
-  const session = sessions.get(token)!;
-  if (Date.now() - session.createdAt > 24 * 60 * 60 * 1000) {
-    sessions.delete(token);
-    res.status(401).json({ error: "Session expired" });
-    return;
+  try {
+    const [session] = await db.select().from(cmsSessionsTable)
+      .where(and(eq(cmsSessionsTable.token, token), gt(cmsSessionsTable.expiresAt, new Date())));
+    if (!session) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    next();
+  } catch (err) {
+    console.error("CMS auth check error:", err);
+    res.status(500).json({ error: "Auth check failed" });
   }
-  next();
 }
 
 export let nextPredictionId = 100;
@@ -89,22 +97,25 @@ export interface MockPrediction {
   updatedAt: string;
 }
 
-export const mockPredictions: MockPrediction[] = [
-  { id: 1, question: "Will Saudi Arabia's NEOM project meet its 2030 deadline?", category: "Megaprojects", categorySlug: "megaprojects", resolvesAt: "2030-12-31T00:00:00Z", yesPercentage: 22, noPercentage: 78, totalCount: 8420, momentum: 3.2, momentumDirection: "down", trendData: [35, 32, 28, 25, 22], cardLayout: "featured", editorialStatus: "approved", isFeatured: true, tags: ["saudi", "neom", "vision-2030"], createdAt: new Date(Date.now() - 86400000 * 14).toISOString(), updatedAt: new Date().toISOString() },
-  { id: 2, question: "Will Dubai overtake Singapore as the world's top fintech hub by 2027?", category: "Finance", categorySlug: "finance", resolvesAt: "2027-06-30T00:00:00Z", yesPercentage: 61, noPercentage: 39, totalCount: 5230, momentum: 5.1, momentumDirection: "up", trendData: [45, 52, 55, 58, 61], cardLayout: "grid", editorialStatus: "approved", isFeatured: true, tags: ["dubai", "fintech"], createdAt: new Date(Date.now() - 86400000 * 10).toISOString(), updatedAt: new Date(Date.now() - 3600000).toISOString() },
-  { id: 3, question: "Will a MENA-based unicorn IPO on NASDAQ in 2026?", category: "Startups", categorySlug: "startups", resolvesAt: "2026-12-31T00:00:00Z", yesPercentage: 45, noPercentage: 55, totalCount: 3100, momentum: 1.8, momentumDirection: "up", trendData: [38, 40, 42, 44, 45], cardLayout: "grid", editorialStatus: "draft", isFeatured: false, tags: ["ipo", "unicorn"], createdAt: new Date(Date.now() - 86400000 * 5).toISOString(), updatedAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: 4, question: "Will remote work become the default in Gulf tech companies?", category: "Technology & AI", categorySlug: "technology-ai", resolvesAt: "2027-01-01T00:00:00Z", yesPercentage: 33, noPercentage: 67, totalCount: 2750, momentum: -2.1, momentumDirection: "down", trendData: [42, 38, 35, 34, 33], cardLayout: "compact", editorialStatus: "in_review", isFeatured: false, tags: ["remote-work", "gulf"], createdAt: new Date(Date.now() - 86400000 * 3).toISOString(), updatedAt: new Date(Date.now() - 7200000).toISOString() },
-];
+export const mockPredictions: MockPrediction[] = [];
 
-router.post("/cms/auth/login", (req, res) => {
-  if (IS_DEFAULT_CREDS && process.env.NODE_ENV === "production") {
+router.post("/cms/auth/login", async (req, res) => {
+  if (hasAnyDefaultCred && process.env.NODE_ENV === "production") {
     return res.status(503).json({ error: "CMS login disabled — default credentials detected. Set CMS_USERNAME and CMS_PIN environment variables." });
   }
   const { username, pin } = req.body;
   if (username === CMS_USERNAME && pin === CMS_PIN) {
     const token = generateToken();
-    sessions.set(token, { username, createdAt: Date.now() });
-    return res.json({ token, username });
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    try {
+      await db.insert(cmsSessionsTable).values({ token, username, expiresAt });
+      // Write-through to in-memory Map for backward compat with majlis.ts / ideation.ts
+      cmsSessions.set(token, { username, createdAt: Date.now() });
+      return res.json({ token, username });
+    } catch (err) {
+      console.error("CMS login session insert error:", err);
+      return res.status(500).json({ error: "Login failed" });
+    }
   }
   return res.status(401).json({ error: "Invalid credentials" });
 });
@@ -287,7 +298,7 @@ router.get("/cms/debates", requireCmsAuth, async (req, res) => {
       categorySlug: p.categorySlug,
       tags: p.tags ?? [],
       pollType: p.pollType,
-      cardLayout: "standard",
+      cardLayout: p.cardLayout ?? "standard",
       isFeatured: p.isFeatured,
       isEditorsPick: p.isEditorsPick,
       editorialStatus: p.editorialStatus,
@@ -321,7 +332,7 @@ router.get("/cms/debates/:id", requireCmsAuth, async (req, res) => {
       categorySlug: poll.categorySlug,
       tags: poll.tags ?? [],
       pollType: poll.pollType,
-      cardLayout: "standard",
+      cardLayout: poll.cardLayout ?? "standard",
       isFeatured: poll.isFeatured,
       isEditorsPick: poll.isEditorsPick,
       editorialStatus: poll.editorialStatus,
@@ -343,7 +354,7 @@ router.put("/cms/debates/:id", requireCmsAuth, async (req, res) => {
     const [existing] = await db.select().from(pollsTable).where(eq(pollsTable.id, pollId));
     if (!existing) return res.status(404).json({ error: "Not found" });
 
-    const { options, cardLayout, updatedAt, totalVotes, ...data } = req.body;
+    const { options, updatedAt, totalVotes, ...data } = req.body;
 
     if (data.editorialStatus && VALID_STATUSES.has(data.editorialStatus)) {
       if (!isValidStatusTransition(existing.editorialStatus, data.editorialStatus)) {
@@ -358,6 +369,7 @@ router.put("/cms/debates/:id", requireCmsAuth, async (req, res) => {
     if (data.categorySlug !== undefined) updateFields.categorySlug = data.categorySlug;
     if (data.tags !== undefined) updateFields.tags = data.tags;
     if (data.pollType !== undefined) updateFields.pollType = data.pollType;
+    if (data.cardLayout !== undefined) updateFields.cardLayout = data.cardLayout;
     if (data.isFeatured !== undefined) updateFields.isFeatured = data.isFeatured;
     if (data.isEditorsPick !== undefined) updateFields.isEditorsPick = data.isEditorsPick;
     if (data.editorialStatus !== undefined) updateFields.editorialStatus = data.editorialStatus;
@@ -440,8 +452,29 @@ router.put("/cms/predictions/:id", requireCmsAuth, async (req, res) => {
       }
     }
 
-    const { id: _id, createdAt: _ca, ...data } = req.body;
-    const [updated] = await db.update(predictionsTable).set({ ...data, updatedAt: new Date() }).where(eq(predictionsTable.id, predId)).returning();
+    const { question, category, categorySlug, tags, resolvesAt, yesPercentage, noPercentage,
+      totalCount, momentum, momentumDirection, trendData, cardLayout, editorialStatus,
+      isFeatured, options, optionResults } = req.body;
+    const data: Record<string, unknown> = {};
+    if (question !== undefined) data.question = question;
+    if (category !== undefined) data.category = category;
+    if (categorySlug !== undefined) data.categorySlug = categorySlug;
+    if (tags !== undefined) data.tags = tags;
+    if (resolvesAt !== undefined) data.resolvesAt = resolvesAt;
+    if (yesPercentage !== undefined) data.yesPercentage = yesPercentage;
+    if (noPercentage !== undefined) data.noPercentage = noPercentage;
+    if (totalCount !== undefined) data.totalCount = totalCount;
+    if (momentum !== undefined) data.momentum = momentum;
+    if (momentumDirection !== undefined) data.momentumDirection = momentumDirection;
+    if (trendData !== undefined) data.trendData = trendData;
+    if (cardLayout !== undefined) data.cardLayout = cardLayout;
+    if (editorialStatus !== undefined) data.editorialStatus = editorialStatus;
+    if (isFeatured !== undefined) data.isFeatured = isFeatured;
+    if (options !== undefined) data.options = options;
+    if (optionResults !== undefined) data.optionResults = optionResults;
+
+    data.updatedAt = new Date();
+    const [updated] = await db.update(predictionsTable).set(data).where(eq(predictionsTable.id, predId)).returning();
     return res.json({ success: true, item: updated });
   } catch (err) {
     console.error("Update prediction error:", err);
@@ -501,8 +534,25 @@ router.put("/cms/pulse-topics/:id", requireCmsAuth, async (req, res) => {
       }
     }
 
-    const { id: _id, createdAt: _ca, ...data } = req.body;
-    await db.update(pulseTopicsTable).set({ ...data, updatedAt: new Date() }).where(eq(pulseTopicsTable.id, topicId));
+    const { topicId: bodyTopicId, tag, tagColor, title, stat, delta, deltaUp, blurb, source,
+      sparkData, liveConfig, sortOrder, editorialStatus } = req.body;
+    const data: Record<string, unknown> = {};
+    if (bodyTopicId !== undefined) data.topicId = bodyTopicId;
+    if (tag !== undefined) data.tag = tag;
+    if (tagColor !== undefined) data.tagColor = tagColor;
+    if (title !== undefined) data.title = title;
+    if (stat !== undefined) data.stat = stat;
+    if (delta !== undefined) data.delta = delta;
+    if (deltaUp !== undefined) data.deltaUp = deltaUp;
+    if (blurb !== undefined) data.blurb = blurb;
+    if (source !== undefined) data.source = source;
+    if (sparkData !== undefined) data.sparkData = sparkData;
+    if (liveConfig !== undefined) data.liveConfig = liveConfig;
+    if (sortOrder !== undefined) data.sortOrder = sortOrder;
+    if (editorialStatus !== undefined) data.editorialStatus = editorialStatus;
+
+    data.updatedAt = new Date();
+    await db.update(pulseTopicsTable).set(data).where(eq(pulseTopicsTable.id, topicId));
     return res.json({ success: true });
   } catch (err) {
     console.error("Update pulse topic error:", err);
@@ -843,23 +893,43 @@ router.post("/cms/:type/bulk-action", requireCmsAuth, async (req, res) => {
       return res.status(400).json({ error: `Invalid target status '${newStatus}'` });
     }
 
-    // NOTE: Per-item transition validation is not performed in bulk actions for performance.
-    // This is a known limitation — invalid transitions (e.g. draft -> unflag) may succeed.
-    // To fully enforce, each item's current status would need to be fetched and checked individually.
-
+    // Fetch current statuses and validate transitions per item
+    let items: { id: number; editorialStatus: string }[] = [];
     if (type === "debates") {
-      await db.update(pollsTable).set({ editorialStatus: newStatus }).where(inArray(pollsTable.id, ids));
+      items = await db.select({ id: pollsTable.id, editorialStatus: pollsTable.editorialStatus }).from(pollsTable).where(inArray(pollsTable.id, ids));
     } else if (type === "predictions") {
-      await db.update(predictionsTable).set({ editorialStatus: newStatus, updatedAt: new Date() }).where(inArray(predictionsTable.id, ids));
+      items = await db.select({ id: predictionsTable.id, editorialStatus: predictionsTable.editorialStatus }).from(predictionsTable).where(inArray(predictionsTable.id, ids));
     } else if (type === "pulse-topics") {
-      await db.update(pulseTopicsTable).set({ editorialStatus: newStatus, updatedAt: new Date() }).where(inArray(pulseTopicsTable.id, ids));
+      items = await db.select({ id: pulseTopicsTable.id, editorialStatus: pulseTopicsTable.editorialStatus }).from(pulseTopicsTable).where(inArray(pulseTopicsTable.id, ids));
     } else if (type === "voices") {
-      await db.update(profilesTable).set({ editorialStatus: newStatus }).where(inArray(profilesTable.id, ids));
+      items = await db.select({ id: profilesTable.id, editorialStatus: profilesTable.editorialStatus }).from(profilesTable).where(inArray(profilesTable.id, ids));
     } else {
       return res.status(400).json({ error: "Invalid type" });
     }
 
-    return res.json({ success: true, updated: ids.length });
+    const validIds: number[] = [];
+    const skippedIds: number[] = [];
+    for (const item of items) {
+      if (isValidStatusTransition(item.editorialStatus, newStatus)) {
+        validIds.push(item.id);
+      } else {
+        skippedIds.push(item.id);
+      }
+    }
+
+    if (validIds.length > 0) {
+      if (type === "debates") {
+        await db.update(pollsTable).set({ editorialStatus: newStatus }).where(inArray(pollsTable.id, validIds));
+      } else if (type === "predictions") {
+        await db.update(predictionsTable).set({ editorialStatus: newStatus, updatedAt: new Date() }).where(inArray(predictionsTable.id, validIds));
+      } else if (type === "pulse-topics") {
+        await db.update(pulseTopicsTable).set({ editorialStatus: newStatus, updatedAt: new Date() }).where(inArray(pulseTopicsTable.id, validIds));
+      } else if (type === "voices") {
+        await db.update(profilesTable).set({ editorialStatus: newStatus }).where(inArray(profilesTable.id, validIds));
+      }
+    }
+
+    return res.json({ success: true, updated: validIds.length, skipped: skippedIds.length, skippedIds });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Bulk action failed" });
@@ -996,7 +1066,18 @@ const storage = isR2Available
       },
     });
 
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files (JPEG, PNG, GIF, WebP) are allowed'));
+    }
+  },
+});
 
 router.post("/cms/upload-image", requireCmsAuth, upload.single("image"), (req, res) => {
   if (!req.file) {

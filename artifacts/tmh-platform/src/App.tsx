@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Toaster } from "@/components/ui/toaster"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { I18nProvider } from "@/lib/i18n"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
 import Home from "@/pages/home"
 import Polls from "@/pages/polls"
 import PollDetail from "@/pages/poll-detail"
@@ -10,6 +11,7 @@ import PollArchive from "@/pages/poll-archive"
 import Profiles from "@/pages/profiles"
 import ProfileDetail from "@/pages/profile-detail"
 import Predictions from "@/pages/predictions"
+import PredictionDetail from "@/pages/prediction-detail"
 import About from "@/pages/about"
 import Apply from "@/pages/apply"
 import Join from "@/pages/join"
@@ -21,6 +23,7 @@ import Majlis from "@/pages/majlis"
 import MajlisLogin from "@/pages/majlis-login"
 import Contact from "@/pages/contact"
 import NotFound from "@/pages/not-found"
+import { Chatbot } from "@/components/Chatbot"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,20 +44,23 @@ function Router() {
       <Route path="/voices" component={Profiles} />
       <Route path="/voices/:id" component={ProfileDetail} />
       <Route path="/predictions" component={Predictions} />
+      <Route path="/predictions/:id" component={PredictionDetail} />
       <Route path="/about" component={About} />
       <Route path="/apply" component={Apply} />
       <Route path="/join" component={Join} />
       <Route path="/terms" component={Terms} />
       <Route path="/faq" component={FAQ} />
-      <Route path="/mena-pulse" component={MenaPulse} />
+      <Route path="/pulse" component={MenaPulse} />
       <Route path="/majlis/login" component={MajlisLogin} />
       <Route path="/majlis" component={Majlis} />
       <Route path="/contact" component={Contact} />
       <Route path="/admin" component={Admin} />
       {/* URL redirects */}
+      <Route path="/polls"><Redirect to="/debates" /></Route>
+      <Route path="/polls/:id">{(params: { id: string }) => <Redirect to={`/debates/${params.id}`} />}</Route>
       <Route path="/profiles"><Redirect to="/voices" /></Route>
       <Route path="/profiles/:id">{(params: { id: string }) => <Redirect to={`/voices/${params.id}`} />}</Route>
-      <Route path="/pulse"><Redirect to="/mena-pulse" /></Route>
+
       <Route component={NotFound} />
     </Switch>
   )
@@ -66,9 +72,12 @@ function App() {
       <TooltipProvider>
         <I18nProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
+            <ErrorBoundary>
+              <Router />
+            </ErrorBoundary>
           </WouterRouter>
           <Toaster />
+          <Chatbot />
         </I18nProvider>
       </TooltipProvider>
     </QueryClientProvider>

@@ -10,6 +10,7 @@ import adminRouter from "./admin";
 import cmsRouter from "./cms";
 import majlisRouter from "./majlis";
 import ideationRouter from "./ideation";
+import chatbotRouter from "./chatbot";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(adminRouter);
 router.use(cmsRouter);
 router.use(majlisRouter);
 router.use(ideationRouter);
+router.use(chatbotRouter);
 
 export default router;

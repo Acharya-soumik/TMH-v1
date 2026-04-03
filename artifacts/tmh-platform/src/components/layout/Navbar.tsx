@@ -60,7 +60,7 @@ export function Navbar() {
 
   const defaultLinks = [
     { label: t("About"), href: "/about" },
-    { label: t("Pulse"), href: "/mena-pulse" },
+    { label: t("Pulse"), href: "/pulse" },
     { label: t("Debates"), href: "/debates" },
     { label: t("Predictions"), href: "/predictions" },
     { label: t("Voices"), href: "/voices" },
@@ -101,7 +101,7 @@ export function Navbar() {
               <span className="font-display font-black text-lg uppercase tracking-tight text-foreground leading-none group-hover:text-primary transition-colors">
                 {brandName}<span className="text-primary">.</span>
               </span>
-              <span className="text-[7px] font-serif tracking-[0.2em] uppercase text-muted-foreground leading-none mt-1.5">
+              <span className="text-[9px] font-serif tracking-[0.2em] uppercase text-muted-foreground leading-none mt-1.5">
                 {brandSub}
               </span>
             </Link>
@@ -114,7 +114,7 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "text-[9px] lg:text-[11px] uppercase tracking-[0.15em] lg:tracking-[0.2em] font-bold transition-all font-serif flex items-center gap-1",
+                  "text-[10px] lg:text-[11.5px] uppercase tracking-[0.15em] lg:tracking-[0.2em] font-bold transition-all font-serif flex items-center gap-1",
                   location === link.href || (link.href === "/majlis" && location.startsWith("/majlis"))
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
@@ -130,7 +130,7 @@ export function Navbar() {
             {ctaButton && !settingsLoading && (
             <Link
               href={ctaButton.href}
-              className="hidden lg:flex items-center gap-2 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.15em] px-4 py-2 hover:bg-primary/90 transition-colors font-serif"
+              className="hidden lg:flex items-center gap-2 bg-primary text-white text-[11px] font-bold uppercase tracking-[0.15em] px-4 py-2 hover:bg-primary/90 transition-colors font-serif"
             >
               {ctaButton.label}
             </Link>

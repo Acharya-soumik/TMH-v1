@@ -60,7 +60,7 @@ export default function PageTerms() {
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-serif text-2xl font-bold uppercase tracking-wide">Terms & Conditions<span className="text-primary">.</span></h1>
+          <h1 className="font-serif text-2xl font-bold uppercase text-primary tracking-wide">Terms & Conditions<span className="text-primary">.</span></h1>
           <p className="text-xs text-muted-foreground mt-1">{config.sections.length} sections</p>
         </div>
         <div className="flex gap-2">

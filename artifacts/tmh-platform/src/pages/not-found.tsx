@@ -4,7 +4,10 @@ import { useI18n } from "@/lib/i18n"
 import { usePageTitle } from "@/hooks/use-page-title"
 
 export default function NotFound() {
-  usePageTitle("Page Not Found");
+  usePageTitle({
+    title: "Page Not Found",
+    description: "This page doesn't exist. Head back to The Tribunal to explore debates, predictions, and voices from across MENA.",
+  });
   const { t, isAr } = useI18n()
 
   return (
@@ -60,7 +63,7 @@ export default function NotFound() {
             {t("Explore")}
           </p>
           <div className="flex flex-wrap gap-6 justify-center">
-            <Link href="/mena-pulse" className="text-[10px] uppercase tracking-widest font-bold font-serif text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/pulse" className="text-[10px] uppercase tracking-widest font-bold font-serif text-muted-foreground hover:text-foreground transition-colors">
               {t("Pulse")} {isAr ? "←" : "→"}
             </Link>
             <Link href="/predictions" className="text-[10px] uppercase tracking-widest font-bold font-serif text-muted-foreground hover:text-foreground transition-colors">

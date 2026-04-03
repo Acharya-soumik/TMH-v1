@@ -1,5 +1,14 @@
 import { Request, Response, NextFunction } from "express"
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 const BOT_UA_PATTERNS = [
   /Twitterbot/i,
   /facebookexternalhit/i,
@@ -24,6 +33,7 @@ function isBot(ua: string): boolean {
   return BOT_UA_PATTERNS.some(p => p.test(ua))
 }
 
+const INTERNAL_API_BASE = process.env.INTERNAL_API_URL ?? `http://127.0.0.1:${process.env.PORT ?? 8080}`;
 const SITE = "https://themiddleeasthustle.com"
 const DEFAULT_IMAGE = `${SITE}/og-cover.jpg`
 const SITE_NAME = "The Tribunal, by The Middle East Hustle"
@@ -37,38 +47,42 @@ function buildHtml(meta: {
 }): string {
   const { title, description, url, image, type = "website" } = meta
   const fullTitle = title.includes("Tribunal") || title.includes("Middle East") ? title : `${title} | ${SITE_NAME}`
+  const safeTitle = escapeHtml(fullTitle)
+  const safeDescription = escapeHtml(description)
+  const safeUrl = escapeHtml(url)
+  const safeImage = escapeHtml(image)
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${fullTitle}</title>
-  <meta name="description" content="${description}" />
+  <title>${safeTitle}</title>
+  <meta name="description" content="${safeDescription}" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="${type}" />
   <meta property="og:site_name" content="${SITE_NAME}" />
-  <meta property="og:title" content="${fullTitle}" />
-  <meta property="og:description" content="${description}" />
-  <meta property="og:url" content="${url}" />
-  <meta property="og:image" content="${image}" />
+  <meta property="og:title" content="${safeTitle}" />
+  <meta property="og:description" content="${safeDescription}" />
+  <meta property="og:url" content="${safeUrl}" />
+  <meta property="og:image" content="${safeImage}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@TMHustle" />
-  <meta name="twitter:title" content="${fullTitle}" />
-  <meta name="twitter:description" content="${description}" />
-  <meta name="twitter:image" content="${image}" />
+  <meta name="twitter:title" content="${safeTitle}" />
+  <meta name="twitter:description" content="${safeDescription}" />
+  <meta name="twitter:image" content="${safeImage}" />
 
   <!-- Redirect bots gracefully -->
-  <link rel="canonical" href="${url}" />
+  <link rel="canonical" href="${safeUrl}" />
 </head>
 <body>
-  <h1>${fullTitle}</h1>
-  <p>${description}</p>
-  <a href="${url}">View on The Tribunal</a>
+  <h1>${safeTitle}</h1>
+  <p>${safeDescription}</p>
+  <a href="${safeUrl}">View on The Tribunal</a>
 </body>
 </html>`
 }
@@ -86,7 +100,7 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
   if (pollMatch) {
     // We'll try to fetch poll data from the internal polls route
     const pollId = pollMatch[1]
-    fetch(`http://localhost:${process.env.PORT ?? 8080}/api/polls/${pollId}`)
+    fetch(`${INTERNAL_API_BASE}/api/polls/${pollId}`)
       .then(r => r.json() as Promise<Record<string, any>>)
       .then((poll) => {
         const title = poll.question ?? "The Middle East's boldest question"
@@ -114,7 +128,7 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
   const profileMatch = req.path.match(/^\/voices\/(\d+)/)
   if (profileMatch) {
     const profileId = profileMatch[1]
-    fetch(`http://localhost:${process.env.PORT ?? 8080}/api/profiles/${profileId}`)
+    fetch(`${INTERNAL_API_BASE}/api/profiles/${profileId}`)
       .then(r => r.json() as Promise<Record<string, any>>)
       .then((profile) => {
         const name = profile.name ?? "A Hustler"
@@ -151,6 +165,14 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
       title: "All Debates | The Tribunal",
       description: "Browse every debate. 135+ questions about the future of the Arab world.",
     },
+    "/debates": {
+      title: "All Debates | The Tribunal",
+      description: "Browse every debate. 135+ questions about the future of the Arab world.",
+    },
+    "/debates/archive": {
+      title: "Debate Archive | The Tribunal",
+      description: "Past debates and their results. See how MENA voted on the questions that mattered.",
+    },
     "/voices": {
       title: "The Voices | The Tribunal",
       description: "100+ curated founders, operators, and change-makers shaping MENA.",
@@ -166,6 +188,10 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
     "/predictions": {
       title: "Predictions | The Tribunal",
       description: "Bloomberg-style prediction market for MENA. Track confidence, watch consensus shift, and call the future.",
+    },
+    "/pulse": {
+      title: "MENA Pulse | The Tribunal",
+      description: "Exploding Topics for MENA. 36 data-driven trend cards across 8 categories — the region's vital signs in real time.",
     },
     "/mena-pulse": {
       title: "MENA Pulse | The Tribunal",

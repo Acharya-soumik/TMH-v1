@@ -10,6 +10,7 @@ export const pollsTable = pgTable("polls", {
   categorySlug: text("category_slug").notNull(),
   tags: jsonb("tags").$type<string[]>().notNull().default([]),
   pollType: text("poll_type").notNull().default("binary"),
+  cardLayout: text("card_layout").notNull().default("standard"),
   isFeatured: boolean("is_featured").notNull().default(false),
   isEditorsPick: boolean("is_editors_pick").notNull().default(false),
   editorialStatus: text("editorial_status").notNull().default("approved"),

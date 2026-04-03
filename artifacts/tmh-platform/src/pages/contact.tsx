@@ -1,21 +1,42 @@
 import { useState } from "react"
+import { Link } from "wouter"
 import { Layout } from "@/components/layout/Layout"
 import { useI18n } from "@/lib/i18n"
 import { Mail, MapPin, MessageSquare } from "lucide-react"
 import { usePageTitle } from "@/hooks/use-page-title"
 
 export default function Contact() {
-  usePageTitle("Contact");
+  usePageTitle({
+    title: "Contact",
+    description: "Get in touch with The Tribunal team. Partnerships, press, feedback, or just say hello.",
+  });
   const { t, isAr } = useI18n()
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" })
   const [submitted, setSubmitted] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: value }))
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => { const next = { ...prev }; delete next[name]; return next })
+    }
+  }
+
+  function validate(): Record<string, string> {
+    const errors: Record<string, string> = {}
+    if (!form.name.trim()) errors.name = "This field is required"
+    if (!form.email.trim()) errors.email = "This field is required"
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = "Please enter a valid email"
+    if (!form.message.trim()) errors.message = "This field is required"
+    return errors
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    const errors = validate()
+    setFieldErrors(errors)
+    if (Object.keys(errors).length > 0) return
     // Open mailto with pre-filled fields as fallback
     const mailtoBody = `Name: ${form.name}%0D%0A%0D%0A${form.message}`
     const mailtoSubject = form.subject || "General Inquiry"
@@ -137,35 +158,35 @@ export default function Contact() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} noValidate className="space-y-6">
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div>
                     <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground font-serif mb-2 block">
-                      {t("Name")}
+                      {t("Name")} *
                     </label>
                     <input
                       type="text"
                       name="name"
-                      required
                       value={form.name}
                       onChange={handleChange}
-                      className="w-full border border-border bg-background text-foreground px-4 py-3 text-sm font-sans focus:outline-none focus:border-primary transition-colors"
+                      className={`w-full border bg-background text-foreground px-4 py-3 text-sm font-sans focus:outline-none transition-colors ${fieldErrors.name ? "border-red-500 focus:border-red-500" : "border-border focus:border-primary"}`}
                       placeholder={t("Your name")}
                     />
+                    {fieldErrors.name && <p className="text-xs text-red-500 mt-1">{fieldErrors.name}</p>}
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground font-serif mb-2 block">
-                      {t("Email")}
+                      {t("Email")} *
                     </label>
                     <input
-                      type="email"
+                      type="text"
                       name="email"
-                      required
                       value={form.email}
                       onChange={handleChange}
-                      className="w-full border border-border bg-background text-foreground px-4 py-3 text-sm font-sans focus:outline-none focus:border-primary transition-colors"
+                      className={`w-full border bg-background text-foreground px-4 py-3 text-sm font-sans focus:outline-none transition-colors ${fieldErrors.email ? "border-red-500 focus:border-red-500" : "border-border focus:border-primary"}`}
                       placeholder={t("your@email.com")}
                     />
+                    {fieldErrors.email && <p className="text-xs text-red-500 mt-1">{fieldErrors.email}</p>}
                   </div>
                 </div>
 
@@ -192,17 +213,17 @@ export default function Contact() {
 
                 <div>
                   <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground font-serif mb-2 block">
-                    {t("Message")}
+                    {t("Message")} *
                   </label>
                   <textarea
                     name="message"
-                    required
                     rows={6}
                     value={form.message}
                     onChange={handleChange}
-                    className="w-full border border-border bg-background text-foreground px-4 py-3 text-sm font-sans focus:outline-none focus:border-primary transition-colors resize-none"
+                    className={`w-full border bg-background text-foreground px-4 py-3 text-sm font-sans focus:outline-none transition-colors resize-none ${fieldErrors.message ? "border-red-500 focus:border-red-500" : "border-border focus:border-primary"}`}
                     placeholder={t("What's on your mind?")}
                   />
+                  {fieldErrors.message && <p className="text-xs text-red-500 mt-1">{fieldErrors.message}</p>}
                 </div>
 
                 <button
@@ -227,18 +248,18 @@ export default function Contact() {
             {t("Join the conversation shaping the future of the Middle East.")}
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <a
+            <Link
               href="/debates"
               className="bg-foreground text-background px-6 py-2.5 font-bold uppercase tracking-widest text-[10px] hover:bg-primary transition-colors font-serif"
             >
               {t("Enter The Debates")}
-            </a>
-            <a
+            </Link>
+            <Link
               href="/apply"
               className="border border-foreground text-foreground px-6 py-2.5 font-bold uppercase tracking-widest text-[10px] hover:bg-foreground hover:text-background transition-colors font-serif"
             >
               {t("Join The Voices")}
-            </a>
+            </Link>
           </div>
         </div>
       </div>

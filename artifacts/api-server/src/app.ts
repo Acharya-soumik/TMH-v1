@@ -1,6 +1,7 @@
 import express, { type Request, type Express } from "express";
 import cors from "cors";
 import path from "path";
+import rateLimit from "express-rate-limit";
 import router from "./routes";
 import { ogTagsMiddleware } from "./middlewares/ogTags";
 
@@ -58,6 +59,18 @@ app.use("/api/cms", (_req, res, next) => {
   next();
 });
 
+// ── Auth rate limiting ──────────────────────────────────────
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 attempts per window
+  message: { error: "Too many login attempts, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use("/api/cms/auth", authLimiter);
+app.use("/api/majlis/auth", authLimiter);
+
 // ── API routes ──────────────────────────────────────────────
 
 app.use("/api", router);
@@ -94,6 +107,14 @@ app.use((req, res) => {
   res.sendFile(
     path.join(process.cwd(), `artifacts/${dir}/dist/public/index.html`),
   );
+});
+
+// ── Global error handler — must be last middleware ──────────
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("[UNHANDLED ERROR]", err.message);
+  if (!res.headersSent) {
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 export default app;

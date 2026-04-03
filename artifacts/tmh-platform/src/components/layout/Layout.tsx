@@ -2,7 +2,6 @@ import { ReactNode, useEffect } from "react"
 import { useLocation } from "wouter"
 import { Navbar } from "./Navbar"
 import { Footer } from "./Footer"
-import { CookieConsent } from "@/components/ui/CookieConsent"
 import { ScrollToTop } from "./ScrollToTop"
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -20,7 +19,6 @@ export function Layout({ children }: { children: ReactNode }) {
       </main>
       <Footer />
       <ScrollToTop />
-      <CookieConsent />
     </div>
   )
 }

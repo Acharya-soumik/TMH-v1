@@ -1197,8 +1197,8 @@ function PulseShareBtn({ title, stat, id }: { title: string; stat: string; id: s
   const [showModal, setShowModal] = useState(false);
   const url =
     typeof window !== "undefined"
-      ? `${window.location.origin}/mena-pulse?shared=${id}`
-      : `/mena-pulse?shared=${id}`;
+      ? `${window.location.origin}/pulse?shared=${id}`
+      : `/pulse?shared=${id}`;
 
   return (
     <>
@@ -1424,6 +1424,18 @@ function TopicCardComponent({
         />
       </div>
 
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginTop: 12,
+          paddingTop: 10,
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <PulseShareBtn title={topic.title} stat={topic.stat} id={topic.id} />
+      </div>
+
       {expanded && (
         <div
           style={{
@@ -1443,26 +1455,17 @@ function TopicCardComponent({
           >
             {topic.blurb}
           </p>
-          <div
+          <p
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 8,
+              color: "rgba(255,255,255,0.4)",
+              textTransform: "uppercase",
+              letterSpacing: "0.15em",
             }}
           >
-            <p
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 8,
-                color: "rgba(255,255,255,0.4)",
-                textTransform: "uppercase",
-                letterSpacing: "0.15em",
-              }}
-            >
-              {t("Source:")} {topic.source}
-            </p>
-            <PulseShareBtn title={topic.title} stat={topic.stat} id={topic.id} />
-          </div>
+            {t("Source:")} {topic.source}
+          </p>
         </div>
       )}
     </div>
@@ -1703,7 +1706,10 @@ function CategoryFilter({
 }
 
 export default function MenaPulse() {
-  usePageTitle("MENA Pulse");
+  usePageTitle({
+    title: "Pulse",
+    description: "36 data-driven trend cards across 8 categories -- from press freedom to sovereign wealth. The region's vital signs, live.",
+  });
   const [activeCategory, setActiveCategory] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedId, setHighlightedId] = useState<string | null>(null);

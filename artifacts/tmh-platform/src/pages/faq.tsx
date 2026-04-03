@@ -145,7 +145,10 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function FAQ() {
-  usePageTitle("FAQ");
+  usePageTitle({
+    title: "FAQ",
+    description: "Frequently asked questions about The Tribunal -- how it works, who it's for, and why anonymity matters.",
+  });
   const { t, isAr } = useI18n()
   const { data: cmsConfig } = usePageConfig<{ sections?: FaqSection[] }>("faq")
   const FAQ_SECTIONS = cmsConfig?.sections?.length ? cmsConfig.sections : FAQ_SECTIONS_DEFAULT

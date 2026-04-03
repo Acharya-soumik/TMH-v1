@@ -1,20 +1,6 @@
 import { useState, useEffect } from "react";
 import { MessageSquare, Users, Ban, VolumeX, CheckCircle, Trash2, RefreshCw, Shield, Mail, Copy, Plus } from "lucide-react";
-
-const API_BASE = "/api/cms/majlis";
-
-function getHeaders() {
-  const token = localStorage.getItem("cms_token");
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (token) headers["x-cms-token"] = token;
-  return headers;
-}
-
-async function majlisRequest(path: string, options: RequestInit = {}) {
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers: { ...getHeaders(), ...(options.headers as Record<string, string> || {}) } });
-  if (!res.ok) throw new Error("Request failed");
-  return res.json();
-}
+import { api } from "@/lib/api";
 
 interface MajlisUser {
   id: number;
@@ -81,10 +67,10 @@ export default function MajlisPage() {
     setLoading(true);
     try {
       const [statsData, usersData, messagesData, invitesData] = await Promise.all([
-        majlisRequest("/stats"),
-        majlisRequest("/users"),
-        majlisRequest("/messages?limit=100"),
-        majlisRequest("/invites"),
+        api.getMajlisStats(),
+        api.getMajlisUsers(),
+        api.getMajlisMessages(100),
+        api.getMajlisInvites(),
       ]);
       setStats(statsData);
       setUsers(usersData.users);
@@ -101,7 +87,7 @@ export default function MajlisPage() {
 
   const toggleUser = async (id: number, field: "isActive" | "isBanned" | "isMuted", value: boolean) => {
     try {
-      await majlisRequest(`/users/${id}`, { method: "PATCH", body: JSON.stringify({ [field]: value }) });
+      await api.updateMajlisUser(id, { [field]: value });
       loadData();
     } catch (err) {
       console.error("Failed to update user:", err);
@@ -111,7 +97,7 @@ export default function MajlisPage() {
   const deleteMessage = async (id: number) => {
     if (!confirm("Delete this message?")) return;
     try {
-      await majlisRequest(`/messages/${id}`, { method: "DELETE" });
+      await api.deleteMajlisMessage(id);
       loadData();
     } catch (err) {
       console.error("Failed to delete message:", err);
@@ -128,10 +114,7 @@ export default function MajlisPage() {
     }
     setInviteLoading(true);
     try {
-      const data = await majlisRequest("/invites", {
-        method: "POST",
-        body: JSON.stringify({ profileId: parseInt(inviteProfileId), email: inviteEmail }),
-      });
+      const data = await api.createMajlisInvite({ profileId: parseInt(inviteProfileId), email: inviteEmail });
       setInviteProfileId("");
       setInviteEmail("");
       setGeneratedCode(data.invite?.token || null);

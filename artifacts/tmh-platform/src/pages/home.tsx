@@ -1326,7 +1326,9 @@ function SidebarPredictionItem({
 }
 
 export default function Home() {
-  usePageTitle();
+  usePageTitle({
+    description: "The voice of 541 million. Real debates, predictions, and voices from across MENA.",
+  });
   const { data: featuredPoll, isLoading: featuredLoading } =
     useGetFeaturedPoll();
   const { data: trendingPolls, isLoading: trendingLoading } = useListPolls({
@@ -1670,7 +1672,7 @@ export default function Home() {
                 accent: "#3B82F6",
               },
               {
-                href: "/mena-pulse",
+                href: "/pulse",
                 label: t("The Pulse"),
                 desc: "Real trends backed by real data",
                 count: String(
@@ -2105,7 +2107,7 @@ export default function Home() {
                   "Nov",
                   "Dec",
                 ];
-                const pulseUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/mena-pulse`;
+                const pulseUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/pulse`;
                 return (
                   <div
                     className="bg-card border border-border rounded-[4px] flex flex-col lg:flex-row gap-0 overflow-hidden"
@@ -2345,7 +2347,7 @@ export default function Home() {
                           Source: {topic.source}
                         </p>
                         <Link
-                          href="/mena-pulse"
+                          href="/pulse"
                           className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground hover:text-[#10B981] font-serif transition-colors flex items-center gap-1"
                         >
                           Explore <ArrowRight className="w-3 h-3" />
@@ -2365,7 +2367,7 @@ export default function Home() {
                   {t("Latest Trends")}
                 </p>
                 <Link
-                  href="/mena-pulse"
+                  href="/pulse"
                   className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground font-serif transition-colors"
                 >
                   {t("View All")}
@@ -2424,7 +2426,7 @@ export default function Home() {
                   const max = Math.max(...t2.sparkData);
                   const min = Math.min(...t2.sparkData);
                   const rng = max - min || 1;
-                  const pUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/mena-pulse`;
+                  const pUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/pulse`;
                   return (
                     <motion.div
                       key={idx}

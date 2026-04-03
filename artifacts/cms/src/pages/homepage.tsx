@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Save, Plus, Trash2, GripVertical, Eye, EyeOff, ChevronDown, ChevronUp, X, Monitor } from "lucide-react";
+import { toast } from "sonner";
 
 interface Banner {
   id: string;
@@ -68,7 +69,7 @@ export default function HomepagePage() {
     setSaving(true);
     try {
       await api.updateHomepage(data as unknown as Record<string, unknown>);
-    } catch (e: unknown) { alert(e instanceof Error ? e.message : "Save failed"); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Save failed"); }
     finally { setSaving(false); }
   };
 
@@ -77,7 +78,7 @@ export default function HomepagePage() {
       const res = await api.addBanner({ title: "New Banner", subtitle: "", ctaText: "Learn More", ctaLink: "/", bgColor: "#DC143C", textColor: "#FFFFFF", enabled: false, position: "top" });
       if (data) setData({ ...data, banners: [...data.banners, res.banner] });
       setExpandedBanner(res.banner.id);
-    } catch (e: unknown) { alert(e instanceof Error ? e.message : "Failed"); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Failed"); }
   };
 
   const removeBanner = async (id: string) => {
@@ -85,7 +86,7 @@ export default function HomepagePage() {
       await api.deleteBanner(id);
       if (data) setData({ ...data, banners: data.banners.filter(b => b.id !== id) });
       if (previewBannerId === id) setPreviewBannerId(null);
-    } catch (e: unknown) { alert(e instanceof Error ? e.message : "Failed"); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Failed"); }
   };
 
   const updateBanner = (id: string, field: string, value: unknown) => {
@@ -244,7 +245,7 @@ export default function HomepagePage() {
 
       {activeTab === "sections" && (
         <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">Drag to reorder sections. Toggle visibility to show/hide them on the homepage.</p>
+          <p className="text-sm text-muted-foreground">Use arrows to reorder sections. Toggle visibility to show/hide them on the homepage.</p>
           {[...data.sections].sort((a, b) => a.order - b.order).map(section => (
             <div key={section.id} className="border border-border rounded-md bg-card">
               <div className="flex items-center gap-3 px-4 py-3">

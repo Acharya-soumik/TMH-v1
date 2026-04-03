@@ -23,7 +23,7 @@ const FALLBACK_PILLARS = [
     num: "03",
     title: "The Pulse",
     body: "Exploding Topics for MENA. 36 data-driven trend cards across 8 categories — from press freedom collapse to the $4.1T sovereign wealth machine. Filterable by Power, Money, Society, Tech, Survival, Migration, Culture, and Health. Real-time population counter. Live tickers. The region's vital signs.",
-    link: "/mena-pulse",
+    link: "/pulse",
     cta: "Read The Pulse",
   },
   {
@@ -106,7 +106,10 @@ interface AboutConfig {
 }
 
 export default function About() {
-  usePageTitle("About");
+  usePageTitle({
+    title: "About",
+    description: "The Tribunal is the anonymous voice of MENA -- 541 million people, one platform for debates, predictions, and real opinions.",
+  });
   const { t, isAr } = useI18n()
   const { data: pageConfig } = usePageConfig<AboutConfig & {
     stats?: Array<{ num: string; label: string }>;
@@ -178,7 +181,7 @@ export default function About() {
           <div className="grid md:grid-cols-2 gap-10">
             {pillars.map(p => (
               <div key={p.num} className="relative">
-                <span className="text-6xl font-display font-black text-foreground/8 leading-none select-none block">{p.num}</span>
+                <span className="text-6xl font-display font-black text-gray-900/20 dark:text-gray-100/20 leading-none select-none block">{p.num}</span>
                 <div className="-mt-3">
                   <h3 className="font-serif font-black uppercase text-lg border-b border-border pb-2 mb-3 text-foreground tracking-wide">
                     {t(p.title)}
@@ -203,8 +206,8 @@ export default function About() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {stats.map(stat => (
               <div key={stat.label}>
-                <div className="font-display font-black text-4xl md:text-5xl text-primary leading-none mb-2">{stat.num}</div>
-                <div className="text-[10px] uppercase tracking-[0.2em] text-background/70 font-serif">{t(stat.label)}</div>
+                <div className="font-display font-black text-4xl md:text-5xl text-gray-900 dark:text-white leading-none mb-2">{stat.num}</div>
+                <div className="text-[10px] uppercase tracking-[0.2em] text-gray-700 dark:text-gray-300 font-serif">{t(stat.label)}</div>
               </div>
             ))}
           </div>
@@ -260,7 +263,7 @@ export default function About() {
           <div className="grid md:grid-cols-2 gap-8">
             {beliefs.map(b => (
               <div key={b.num} className="relative">
-                <span className="text-6xl font-display font-black text-foreground/8 leading-none select-none block">{b.num}</span>
+                <span className="text-6xl font-display font-black text-gray-900/20 dark:text-gray-100/20 leading-none select-none block">{b.num}</span>
                 <div className="-mt-3">
                   <h3 className="font-serif font-black uppercase text-lg border-b border-border pb-2 mb-3 text-foreground tracking-wide">
                     {t(b.title)}
@@ -337,7 +340,7 @@ export default function About() {
               {t("Cast Your Vote")}
             </Link>
             <Link
-              href="/mena-pulse"
+              href="/pulse"
               className="border border-foreground text-foreground px-8 py-3 font-bold uppercase tracking-widest text-xs hover:bg-foreground hover:text-background transition-colors font-serif"
             >
               {t("Read The Pulse")}

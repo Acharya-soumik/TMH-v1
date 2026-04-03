@@ -52,16 +52,24 @@ router.post("/:id/vote", voteRateLimit, async (req, res) => {
         )
       );
 
+    let changed = false;
     if (existing) {
-      return res.status(409).json({ error: "Already voted on this prediction" });
+      if (existing.choice === choice) {
+        return res.status(200).json({ error: "Already voted with this choice", unchanged: true });
+      }
+      await db
+        .update(predictionVotesTable)
+        .set({ choice })
+        .where(eq(predictionVotesTable.id, existing.id));
+      changed = true;
+    } else {
+      await db.insert(predictionVotesTable).values({
+        predictionId,
+        choice,
+        voterToken,
+        country: null,
+      });
     }
-
-    await db.insert(predictionVotesTable).values({
-      predictionId,
-      choice,
-      voterToken,
-      country: null,
-    });
 
     // Calculate per-option percentages
     const allVotes = await db
@@ -96,6 +104,7 @@ router.post("/:id/vote", voteRateLimit, async (req, res) => {
 
     return res.json({
       success: true,
+      changed,
       yesPercentage,
       noPercentage,
       optionResults,

@@ -135,7 +135,7 @@ async function sendApplicationEmail(email: string, name: string, status: string,
         text: bodies[status] ?? `Thank you for applying, ${name}. We'll be in touch.`,
       }),
     })
-    console.log(`[APPLY] Resend email sent to ${email} (${status})`)
+    console.log(`[APPLY] Resend email sent to ${email.substring(0, 3)}*** (${status})`)
   } catch (err) {
     console.error("[APPLY] Resend email failed:", err)
   }
@@ -172,9 +172,10 @@ router.post("/apply", async (req, res) => {
       aiChecklist: aiResult.checklist,
     }).returning()
     refNumber = `TMH-${inserted.id || Date.now()}`
-    console.log(`[APPLY] Stored application: ${name} <${email}> | Score: ${aiResult.score} | Status: ${aiResult.status} | Ref: ${refNumber}`)
+    console.log(`[APPLY] Stored application: ${name.substring(0, 2)}*** <${email.substring(0, 3)}***> | Score: ${aiResult.score} | Status: ${aiResult.status} | Ref: ${refNumber}`)
   } catch (err) {
-    console.error("[APPLY] DB save failed:", err)
+    console.error("[APPLY] DB save failed:", (err as Error).message)
+    return res.status(500).json({ success: false, error: "Failed to submit application. Please try again." })
   }
 
   sendApplicationEmail(email, name, aiResult.status, aiResult.reasoning, aiResult.score).catch(() => {})

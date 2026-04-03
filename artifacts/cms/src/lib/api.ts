@@ -186,6 +186,18 @@ export const api = {
   publishDraft: (ideaId: number) =>
     request(`/ideation/ideas/${ideaId}/publish-draft`, { method: "POST" }),
 
+  // Majlis
+  getMajlisStats: () => request("/majlis/stats"),
+  getMajlisUsers: () => request("/majlis/users"),
+  getMajlisMessages: (limit = 100) => request(`/majlis/messages?limit=${limit}`),
+  getMajlisInvites: () => request("/majlis/invites"),
+  updateMajlisUser: (id: number, data: Record<string, unknown>) =>
+    request(`/majlis/users/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteMajlisMessage: (id: number) =>
+    request(`/majlis/messages/${id}`, { method: "DELETE" }),
+  createMajlisInvite: (data: { profileId: number; email: string }) =>
+    request("/majlis/invites", { method: "POST", body: JSON.stringify(data) }),
+
   getRejectionLog: () => request("/ideation/rejection-log"),
   deleteRejectionLogEntry: (id: number) => request(`/ideation/rejection-log/${id}`, { method: "DELETE" }),
   exportRejectionLog: async () => {

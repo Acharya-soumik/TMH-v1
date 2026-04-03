@@ -6,6 +6,7 @@ import ComboSelect from "@/components/combo-select";
 import PreviewPanel from "@/components/preview-panel";
 import type React from "react";
 import { Save, Send, Check, Archive, RotateCcw, Eye, Flag, XCircle, FileEdit } from "lucide-react";
+import { toast } from "sonner";
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   draft: ["in_review", "approved", "rejected"],
@@ -60,6 +61,12 @@ export default function EditPredictionPage() {
   const update = (field: string, value: unknown) => setForm(f => ({ ...f, [field]: value }));
 
   const save = async (status?: string) => {
+    const errors: string[] = [];
+    if (!form.question?.trim()) errors.push("Question is required");
+    if (errors.length > 0) {
+      errors.forEach(e => toast.error(e));
+      return;
+    }
     setSaving(true);
     try {
       const data = { ...form, editorialStatus: status || form.editorialStatus, resolvesAt: form.resolvesAt || null };
@@ -69,7 +76,7 @@ export default function EditPredictionPage() {
         await api.updatePrediction(Number(params.id), data);
       }
       navigate("/predictions");
-    } catch (e: unknown) { alert(e instanceof Error ? e.message : "Save failed"); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Save failed"); }
     finally { setSaving(false); }
   };
 

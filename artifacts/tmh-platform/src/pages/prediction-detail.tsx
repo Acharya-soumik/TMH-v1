@@ -1,0 +1,461 @@
+import { useState } from "react"
+import { useRoute, Link } from "wouter"
+import { Layout } from "@/components/layout/Layout"
+import { ShareModal } from "@/components/ShareModal"
+import { ArrowLeft, AlertCircle, ArrowRight, Share2, TrendingUp, TrendingDown, Calendar, Users, Info } from "lucide-react"
+import { usePageTitle } from "@/hooks/use-page-title"
+import { Skeleton } from "@/components/ui/skeleton"
+import { LoadingDots } from "@/components/ui/loading-dots"
+import { usePrediction, usePredictions, type ApiPrediction } from "@/hooks/use-cms-data"
+import {
+  ComposedChart,
+  Area,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ReferenceLine,
+  ResponsiveContainer,
+  LineChart,
+} from "recharts"
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+const OPTION_COLORS = ["#10B981", "#3B82F6", "#F59E0B", "#DC143C", "#8B5CF6", "#EC4899"]
+
+function DetailSkeleton() {
+  return (
+    <div className="flex flex-col lg:flex-row gap-10">
+      <div className="flex-1 space-y-8">
+        <div className="border border-border bg-card p-8 space-y-4">
+          <div className="flex gap-3">
+            <Skeleton className="h-5 w-24 bg-foreground/10" />
+            <Skeleton className="h-5 w-32 bg-foreground/10" />
+          </div>
+          <Skeleton className="h-10 w-full bg-foreground/10" />
+          <Skeleton className="h-10 w-3/4 bg-foreground/10" />
+          <Skeleton className="h-64 w-full bg-foreground/10 mt-6" />
+          <div className="flex gap-4 pt-6">
+            <Skeleton className="h-14 w-full bg-foreground/10" />
+            <Skeleton className="h-14 w-full bg-foreground/10" />
+          </div>
+        </div>
+      </div>
+      <div className="lg:w-80 space-y-6">
+        <Skeleton className="h-5 w-32 bg-foreground/10" />
+        {[1, 2, 3].map(i => (
+          <div key={i} className="border border-border bg-card p-5 space-y-3">
+            <Skeleton className="h-3 w-16 bg-foreground/10" />
+            <Skeleton className="h-5 w-full bg-foreground/10" />
+            <Skeleton className="h-3 w-20 bg-foreground/10" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ConfidenceChart({ data, momentum, up }: { data: number[]; momentum: number; up: boolean }) {
+  const chartData = data.map((yes, i) => {
+    const monthIdx = (new Date().getMonth() - data.length + 1 + i + 12) % 12
+    return {
+      month: MONTHS[monthIdx],
+      yes,
+      ma: i >= 2 ? Math.round((data[i] + data[i - 1] + data[i - 2]) / 3) : yes,
+    }
+  })
+
+  return (
+    <div className="border border-border bg-card p-6 md:p-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <div className="h-px w-8 bg-primary mb-3" />
+          <h3 className="font-serif font-black uppercase text-lg tracking-wider">Confidence Trend</h3>
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          {up ? <TrendingUp className="w-4 h-4 text-emerald-500" /> : <TrendingDown className="w-4 h-4 text-red-500" />}
+          <span className={`font-bold ${up ? "text-emerald-500" : "text-red-500"}`}>
+            {up ? "+" : "-"}{Math.abs(momentum).toFixed(1)}%
+          </span>
+          <span className="text-muted-foreground text-xs">30d</span>
+        </div>
+      </div>
+      <ResponsiveContainer width="100%" height={280}>
+        <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <defs>
+            <linearGradient id="predGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={up ? "#10B981" : "#DC143C"} stopOpacity={0.25} />
+              <stop offset="100%" stopColor={up ? "#10B981" : "#DC143C"} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+          <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} />
+          <YAxis domain={[0, 100]} tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+          <ReferenceLine y={50} stroke="rgba(255,255,255,0.15)" strokeDasharray="4 4" />
+          <Tooltip
+            contentStyle={{ background: "#1a1a1a", border: "1px solid rgba(220,20,60,0.3)", borderRadius: 6, fontSize: 13 }}
+            labelStyle={{ color: "#fff" }}
+            formatter={(v: number) => [`${v}%`, "Confidence"]}
+          />
+          <Area type="monotone" dataKey="yes" fill="url(#predGrad)" stroke="none" />
+          <Line type="monotone" dataKey="yes" stroke={up ? "#10B981" : "#DC143C"} strokeWidth={2.5} dot={false} />
+          <Line type="monotone" dataKey="ma" stroke="rgba(200,168,100,0.5)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; onVoteUpdate: (choice: string) => void }) {
+  const storageKey = `tmh_pred_${prediction.id}`
+  const [voted, setVoted] = useState<string | null>(() =>
+    typeof window !== "undefined" ? localStorage.getItem(storageKey) : null
+  )
+  const [confirmChoice, setConfirmChoice] = useState<string | null>(null)
+  const [isDeselecting, setIsDeselecting] = useState(false)
+  const [changing, setChanging] = useState(false)
+
+  const options = prediction.options?.length ? prediction.options : ["yes", "no"]
+  const isLegacy = !prediction.options?.length
+
+  const submitVote = (choice: string) => {
+    setVoted(choice)
+    setConfirmChoice(null)
+    setChanging(false)
+    setIsDeselecting(false)
+    localStorage.setItem(storageKey, choice)
+    onVoteUpdate(choice)
+    let token = localStorage.getItem("tmh_voter_token")
+    if (!token) { token = crypto.randomUUID(); localStorage.setItem("tmh_voter_token", token) }
+    fetch(`/api/predictions/${prediction.id}/vote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ choice, voterToken: token }),
+    }).catch(() => {})
+  }
+
+  const removeVote = () => {
+    setVoted(null)
+    setConfirmChoice(null)
+    setIsDeselecting(false)
+    setChanging(false)
+    localStorage.removeItem(storageKey)
+    let token = localStorage.getItem("tmh_voter_token")
+    if (!token) { token = crypto.randomUUID(); localStorage.setItem("tmh_voter_token", token) }
+    fetch(`/api/predictions/${prediction.id}/vote`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ voterToken: token }),
+    }).catch(() => {})
+  }
+
+  const handleVote = (choice: string) => {
+    if (voted === choice && !changing) {
+      setIsDeselecting(true)
+      setConfirmChoice(choice)
+      return
+    }
+    if (voted && !changing) return
+    setIsDeselecting(false)
+    setConfirmChoice(choice)
+  }
+
+  const canClick = !voted || changing
+
+  return (
+    <div className="border border-border bg-card p-6 md:p-8">
+      <div className="h-px w-8 bg-primary mb-3" />
+      <h3 className="font-serif font-black uppercase text-lg tracking-wider mb-6">Cast Your Vote</h3>
+
+      {/* Confidence bars */}
+      <div className="space-y-3 mb-6">
+        {isLegacy ? (
+          <>
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="font-bold uppercase tracking-wider">Yes</span>
+                <span className="text-emerald-500 font-bold">{prediction.yesPercentage}%</span>
+              </div>
+              <div className="h-3 bg-foreground/5 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${prediction.yesPercentage}%` }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="font-bold uppercase tracking-wider">No</span>
+                <span className="text-red-500 font-bold">{prediction.noPercentage}%</span>
+              </div>
+              <div className="h-3 bg-foreground/5 rounded-full overflow-hidden">
+                <div className="h-full bg-red-500 rounded-full transition-all duration-1000" style={{ width: `${prediction.noPercentage}%` }} />
+              </div>
+            </div>
+          </>
+        ) : (
+          options.map((opt, i) => {
+            const pct = prediction.optionResults?.[opt] ?? 0
+            const color = OPTION_COLORS[i % OPTION_COLORS.length]
+            return (
+              <div key={opt}>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="font-bold uppercase tracking-wider">{opt}</span>
+                  <span style={{ color }} className="font-bold">{pct}%</span>
+                </div>
+                <div className="h-3 bg-foreground/5 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: color }} />
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+
+      {/* Vote buttons */}
+      <div className="space-y-2">
+        {isLegacy ? (
+          <div className="flex gap-3">
+            {(["yes", "no"] as const).map(choice => {
+              const color = choice === "yes" ? "#10B981" : "#DC143C"
+              const isSelected = voted === choice
+              return (
+                <button
+                  key={choice}
+                  onClick={() => handleVote(choice)}
+                  className="flex-1 h-14 font-bold uppercase tracking-widest text-sm transition-all duration-150 rounded cursor-pointer"
+                  style={{
+                    border: `2px solid ${color}`,
+                    background: isSelected ? color : "transparent",
+                    color: isSelected ? "#fff" : color,
+                    opacity: voted && !isSelected && !changing ? 0.4 : 1,
+                  }}
+                >
+                  {isSelected && !changing ? `✓ ${choice.toUpperCase()}` : choice.toUpperCase()}
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          options.map((opt, i) => {
+            const color = OPTION_COLORS[i % OPTION_COLORS.length]
+            const isSelected = voted === opt
+            return (
+              <button
+                key={opt}
+                onClick={() => handleVote(opt)}
+                className="w-full py-3 px-4 font-semibold text-sm text-left transition-all duration-150 rounded cursor-pointer"
+                style={{
+                  border: `2px solid ${color}`,
+                  background: isSelected ? color : "transparent",
+                  color: isSelected ? "#fff" : color,
+                  opacity: voted && !isSelected && !changing ? 0.4 : 1,
+                }}
+              >
+                {isSelected && !changing ? `✓ ${opt}` : opt}
+              </button>
+            )
+          })
+        )}
+      </div>
+
+      {voted && !changing && (
+        <button
+          onClick={() => setChanging(true)}
+          className="mt-3 text-xs text-muted-foreground underline hover:text-foreground transition-colors cursor-pointer"
+        >
+          Change vote
+        </button>
+      )}
+
+      <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border text-xs text-muted-foreground">
+        <Users className="w-3.5 h-3.5" />
+        <span>{prediction.totalCount.toLocaleString()} votes cast</span>
+      </div>
+
+      {/* Confirmation overlay */}
+      {confirmChoice && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999]" onClick={() => { setConfirmChoice(null); setIsDeselecting(false) }}>
+          <div className="bg-[#1A1A1A] border border-white/10 rounded-lg p-6 max-w-sm w-[90%] text-center" onClick={e => e.stopPropagation()}>
+            <p className="text-white font-semibold mb-1">
+              {isDeselecting ? "Remove your vote?" : changing ? "Change your vote?" : "Confirm your vote"}
+            </p>
+            <p className="text-white/55 text-sm mb-5">
+              {isDeselecting
+                ? `Remove your vote for "${confirmChoice}"?`
+                : changing
+                  ? `Switch from "${voted}" to "${confirmChoice}"?`
+                  : `Vote for "${confirmChoice}"?`}
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => { setConfirmChoice(null); setIsDeselecting(false) }} className="flex-1 py-2.5 border border-white/20 text-white font-semibold text-sm rounded cursor-pointer hover:bg-white/5 transition-colors">
+                Cancel
+              </button>
+              <button onClick={() => isDeselecting ? removeVote() : submitVote(confirmChoice)} className="flex-1 py-2.5 border-none font-bold text-sm rounded cursor-pointer" style={{ background: isDeselecting ? "#DC143C" : "#C8A864", color: isDeselecting ? "#fff" : "#0D0D0D" }}>
+                {isDeselecting ? "Remove" : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function PredictionDetail() {
+  const [, params] = useRoute("/predictions/:id")
+  const id = params?.id ? parseInt(params.id) : 0
+  const [shareOpen, setShareOpen] = useState(false)
+
+  const { data: prediction, isLoading, error } = usePrediction(id)
+  const { data: relatedData } = usePredictions(prediction?.category)
+
+  usePageTitle(prediction ? {
+    title: prediction.question,
+    description: `${prediction.yesPercentage}% say yes. ${prediction.totalCount.toLocaleString()} votes. Resolves ${prediction.resolvesAt ?? "TBD"}.`,
+  } : { title: "Prediction" })
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 lg:py-16">
+          <Skeleton className="h-4 w-36 mb-8 bg-foreground/10" />
+          <DetailSkeleton />
+          <div className="flex justify-center py-6">
+            <LoadingDots text="Loading prediction" />
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
+  if (error || !prediction) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto px-4 py-24 text-center">
+          <AlertCircle className="w-16 h-16 text-primary mx-auto mb-6" />
+          <h1 className="text-4xl font-serif font-black uppercase tracking-tight mb-4">Prediction not found</h1>
+          <p className="text-muted-foreground mb-8">This prediction might have been removed or the link is invalid.</p>
+          <Link href="/predictions" className="bg-foreground text-background px-6 py-3 font-bold text-xs uppercase tracking-widest hover:bg-primary transition-colors">
+            Back to Predictions
+          </Link>
+        </div>
+      </Layout>
+    )
+  }
+
+  const related = (relatedData?.items ?? []).filter(p => p.id !== prediction.id).slice(0, 5)
+  const shareUrl = `${window.location.origin}/predictions/${prediction.id}`
+  const shareTitle = prediction.question
+
+  return (
+    <Layout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 lg:py-16">
+        <Link href="/predictions" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground font-bold mb-8 transition-colors">
+          <ArrowLeft className="w-3 h-3" /> Back to All Predictions
+        </Link>
+
+        <div className="flex flex-col lg:flex-row gap-10">
+          {/* Main content */}
+          <div className="flex-1 min-w-0 space-y-8">
+            {/* Header card */}
+            <div className="border border-border bg-card p-8 md:p-10">
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-primary/10 text-primary border border-primary/20">
+                  {prediction.category}
+                </span>
+                <span className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
+                  <Calendar className="w-3.5 h-3.5" />
+                  Resolves: {prediction.resolvesAt ?? "TBD"}
+                </span>
+                {prediction.tags?.length > 0 && prediction.tags.map(tag => (
+                  <span key={tag} className="text-[9px] uppercase tracking-widest px-2 py-0.5 border border-border text-muted-foreground font-bold">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+
+              <h1 className="font-serif font-black uppercase text-2xl md:text-3xl lg:text-4xl tracking-tight leading-tight mb-6">
+                {prediction.question}
+              </h1>
+
+              <div className="flex items-center gap-6 pt-4 border-t border-border">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-bold">{prediction.totalCount.toLocaleString()}</span>
+                  <span className="text-xs text-muted-foreground">votes</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {prediction.momentumDirection === "up"
+                    ? <TrendingUp className="w-4 h-4 text-emerald-500" />
+                    : <TrendingDown className="w-4 h-4 text-red-500" />}
+                  <span className={`text-sm font-bold ${prediction.momentumDirection === "up" ? "text-emerald-500" : "text-red-500"}`}>
+                    {prediction.momentumDirection === "up" ? "+" : "-"}{Math.abs(prediction.momentum).toFixed(1)}%
+                  </span>
+                  <span className="text-xs text-muted-foreground">30d momentum</span>
+                </div>
+                <button onClick={() => setShareOpen(true)} className="ml-auto flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                  <Share2 className="w-4 h-4" /> Share
+                </button>
+              </div>
+            </div>
+
+            {/* Confidence chart */}
+            {prediction.trendData?.length > 0 && (
+              <ConfidenceChart
+                data={prediction.trendData}
+                momentum={prediction.momentum}
+                up={prediction.momentumDirection === "up"}
+              />
+            )}
+
+            {/* Vote section */}
+            <VoteSection prediction={prediction} onVoteUpdate={() => {}} />
+          </div>
+
+          {/* Right sidebar */}
+          <div className="lg:w-80 flex-shrink-0 lg:sticky lg:top-24 lg:self-start space-y-6">
+            {related.length > 0 && (
+              <>
+                <div className="border-l-4 border-primary pl-3">
+                  <p className="text-[10px] uppercase tracking-[0.25em] font-bold text-muted-foreground">Related in</p>
+                  <h4 className="font-serif font-black uppercase text-lg tracking-tight">{prediction.category}</h4>
+                </div>
+
+                <div className="space-y-4">
+                  {related.map(r => (
+                    <Link
+                      key={r.id}
+                      href={`/predictions/${r.id}`}
+                      className="group block border border-border bg-card hover:border-primary/40 transition-all duration-200 p-5"
+                    >
+                      <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-muted-foreground">
+                        {r.category}
+                      </span>
+                      <h5 className="font-serif font-black uppercase text-sm tracking-tight mt-1.5 leading-snug line-clamp-3 group-hover:text-primary transition-colors">
+                        {r.question}
+                      </h5>
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                        <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">
+                          {r.totalCount.toLocaleString()} votes
+                        </span>
+                        <span className="text-[9px] uppercase tracking-widest text-primary font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          View <ArrowRight className="w-2.5 h-2.5" />
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {shareOpen && (
+        <ShareModal
+          onClose={() => setShareOpen(false)}
+          url={shareUrl}
+          title={shareTitle}
+        />
+      )}
+    </Layout>
+  )
+}

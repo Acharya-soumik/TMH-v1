@@ -25,10 +25,10 @@ export async function syncToBeehiiv(email: string, source: string) {
       }),
     })
     if (resp.ok) {
-      console.log(`[BEEHIIV] Synced: ${email}`)
+      console.log(`[BEEHIIV] Synced: ${email.substring(0, 3)}***`)
     } else {
       const err = await resp.text()
-      console.error(`[BEEHIIV] Sync failed for ${email}: ${err}`)
+      console.error(`[BEEHIIV] Sync failed for ${email.substring(0, 3)}***: ${err}`)
     }
   } catch (err) {
     console.error(`[BEEHIIV] Request error:`, err)
@@ -47,14 +47,14 @@ router.post("/newsletter/subscribe", async (req, res) => {
       source,
       newsletterOptIn: !!newsletterOptIn,
     }).onConflictDoNothing()
-    console.log(`[NEWSLETTER] Subscriber added: ${clean} (source: ${source}, optIn: ${newsletterOptIn})`)
+    console.log(`[NEWSLETTER] Subscriber added: ${clean.substring(0, 3)}*** (source: ${source}, optIn: ${newsletterOptIn})`)
     if (newsletterOptIn) {
       syncToBeehiiv(clean, source).catch(() => {})
     }
     return res.json({ success: true })
   } catch (err) {
-    console.error(err)
-    return res.json({ success: true })
+    console.error("[NEWSLETTER] Subscribe failed:", (err as Error).message)
+    return res.status(500).json({ success: false, error: "Failed to subscribe. Please try again." })
   }
 })
 

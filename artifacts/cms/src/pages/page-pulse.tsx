@@ -81,7 +81,7 @@ export default function PagePulse() {
 
   useEffect(() => {
     Promise.all([
-      api.getPage("pulse").catch(() => ({ hero: { title: "MENA PULSE", subtitle: "" }, categories: [] })),
+      api.getPage("pulse").catch(() => ({ hero: { title: "PULSE", subtitle: "" }, categories: [] })),
       api.getPulseTopics().then((d: { items: PulseTopic[] }) => d.items).catch(() => []),
       api.getDesignTokens().then((d: { items: DesignToken[] }) => d.items).catch(() => []),
     ]).then(([cfg, items, designTokens]) => {

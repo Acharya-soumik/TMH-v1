@@ -6,7 +6,10 @@ import { Link } from "wouter"
 import { usePageTitle } from "@/hooks/use-page-title"
 
 export default function Join() {
-  usePageTitle("Join");
+  usePageTitle({
+    title: "Join",
+    description: "Join The Tribunal -- the anonymous platform for MENA's most important debates, predictions, and voices.",
+  });
   const { data: poll, isLoading } = useGetFeaturedPoll()
   const [email, setEmail] = useState("")
   const [joined, setJoined] = useState(() => !!localStorage.getItem("tmh_cta_joined"))
@@ -19,7 +22,9 @@ export default function Join() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, source: "qr_join" }),
-    }).catch(() => {})
+    }).catch((err) => {
+      console.error("Subscribe failed:", err)
+    })
     setJoined(true)
   }
 

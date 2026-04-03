@@ -39,7 +39,10 @@ interface ApplyConfig {
 type Status = "idle" | "submitting" | "success" | "error"
 
 export default function Apply() {
-  usePageTitle("Join The Voices");
+  usePageTitle({
+    title: "Join The Voices",
+    description: "Apply to become a featured voice on The Tribunal. Share your perspective with 541 million people across MENA.",
+  });
   const [status, setStatus] = useState<Status>("idle")
   const [refNumber, setRefNumber] = useState("")
   const [wantsMajlis, setWantsMajlis] = useState(() => {
@@ -187,37 +190,37 @@ export default function Apply() {
             </a>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-10">
+          <form onSubmit={handleSubmit} noValidate className="space-y-10">
             <div>
               <h2 className="font-serif font-black uppercase text-xl tracking-widest text-foreground mb-8 border-l-4 border-primary pl-4">
                 Your Details
               </h2>
               <div className="grid sm:grid-cols-2 gap-5">
-                <Field label="Full Name *" required>
-                  <input required type="text" placeholder="Your full name" value={form.name} onChange={set("name")}
-                    className={inputCn} />
-                  {fieldErrors.name && <p className="text-xs text-primary mt-1">{fieldErrors.name}</p>}
+                <Field label="Full Name *">
+                  <input type="text" placeholder="Your full name" value={form.name} onChange={set("name")}
+                    className={cn(inputCn, fieldErrors.name && inputErrorCn)} />
+                  {fieldErrors.name && <p className="text-xs text-red-500 mt-1">{fieldErrors.name}</p>}
                 </Field>
-                <Field label="Email *" required>
-                  <input required type="email" placeholder="you@company.com" value={form.email} onChange={set("email")}
-                    className={inputCn} />
-                  {fieldErrors.email && <p className="text-xs text-primary mt-1">{fieldErrors.email}</p>}
+                <Field label="Email *">
+                  <input type="text" placeholder="you@company.com" value={form.email} onChange={set("email")}
+                    className={cn(inputCn, fieldErrors.email && inputErrorCn)} />
+                  {fieldErrors.email && <p className="text-xs text-red-500 mt-1">{fieldErrors.email}</p>}
                 </Field>
-                <Field label="Title / Role *" required>
-                  <input required type="text" placeholder="Your title" value={form.title} onChange={set("title")}
-                    className={inputCn} />
-                  {fieldErrors.title && <p className="text-xs text-primary mt-1">{fieldErrors.title}</p>}
+                <Field label="Title / Role *">
+                  <input type="text" placeholder="Your title" value={form.title} onChange={set("title")}
+                    className={cn(inputCn, fieldErrors.title && inputErrorCn)} />
+                  {fieldErrors.title && <p className="text-xs text-red-500 mt-1">{fieldErrors.title}</p>}
                 </Field>
-                <Field label="Company / Organisation *" required>
-                  <input required type="text" placeholder="Your company" value={form.company} onChange={set("company")}
-                    className={inputCn} />
-                  {fieldErrors.company && <p className="text-xs text-primary mt-1">{fieldErrors.company}</p>}
+                <Field label="Company / Organisation *">
+                  <input type="text" placeholder="Your company" value={form.company} onChange={set("company")}
+                    className={cn(inputCn, fieldErrors.company && inputErrorCn)} />
+                  {fieldErrors.company && <p className="text-xs text-red-500 mt-1">{fieldErrors.company}</p>}
                 </Field>
                 <Field label="City">
                   <input type="text" placeholder="Your city" value={form.city} onChange={set("city")}
                     className={inputCn} />
                 </Field>
-                <Field label="Country *" required>
+                <Field label="Country *">
                   <div ref={countryRef} className="relative">
                     {isOtherCountry ? (
                       <>
@@ -380,6 +383,7 @@ export default function Apply() {
 }
 
 const inputCn = "w-full px-4 py-3 bg-background border border-border focus:outline-none focus:border-primary text-foreground text-sm font-sans transition-colors placeholder:text-muted-foreground/60 appearance-none"
+const inputErrorCn = "border-red-500 focus:border-red-500"
 
 function Field({ label, required, hint, children, className }: {
   label: string

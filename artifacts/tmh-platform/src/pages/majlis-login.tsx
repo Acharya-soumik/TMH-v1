@@ -7,7 +7,10 @@ import { usePageTitle } from "@/hooks/use-page-title";
 const API_BASE = import.meta.env?.VITE_API_BASE_URL ?? "";
 
 export default function MajlisLogin() {
-  usePageTitle("The Majlis");
+  usePageTitle({
+    title: "The Majlis",
+    description: "Log in to The Majlis -- a private community for MENA's sharpest voices.",
+  });
   const [, navigate] = useLocation();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
