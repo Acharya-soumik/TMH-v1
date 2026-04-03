@@ -123,13 +123,14 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
   const isLegacy = !prediction.options?.length
 
   const submitVote = (choice: string) => {
+    const isNewVote = !voted
     setVoted(choice)
     setConfirmChoice(null)
     setChanging(false)
     setIsDeselecting(false)
     localStorage.setItem(storageKey, choice)
-    // Optimistic update
-    setLocalTotal(prev => prev + 1)
+    // Only increment count for new votes, not vote changes
+    if (isNewVote) setLocalTotal(prev => prev + 1)
     onVoteUpdate(choice)
     let token = localStorage.getItem("tmh_voter_token")
     if (!token) { token = crypto.randomUUID(); localStorage.setItem("tmh_voter_token", token) }

@@ -498,13 +498,17 @@ function VoteButtons({
   const isLegacy = !options?.length;
 
   const submitVote = (choice: string) => {
+    const previousVote = voted;
     setVoted(choice);
     setConfirmChoice(null);
     setChanging(false);
     setIsDeselecting(false);
     if (storageKey) localStorage.setItem(storageKey, choice);
     if (predId != null) {
-      onVote?.(predId, choice);
+      // Only optimistically update if this is a NEW vote, not a change
+      if (!previousVote) {
+        onVote?.(predId, choice);
+      }
       let token = localStorage.getItem("tmh_voter_token");
       if (!token) {
         token = crypto.randomUUID();
@@ -514,7 +518,15 @@ function VoteButtons({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ choice, voterToken: token }),
-      }).catch(() => {});
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data && onVote && (data.yesPercentage != null || data.optionResults)) {
+            // Server-authoritative update for vote changes
+            onVote(predId, choice);
+          }
+        })
+        .catch(() => {});
     }
   };
 
