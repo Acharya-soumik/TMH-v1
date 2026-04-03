@@ -75,15 +75,15 @@ export default function PageAbout() {
         <h2 className="font-serif text-lg font-bold uppercase tracking-wide">Hero Section</h2>
         <div>
           <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Tagline</label>
-          <input value={config.hero.tagline} onChange={e => setConfig({ ...config, hero: { ...config.hero, tagline: e.target.value } })} className="w-full px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+          <input value={config?.hero?.tagline ?? ""} onChange={e => setConfig({ ...config, hero: { ...config?.hero, tagline: e.target.value } } as AboutConfig)} className="w-full px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
         </div>
         <div>
           <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Title</label>
-          <input value={config.hero.title} onChange={e => setConfig({ ...config, hero: { ...config.hero, title: e.target.value } })} className="w-full px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+          <input value={config?.hero?.title ?? ""} onChange={e => setConfig({ ...config, hero: { ...config?.hero, title: e.target.value } } as AboutConfig)} className="w-full px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
         </div>
         <div>
           <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Subtitle</label>
-          <textarea value={config.hero.subtitle} onChange={e => setConfig({ ...config, hero: { ...config.hero, subtitle: e.target.value } })} rows={3} className="w-full px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
+          <textarea value={config?.hero?.subtitle ?? ""} onChange={e => setConfig({ ...config, hero: { ...config?.hero, subtitle: e.target.value } } as AboutConfig)} rows={3} className="w-full px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
         </div>
       </section>
 
