@@ -155,13 +155,30 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
     setIsDeselecting(false)
     setChanging(false)
     localStorage.removeItem(storageKey)
+
+    // Optimistic: revert to original prediction percentages
+    setLocalTotal(prev => Math.max(0, prev - 1))
+    setLocalYes(prediction.yesPercentage)
+    setLocalNo(prediction.noPercentage)
+    setLocalOptionResults(prediction.optionResults ?? {})
+
     let token = localStorage.getItem("tmh_voter_token")
     if (!token) { token = crypto.randomUUID(); localStorage.setItem("tmh_voter_token", token) }
     fetch(`/api/predictions/${prediction.id}/vote`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ voterToken: token }),
-    }).catch(() => {})
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          if (data.yesPercentage != null) setLocalYes(data.yesPercentage)
+          if (data.noPercentage != null) setLocalNo(data.noPercentage)
+          if (data.totalCount != null) setLocalTotal(data.totalCount)
+          if (data.optionResults) setLocalOptionResults(data.optionResults)
+        }
+      })
+      .catch(() => {})
   }
 
   const handleVote = (choice: string) => {

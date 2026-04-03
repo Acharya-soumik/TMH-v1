@@ -206,8 +206,8 @@ export default function About() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {stats.map(stat => (
               <div key={stat.label}>
-                <div className="font-display font-black text-4xl md:text-5xl text-gray-900 dark:text-white leading-none mb-2">{stat.num}</div>
-                <div className="text-[10px] uppercase tracking-[0.2em] text-gray-700 dark:text-gray-300 font-serif">{t(stat.label)}</div>
+                <div className="font-display text-4xl md:text-5xl leading-none mb-2">{stat.num}</div>
+                <div className="text-[10px] uppercase tracking-[0.2em] font-serif text-primary">{t(stat.label)}</div>
               </div>
             ))}
           </div>

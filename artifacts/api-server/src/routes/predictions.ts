@@ -13,6 +13,33 @@ const voteRateLimit = rateLimit({
   message: { error: "Too many votes from this IP, please try again later" },
 });
 
+async function recalculateVotePercentages(predictionId: number, validOptions: string[], isMultiOption: boolean) {
+  const allVotes = await db
+    .select({ choice: predictionVotesTable.choice, count: count() })
+    .from(predictionVotesTable)
+    .where(eq(predictionVotesTable.predictionId, predictionId))
+    .groupBy(predictionVotesTable.choice);
+
+  const total = allVotes.reduce((sum, v) => sum + v.count, 0);
+  const optionResults: Record<string, number> = {};
+  for (const opt of validOptions) {
+    const voteRow = allVotes.find(v => v.choice === opt);
+    optionResults[opt] = total > 0 ? Math.round(((voteRow?.count ?? 0) / total) * 100) : 0;
+  }
+
+  const yesPercentage = optionResults["yes"] ?? optionResults[validOptions[0]] ?? 50;
+  const noPercentage = isMultiOption
+    ? (optionResults[validOptions[1]] ?? 50)
+    : (100 - yesPercentage);
+
+  await db
+    .update(predictionsTable)
+    .set({ yesPercentage, noPercentage, totalCount: total, optionResults, updatedAt: new Date() })
+    .where(eq(predictionsTable.id, predictionId));
+
+  return { yesPercentage, noPercentage, optionResults, totalCount: total };
+}
+
 router.post("/:id/vote", voteRateLimit, async (req, res) => {
   try {
     const predictionId = Number(req.params.id);
@@ -71,48 +98,60 @@ router.post("/:id/vote", voteRateLimit, async (req, res) => {
       });
     }
 
-    // Calculate per-option percentages
-    const allVotes = await db
-      .select({ choice: predictionVotesTable.choice, count: count() })
-      .from(predictionVotesTable)
-      .where(eq(predictionVotesTable.predictionId, predictionId))
-      .groupBy(predictionVotesTable.choice);
+    const result = await recalculateVotePercentages(predictionId, validOptions, !!prediction.options);
 
-    const total = allVotes.reduce((sum, v) => sum + v.count, 0);
-    const optionResults: Record<string, number> = {};
-    for (const opt of validOptions) {
-      const voteRow = allVotes.find(v => v.choice === opt);
-      optionResults[opt] = total > 0 ? Math.round(((voteRow?.count ?? 0) / total) * 100) : 0;
-    }
-
-    // Keep yesPercentage/noPercentage for backward compat
-    const yesPercentage = optionResults["yes"] ?? optionResults[validOptions[0]] ?? 50;
-    const noPercentage = prediction.options
-      ? (optionResults[validOptions[1]] ?? 50)
-      : (100 - yesPercentage);
-
-    await db
-      .update(predictionsTable)
-      .set({
-        yesPercentage,
-        noPercentage,
-        totalCount: total,
-        optionResults,
-        updatedAt: new Date(),
-      })
-      .where(eq(predictionsTable.id, predictionId));
-
-    return res.json({
-      success: true,
-      changed,
-      yesPercentage,
-      noPercentage,
-      optionResults,
-      totalCount: total,
-    });
+    return res.json({ success: true, changed, ...result });
   } catch (err) {
     console.error("Prediction vote error:", err);
     return res.status(500).json({ error: "Failed to record prediction vote" });
+  }
+});
+
+router.delete("/:id/vote", voteRateLimit, async (req, res) => {
+  try {
+    const predictionId = Number(req.params.id);
+    const { voterToken } = req.body;
+
+    if (!voterToken) {
+      return res.status(400).json({ error: "voterToken is required" });
+    }
+
+    const [prediction] = await db
+      .select({
+        editorialStatus: predictionsTable.editorialStatus,
+        options: predictionsTable.options,
+      })
+      .from(predictionsTable)
+      .where(eq(predictionsTable.id, predictionId));
+
+    if (!prediction) {
+      return res.status(404).json({ error: "Prediction not found" });
+    }
+
+    const validOptions = prediction.options || ["yes", "no"];
+
+    const [existing] = await db
+      .select()
+      .from(predictionVotesTable)
+      .where(
+        and(
+          eq(predictionVotesTable.predictionId, predictionId),
+          eq(predictionVotesTable.voterToken, voterToken)
+        )
+      );
+
+    if (!existing) {
+      const result = await recalculateVotePercentages(predictionId, validOptions, !!prediction.options);
+      return res.json({ success: true, ...result });
+    }
+
+    await db.delete(predictionVotesTable).where(eq(predictionVotesTable.id, existing.id));
+
+    const result = await recalculateVotePercentages(predictionId, validOptions, !!prediction.options);
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    console.error("Prediction vote delete error:", err);
+    return res.status(500).json({ error: "Failed to remove prediction vote" });
   }
 });
 
@@ -132,6 +171,7 @@ router.get("/:id/results", async (req, res) => {
       yesPercentage: prediction.yesPercentage,
       noPercentage: prediction.noPercentage,
       totalCount: prediction.totalCount,
+      optionResults: prediction.optionResults,
     });
   } catch (err) {
     console.error("Prediction results error:", err);

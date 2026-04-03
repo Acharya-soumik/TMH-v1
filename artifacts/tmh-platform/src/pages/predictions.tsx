@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Search, X, Share2, CheckCircle2, MessageSquare } from "lucide-react";
 import { Link } from "wouter";
@@ -483,7 +483,7 @@ function VoteButtons({
   locked?: boolean;
   predId?: number;
   options?: string[];
-  onVote?: (predId: number, choice: string) => void;
+  onVote?: (predId: number, choice: string | null, serverYes?: number, serverNo?: number) => void;
 }) {
   const storageKey = predId != null ? `tmh_pred_${predId}` : null;
   const [voted, setVoted] = useState<string | null>(() => {
@@ -506,7 +506,7 @@ function VoteButtons({
     setIsDeselecting(false);
     if (storageKey) localStorage.setItem(storageKey, choice);
     if (predId != null) {
-      // Only optimistically update if this is a NEW vote, not a change
+      // Optimistic update only for NEW votes (no server data yet)
       if (!previousVote) {
         onVote?.(predId, choice);
       }
@@ -522,9 +522,11 @@ function VoteButtons({
       })
         .then(r => r.ok ? r.json() : null)
         .then(data => {
-          if (data && onVote && (data.yesPercentage != null || data.optionResults)) {
-            // Server-authoritative update for vote changes
-            onVote(predId, choice);
+          if (data && onVote) {
+            // Server-authoritative: overwrite with real percentages
+            if (data.yesPercentage != null) {
+              onVote(predId, choice, data.yesPercentage, data.noPercentage ?? (100 - data.yesPercentage));
+            }
           }
         })
         .catch(() => {});
@@ -538,6 +540,9 @@ function VoteButtons({
     setChanging(false);
     if (storageKey) localStorage.removeItem(storageKey);
     if (predId != null) {
+      // Optimistic: revert to base percentages
+      onVote?.(predId, null);
+
       let token = localStorage.getItem("tmh_voter_token");
       if (!token) {
         token = crypto.randomUUID();
@@ -547,7 +552,14 @@ function VoteButtons({
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ voterToken: token }),
-      }).catch(() => {});
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data && onVote && data.yesPercentage != null) {
+            onVote(predId, null, data.yesPercentage, data.noPercentage ?? (100 - data.yesPercentage));
+          }
+        })
+        .catch(() => {});
     }
   };
 
@@ -843,7 +855,7 @@ function MomentumTicker({
 
 // ─── FEATURED PREDICTION ─────────────────────────────────────────────────────
 
-function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (predId: number, choice: string) => void }) {
+function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (predId: number, choice: string | null, serverYes?: number, serverNo?: number) => void }) {
   const featuredData = useMemo(() => {
     return card.data.map((yes, i) => {
       const slice = card.data.slice(Math.max(0, i - 2), i + 1);
@@ -1085,7 +1097,7 @@ function PredictionGridCard({
 }: {
   card: PredictionCard;
   highlighted?: boolean;
-  onVote?: (predId: number, choice: string) => void;
+  onVote?: (predId: number, choice: string | null, serverYes?: number, serverNo?: number) => void;
 }) {
   const [glowing, setGlowing] = useState(!!highlighted);
   const [showInfo, setShowInfo] = useState(false);
@@ -1620,18 +1632,31 @@ export default function Predictions() {
     return FALLBACK_TICKER_DATA;
   }, [apiData]);
 
-  const handleVoteOverride = (predId: number, choice: string) => {
+  const handleVoteOverride = useCallback((predId: number, choice: string | null, serverYes?: number, serverNo?: number) => {
     setVoteOverrides((prev) => {
+      // Vote removal
+      if (choice === null) {
+        if (serverYes != null) {
+          // Server sent back post-removal percentages
+          return { ...prev, [predId]: { yes: serverYes, no: serverNo ?? (100 - serverYes) } };
+        }
+        // Optimistic: remove override so card reverts to base PREDICTIONS data
+        const next = { ...prev };
+        delete next[predId];
+        return next;
+      }
+      // Server-authoritative: use real percentages when available
+      if (serverYes != null) {
+        return { ...prev, [predId]: { yes: serverYes, no: serverNo ?? (100 - serverYes) } };
+      }
+      // Optimistic fallback: shift by 1 (only used before server responds)
       const card = PREDICTIONS.find((c) => c.id === predId);
       if (!card) return prev;
       const currentYes = prev[predId]?.yes ?? card.yes;
-      const currentNo = prev[predId]?.no ?? card.no;
-      const shift = 1;
-      const newYes = choice === "yes" ? Math.min(currentYes + shift, 99) : Math.max(currentYes - shift, 1);
-      const newNo = 100 - newYes;
-      return { ...prev, [predId]: { yes: newYes, no: newNo } };
+      const newYes = choice === "yes" ? Math.min(currentYes + 1, 99) : Math.max(currentYes - 1, 1);
+      return { ...prev, [predId]: { yes: newYes, no: 100 - newYes } };
     });
-  };
+  }, [PREDICTIONS]);
 
   const filteredCards = useMemo(() => {
     let result = PREDICTIONS.map((c) => {

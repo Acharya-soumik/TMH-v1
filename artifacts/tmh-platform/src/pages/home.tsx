@@ -621,6 +621,13 @@ function FeaturedPredictionCard({
   const [hovIdx, setHovIdx] = useState<number | null>(null);
   const predUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/predictions`;
 
+  // Re-sync vote/phase from localStorage when the prediction ID changes
+  // (e.g. fallback → API data swap)
+  useEffect(() => {
+    setVote(getPredVote(featured.id));
+    setPhase(getPredPhase(featured.id));
+  }, [featured.id]);
+
   const handleVote = (choice: "yes" | "no") => {
     if (vote) return;
     setVote(choice);
@@ -904,12 +911,14 @@ function FeaturedPredictionCard({
               onUnlock={phase === "gate" ? unlock : undefined}
             />
           </div>
-          <p
-            className="font-serif font-black uppercase text-[15px] leading-tight text-foreground tracking-tight"
-            style={{ lineHeight: 1.15 }}
-          >
-            {featured.question}
-          </p>
+          <Link href="/predictions">
+            <p
+              className="font-serif font-black uppercase text-[15px] leading-tight text-foreground tracking-tight cursor-pointer hover:text-primary transition-colors"
+              style={{ lineHeight: 1.15 }}
+            >
+              {featured.question}
+            </p>
+          </Link>
           <p className="text-[10px] text-muted-foreground font-serif mt-2">
             {featured.count} predictions locked in
           </p>
@@ -988,16 +997,20 @@ function FeaturedPredictionCard({
                 <motion.button
                   onClick={() => handleVote("yes")}
                   whileTap={{ scale: 0.97 }}
-                  className="flex-1 py-2.5 border font-bold text-[11px] uppercase tracking-[0.12em] font-serif transition-colors duration-150 hover:bg-[#10B981] hover:text-white hover:border-[#10B981]"
+                  className="flex-1 py-2.5 border font-bold text-[11px] uppercase tracking-[0.12em] font-serif transition-colors duration-150 hover:bg-[#10B981] hover:border-[#10B981]"
                   style={{ borderColor: "#10B981", color: "#10B981" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "#10B981"; }}
                 >
                   Yes
                 </motion.button>
                 <motion.button
                   onClick={() => handleVote("no")}
                   whileTap={{ scale: 0.97 }}
-                  className="flex-1 py-2.5 border font-bold text-[11px] uppercase tracking-[0.12em] font-serif transition-colors duration-150 hover:bg-[#DC143C] hover:text-white hover:border-[#DC143C]"
+                  className="flex-1 py-2.5 border font-bold text-[11px] uppercase tracking-[0.12em] font-serif transition-colors duration-150 hover:bg-[#DC143C] hover:border-[#DC143C]"
                   style={{ borderColor: "#DC143C", color: "#DC143C" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "#DC143C"; }}
                 >
                   No
                 </motion.button>
@@ -1207,6 +1220,11 @@ function SidebarPredictionItem({
   const [phase, setPhase] = useState(initialPhase);
   const predUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/predictions`;
 
+  useEffect(() => {
+    setVote(getPredVote(pred.id));
+    setPhase(getPredPhase(pred.id));
+  }, [pred.id]);
+
   const handleQuickVote = (choice: "yes" | "no", e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -1236,92 +1254,98 @@ function SidebarPredictionItem({
   };
 
   return (
-    <div className="py-3 border-b border-border group">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <p className="text-[9px] uppercase tracking-widest text-[#3B82F6] font-serif font-bold">
-            {pred.category}
-          </p>
-          <p className="font-serif font-black uppercase text-[12px] leading-tight text-foreground mt-1">
-            {pred.question.length > 70
-              ? pred.question.slice(0, 70) + "…"
-              : pred.question}
-          </p>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="flex-shrink-0 w-16 h-8">
-            <svg
-              viewBox="0 0 60 24"
-              className="w-full h-full"
-              preserveAspectRatio="none"
-            >
-              <polyline
-                points={pred.data
-                  .map(
-                    (v, i) =>
-                      `${(i / (pred.data.length - 1)) * 60},${24 - (v / 100) * 20}`,
-                  )
-                  .join(" ")}
-                fill="none"
-                stroke="#10B981"
-                strokeWidth="1.5"
-                strokeLinejoin="round"
-              />
-              <polyline
-                points={pred.data
-                  .map(
-                    (v, i) =>
-                      `${(i / (pred.data.length - 1)) * 60},${24 - ((100 - v) / 100) * 20}`,
-                  )
-                  .join(" ")}
-                fill="none"
-                stroke="#DC143C"
-                strokeWidth="1"
-                opacity="0.6"
-                strokeLinejoin="round"
-              />
-            </svg>
+    <Link href={`/predictions/${pred.id}`}>
+      <motion.div
+        className="py-3 border-b border-border group cursor-pointer"
+        whileHover={{ x: 4 }}
+        transition={{ duration: 0.2, ease: EASE_OUT_EXPO }}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-[9px] uppercase tracking-widest text-[#3B82F6] font-serif font-bold">
+              {pred.category}
+            </p>
+            <p className="font-serif font-black uppercase text-[12px] leading-tight text-foreground mt-1 group-hover:text-primary transition-colors">
+              {pred.question.length > 70
+                ? pred.question.slice(0, 70) + "…"
+                : pred.question}
+            </p>
           </div>
-          <ShareMenu title={pred.question} shareUrl={predUrl} color="#3B82F6" />
+          <div className="flex items-center gap-1">
+            <div className="flex-shrink-0 w-16 h-8">
+              <svg
+                viewBox="0 0 60 24"
+                className="w-full h-full"
+                preserveAspectRatio="none"
+              >
+                <polyline
+                  points={pred.data
+                    .map(
+                      (v, i) =>
+                        `${(i / (pred.data.length - 1)) * 60},${24 - (v / 100) * 20}`,
+                    )
+                    .join(" ")}
+                  fill="none"
+                  stroke="#10B981"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                />
+                <polyline
+                  points={pred.data
+                    .map(
+                      (v, i) =>
+                        `${(i / (pred.data.length - 1)) * 60},${24 - ((100 - v) / 100) * 20}`,
+                    )
+                    .join(" ")}
+                  fill="none"
+                  stroke="#DC143C"
+                  strokeWidth="1"
+                  opacity="0.6"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <ShareMenu title={pred.question} shareUrl={predUrl} color="#3B82F6" />
+          </div>
         </div>
-      </div>
-      <div className="flex items-center gap-3 mt-1.5">
-        <span
-          className="text-[9px] font-bold font-serif"
-          style={{ color: "#10B981" }}
-        >
-          Yes {pred.yes}%
-        </span>
-        <span
-          className="text-[9px] font-bold font-serif"
-          style={{ color: "#DC143C" }}
-        >
-          No {pred.no}%
-        </span>
-        {vote ? (
-          <span className="text-[8px] font-bold font-serif ml-auto text-[#3B82F6]">
-            ✓ {vote.toUpperCase()}
+        <div className="flex items-center gap-3 mt-1.5">
+          <span
+            className="text-[9px] font-bold font-serif"
+            style={{ color: "#10B981" }}
+          >
+            Yes {pred.yes}%
           </span>
-        ) : (
-          <span className="ml-auto flex gap-1">
-            <motion.button
-              onClick={(e) => handleQuickVote("yes", e)}
-              whileTap={{ scale: 0.93 }}
-              className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider font-serif border border-[#10B981]/40 text-[#10B981] hover:bg-[#10B981] hover:text-white transition-colors rounded-sm"
-            >
-              Y
-            </motion.button>
-            <motion.button
-              onClick={(e) => handleQuickVote("no", e)}
-              whileTap={{ scale: 0.93 }}
-              className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider font-serif border border-[#DC143C]/40 text-[#DC143C] hover:bg-[#DC143C] hover:text-white transition-colors rounded-sm"
-            >
-              N
-            </motion.button>
+          <span
+            className="text-[9px] font-bold font-serif"
+            style={{ color: "#DC143C" }}
+          >
+            No {pred.no}%
           </span>
-        )}
-      </div>
-    </div>
+          {vote ? (
+            <span className="text-[8px] font-bold font-serif ml-auto text-[#3B82F6]">
+              ✓ {vote.toUpperCase()}
+            </span>
+          ) : (
+            <span className="ml-auto flex gap-1">
+              <motion.button
+                onClick={(e) => handleQuickVote("yes", e)}
+                whileTap={{ scale: 0.93 }}
+                className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider font-serif border border-[#10B981]/40 text-[#10B981] hover:bg-[#10B981] hover:text-white transition-colors rounded-sm"
+              >
+                Y
+              </motion.button>
+              <motion.button
+                onClick={(e) => handleQuickVote("no", e)}
+                whileTap={{ scale: 0.93 }}
+                className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider font-serif border border-[#DC143C]/40 text-[#DC143C] hover:bg-[#DC143C] hover:text-white transition-colors rounded-sm"
+              >
+                N
+              </motion.button>
+            </span>
+          )}
+        </div>
+      </motion.div>
+    </Link>
   );
 }
 
@@ -1358,6 +1382,17 @@ export default function Home() {
     () => !!localStorage.getItem("tmh_cta_joined"),
   );
   const [pulseHovIdx, setPulseHovIdx] = useState<number | null>(null);
+  const [astTime, setAstTime] = useState(() => {
+    const now = new Date();
+    return now.toLocaleTimeString("en-US", { timeZone: "Asia/Riyadh", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+  });
+  useEffect(() => {
+    const id = setInterval(() => {
+      const now = new Date();
+      setAstTime(now.toLocaleTimeString("en-US", { timeZone: "Asia/Riyadh", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }));
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
   const menaPop = usePopulationCounter(
     homepageConfig?.masthead?.basePopulation,
     homepageConfig?.masthead?.growthRate,
@@ -1555,11 +1590,11 @@ export default function Home() {
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-2 text-[9px] uppercase tracking-[0.18em] text-muted-foreground border-b border-border font-serif">
+          <div className="flex items-center justify-between py-2 text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-serif">
             <span>{t(`EST. 2026 · ISSUE NO. ${issueNumber}`)}</span>
             <span className="hidden sm:block">{issueDate}</span>
-            <span className="text-primary font-bold">
-              {t("Opinion of Record")}
+            <span className="text-primary font-bold font-mono tabular-nums">
+              {astTime} AST
             </span>
           </div>
 
@@ -1583,20 +1618,21 @@ export default function Home() {
                   The Tribunal<span className="text-primary">.</span>
                 </h1>
                 <motion.p
-                  className="text-[10px] font-serif tracking-[0.25em] uppercase text-muted-foreground mt-1"
+                  className="text-sm font-serif tracking-[0.25em] uppercase text-muted-foreground mt-1 pt-1"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.9 }}
                 >
                   {t("by The Middle East Hustle")}
                 </motion.p>
+                <br />
                 <motion.p
                   className="uppercase tracking-[0.22em] text-muted-foreground font-serif mt-3 flex flex-col items-center lg:items-start gap-1"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.55, ease: EASE_OUT_EXPO, delay: 0.9 }}
                 >
-                  <span className="text-[10px]">{t("The voice of")}</span>
+                  <span className="text-[10px] font-semibold">{t("The voice of")}</span>
                   <LiveNumber
                     value={menaPop}
                     className="font-display font-black tracking-tight"
@@ -1608,12 +1644,12 @@ export default function Home() {
                   />
                 </motion.p>
                 <motion.p
-                  className="text-[9px] font-serif tracking-[0.18em] uppercase text-muted-foreground mt-4 hidden lg:block"
+                  className="text-[9px] font-serif font-semibold tracking-[0.18em] uppercase text-muted-foreground mt-1 hidden lg:block"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 1.1 }}
                 >
-                  {t("Voices connecting globally")}
+                  {t("and counting, one more every 4 seconds")}
                 </motion.p>
                 {(homepageConfig?.masthead?.countries?.length ?? 0) > 0 && (
                   <motion.p
@@ -2047,6 +2083,7 @@ export default function Home() {
               </FadeIn>
               {(() => {
                 const fallbackTopic = {
+                  id: "sovereign-wealth",
                   tag: "MONEY",
                   tagColor: "#F59E0B",
                   title: "Sovereign Wealth Power",
@@ -2063,6 +2100,7 @@ export default function Home() {
                 const apiTopic = apiPulseTopics?.items?.[0];
                 const topic = apiTopic
                   ? {
+                      id: apiTopic.topicId,
                       tag: apiTopic.tag,
                       tagColor: apiTopic.tagColor,
                       title: apiTopic.title,
@@ -2317,12 +2355,14 @@ export default function Home() {
                           color="#10B981"
                         />
                       </div>
-                      <p
-                        className="font-serif font-black uppercase text-[15px] leading-tight text-foreground tracking-tight"
-                        style={{ lineHeight: 1.15 }}
-                      >
-                        {topic.title}
-                      </p>
+                      <Link href={`/pulse?shared=${topic.id}`}>
+                        <p
+                          className="font-serif font-black uppercase text-[15px] leading-tight text-foreground tracking-tight cursor-pointer hover:text-primary transition-colors"
+                          style={{ lineHeight: 1.15 }}
+                        >
+                          {topic.title}
+                        </p>
+                      </Link>
                       <div className="flex items-baseline gap-2">
                         <span
                           className="font-display font-black text-2xl"
@@ -2378,6 +2418,7 @@ export default function Home() {
               <StaggerGrid>
                 {(apiPulseTopics?.items?.length
                   ? apiPulseTopics.items.slice(0, 3).map((t) => ({
+                      id: t.topicId,
                       tag: t.tag,
                       tagColor: t.tagColor,
                       title: t.title,
@@ -2388,6 +2429,7 @@ export default function Home() {
                     }))
                   : [
                       {
+                        id: "authoritarianism-index",
                         tag: "POWER",
                         tagColor: "#EF4444",
                         title: "Press Freedom Collapse",
@@ -2399,6 +2441,7 @@ export default function Home() {
                         ],
                       },
                       {
+                        id: "crypto-volume",
                         tag: "MONEY",
                         tagColor: "#F59E0B",
                         title: "Crypto Trading Volume",
@@ -2411,6 +2454,7 @@ export default function Home() {
                         ],
                       },
                       {
+                        id: "women-workforce",
                         tag: "SOCIETY",
                         tagColor: "#EC4899",
                         title: "Women in the Workforce",
@@ -2429,11 +2473,12 @@ export default function Home() {
                   const pUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/pulse`;
                   return (
                     <motion.div
-                      key={idx}
+                      key={t2.id}
                       variants={staggerItem}
                     >
+                    <Link href={`/pulse?shared=${t2.id}`}>
                     <motion.div
-                      className="py-3 border-b border-border group"
+                      className="py-3 border-b border-border group cursor-pointer"
                       whileHover={{ x: 4 }}
                       transition={{ duration: 0.2, ease: EASE_OUT_EXPO }}
                     >
@@ -2445,7 +2490,7 @@ export default function Home() {
                           >
                             {t2.tag}
                           </p>
-                          <p className="font-serif font-black uppercase text-[12px] leading-tight text-foreground mt-1">
+                          <p className="font-serif font-black uppercase text-[12px] leading-tight text-foreground mt-1 group-hover:text-primary transition-colors">
                             {t2.title}
                           </p>
                         </div>
@@ -2494,6 +2539,7 @@ export default function Home() {
                         </span>
                       </div>
                     </motion.div>
+                    </Link>
                     </motion.div>
                   );
                 })}
