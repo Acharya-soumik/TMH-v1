@@ -69,7 +69,7 @@ async function toPollResponse(poll: any, options: any[]) {
 router.get("/polls", async (req, res) => {
   try {
     const { filter, category, limit = "20", offset = "0" } = req.query as Record<string, string>;
-    const lim = Math.min(parseInt(limit) || 20, 500);
+    const lim = Math.min(parseInt(limit) || 20, 50);
     const off = parseInt(offset) || 0;
 
     // Resolve slug → canonical category name to handle duplicate slug variants in DB
@@ -122,7 +122,7 @@ router.get("/polls", async (req, res) => {
       })
     );
 
-    const [countRow] = await db.select({ count: sql<number>`count(*)` }).from(pollsTable).where(eq(pollsTable.editorialStatus, "approved"));
+    const [countRow] = await db.select({ count: sql<number>`count(*)` }).from(pollsTable).where(baseWhere);
     return res.json({ polls: result, total: Number(countRow.count) });
   } catch (err) {
     console.error(err);

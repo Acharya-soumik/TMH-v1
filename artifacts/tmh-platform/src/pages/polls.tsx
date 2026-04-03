@@ -1,6 +1,7 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useListPolls, useListCategories } from "@workspace/api-client-react";
+import type { Poll } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout/Layout";
 import { PollCard } from "@/components/poll/PollCard";
 import { cn } from "@/lib/utils";
@@ -61,35 +62,80 @@ export default function Polls() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAllCategories, setShowAllCategories] = useState(false);
   const CATEGORY_LIMIT = 5;
+  const PAGE_SIZE = 30;
+
+  // Paginated polling: accumulate pages as user scrolls
+  const [offset, setOffset] = useState(0);
+  const [allPolls, setAllPolls] = useState<Poll[]>([]);
+  const [serverTotal, setServerTotal] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const prevKey = useRef("");
 
   const { data: pollsData, isLoading } = useListPolls({
     filter,
     category,
-    limit: 500,
+    limit: PAGE_SIZE,
+    offset: 0,
   });
   const { data: categoriesData } = useListCategories();
   const { data: config } = usePageConfig<PollsConfig>("polls");
 
+  // Reset accumulated polls when filter/category changes
+  useEffect(() => {
+    const key = `${filter}|${category ?? ""}`;
+    if (key !== prevKey.current) {
+      prevKey.current = key;
+      setOffset(0);
+      setAllPolls([]);
+    }
+  }, [filter, category]);
+
+  // Merge first page from React Query
+  useEffect(() => {
+    if (pollsData?.polls && offset === 0) {
+      setAllPolls(pollsData.polls);
+      setServerTotal(pollsData.total ?? pollsData.polls.length);
+    }
+  }, [pollsData, offset]);
+
+  const canLoadMore = allPolls.length < serverTotal;
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !canLoadMore) return;
+    setLoadingMore(true);
+    const nextOffset = allPolls.length;
+    try {
+      const params = new URLSearchParams();
+      params.set("filter", filter);
+      if (category) params.set("category", category);
+      params.set("limit", String(PAGE_SIZE));
+      params.set("offset", String(nextOffset));
+      const res = await fetch(`/api/polls?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAllPolls(prev => [...prev, ...(data.polls ?? [])]);
+        setServerTotal(data.total ?? serverTotal);
+        setOffset(nextOffset);
+      }
+    } catch {}
+    setLoadingMore(false);
+  }, [loadingMore, canLoadMore, allPolls.length, filter, category, serverTotal]);
+
   const filteredPolls = useMemo(() => {
-    if (!pollsData?.polls) return [];
-    if (!searchQuery.trim()) return pollsData.polls;
+    if (!allPolls.length) return [];
+    if (!searchQuery.trim()) return allPolls;
     const q = searchQuery.toLowerCase().trim();
     const words = q.split(/\s+/).filter(Boolean);
-    return pollsData.polls
+    return allPolls
       .map(p => {
         let score = 0;
         const question = p.question?.toLowerCase() ?? "";
-        // Exact question match
         if (question === q) score += 15;
-        // Question contains full query
         if (question.includes(q)) score += 8;
-        // Individual words match in question
         const wordMatches = words.filter(w => question.includes(w)).length;
         if (wordMatches > 0) score += wordMatches * 3;
-        // Category matches
         if (p.category?.toLowerCase() === q) score += 10;
         if (p.category?.toLowerCase().includes(q)) score += 5;
-        // Tag matches
         if ((p.tags as string[])?.some(t => t.toLowerCase() === q)) score += 8;
         if ((p.tags as string[])?.some(t => t.toLowerCase().includes(q))) score += 3;
         return { poll: p, score };
@@ -97,20 +143,9 @@ export default function Polls() {
       .filter(({ score }) => score > 0)
       .sort((a, b) => b.score - a.score)
       .map(({ poll }) => poll);
-  }, [pollsData?.polls, searchQuery]);
+  }, [allPolls, searchQuery]);
 
   const { sentinelRef, visibleItems: visiblePolls, hasMore } = useInfiniteScroll(filteredPolls, 10);
-
-  const pollCount = pollsData?.polls?.length ?? 0;
-  // Compute actual loaded counts per category slug
-  const loadedCategoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const p of (pollsData?.polls ?? [])) {
-      const slug = p.categorySlug ?? "";
-      counts[slug] = (counts[slug] ?? 0) + 1;
-    }
-    return counts;
-  }, [pollsData]);
   const tabs = [
     { id: "trending", label: "Trending" },
     { id: "latest", label: "Latest" },
@@ -340,7 +375,9 @@ export default function Polls() {
               >
                 <span>All Topics</span>
                 <span className="opacity-60">
-                  ({pollCount})
+                  ({categoriesData?.categories
+                    ? categoriesData.categories.reduce((sum, c) => sum + (c.pollCount ?? 0), 0)
+                    : serverTotal})
                 </span>
               </button>
               {(() => {
@@ -364,7 +401,7 @@ export default function Polls() {
                         )}
                       >
                         <span>{cat.name}</span>
-                        <span className="opacity-60">({loadedCategoryCounts[cat.slug] ?? 0})</span>
+                        <span className="opacity-60">({cat.pollCount ?? 0})</span>
                       </button>
                     ))}
                     {hasMore && (
@@ -443,6 +480,23 @@ export default function Polls() {
               {hasMore && (
                 <div ref={sentinelRef} className="flex justify-center py-8">
                   <LoadingDots />
+                </div>
+              )}
+              {/* Load more from server when all visible items rendered but more exist on server */}
+              {!hasMore && canLoadMore && !searchQuery.trim() && (
+                <div className="flex justify-center py-8">
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className={cn(
+                      "px-6 py-3 text-xs uppercase tracking-widest font-bold border border-border transition-colors",
+                      loadingMore
+                        ? "text-muted-foreground opacity-50"
+                        : "text-foreground hover:bg-foreground hover:text-background"
+                    )}
+                  >
+                    {loadingMore ? "Loading..." : `Load More (${allPolls.length} of ${serverTotal})`}
+                  </button>
                 </div>
               )}
             </>
