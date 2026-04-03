@@ -19,7 +19,17 @@ export default function PageApply() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    api.getPage("apply").then(setConfig).catch(console.error).finally(() => setLoading(false));
+    api.getPage("apply").then((data: any) => {
+      setConfig({
+        hero: { tagline: "", title: "", subtitle: "", ...data?.hero },
+        criteria: data?.criteria ?? [],
+        criteriaHeading: data?.criteriaHeading ?? "",
+        countries: data?.countries ?? [],
+        sectors: data?.sectors ?? [],
+        successMessage: { title: "", subtitle: "", cta: "", ...data?.successMessage },
+        disclaimer: data?.disclaimer ?? "",
+      });
+    }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   const save = async () => {

@@ -61,7 +61,15 @@ export default function PageSiteSettings() {
   const [activeTab, setActiveTab] = useState<"navigation" | "footer" | "seo" | "cookie" | "sharegate">("navigation");
 
   useEffect(() => {
-    api.getSiteSettings().then(setConfig).catch(console.error).finally(() => setLoading(false));
+    api.getSiteSettings().then((data: any) => {
+      setConfig({
+        navigation: { links: [], ctaButton: { label: "", href: "", enabled: false }, ...data?.navigation },
+        footer: { links: [], socialLinks: [], copyright: "", tagline: "", ...data?.footer },
+        seo: { siteTitle: "", siteDescription: "", ogImage: "", ...data?.seo },
+        cookieConsent: { enabled: false, message: "", acceptLabel: "", dismissLabel: "", linkText: "", linkHref: "", ...data?.cookieConsent },
+        shareGate: { enabled: false, heading: "", body: "", shareButtonText: "", skipText: "", emailPlaceholder: "", ...data?.shareGate },
+      });
+    }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   const save = async () => {

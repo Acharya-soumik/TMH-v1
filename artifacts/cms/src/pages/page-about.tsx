@@ -37,7 +37,15 @@ export default function PageAbout() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    api.getPage("about").then(setConfig).catch(console.error).finally(() => setLoading(false));
+    api.getPage("about").then((data: any) => {
+      setConfig({
+        hero: { tagline: "", title: "", subtitle: "", ...data?.hero },
+        pillars: data?.pillars ?? [],
+        beliefs: data?.beliefs ?? [],
+        founderStatement: data?.founderStatement ?? { text: "", author: "" },
+        regionCoverage: data?.regionCoverage ?? [],
+      });
+    }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   const save = async () => {
