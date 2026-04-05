@@ -187,12 +187,27 @@ router.get("/cms/stats", requireCmsAuth, async (_req, res) => {
       ...recentPredictions.map(p => ({ type: "prediction" as const, id: p.id, title: p.question, status: p.editorialStatus, updatedAt: p.updatedAt?.toISOString() ?? new Date().toISOString() })),
     ].sort((a, b) => new Date(b.updatedAt!).getTime() - new Date(a.updatedAt!).getTime()).slice(0, 10);
 
+    // Vote counts: real vs dummy
+    const [debateVoteCounts] = await db.select({
+      realVotes: sql<number>`COALESCE(SUM(vote_count), 0)`,
+      dummyVotes: sql<number>`COALESCE(SUM(dummy_vote_count), 0)`,
+    }).from(pollOptionsTable);
+
+    const [predictionVoteCounts] = await db.select({
+      realVotes: sql<number>`COALESCE(SUM(total_count), 0)`,
+      dummyVotes: sql<number>`COALESCE(SUM(dummy_total_count), 0)`,
+    }).from(predictionsTable);
+
     return res.json({
       debates: debateStats,
       predictions: predStats,
       voices: voiceStats,
       pulse: { total: pulseCountResult.count },
       recentActivity,
+      voteCounts: {
+        debates: { real: Number(debateVoteCounts.realVotes), dummy: Number(debateVoteCounts.dummyVotes) },
+        predictions: { real: Number(predictionVoteCounts.realVotes), dummy: Number(predictionVoteCounts.dummyVotes) },
+      },
     });
   } catch (err) {
     console.error("Stats error:", err);
@@ -1577,6 +1592,36 @@ router.get("/public/design-tokens", async (_req, res) => {
   }
 });
 
+function toPredictionPublicResponse(item: any) {
+  const dummyTotal = item.dummyTotalCount ?? 0;
+  const dummyResults: Record<string, number> = item.dummyOptionResults ?? {};
+  const realResults: Record<string, number> = item.optionResults ?? {};
+  const combinedTotal = item.totalCount + dummyTotal;
+
+  // Merge real + dummy option results and recalculate percentages
+  const allOptions = item.options || ["yes", "no"];
+  const combinedResults: Record<string, number> = {};
+  for (const opt of allOptions) {
+    combinedResults[opt] = (realResults[opt] ?? 0) + (dummyResults[opt] ?? 0);
+  }
+  const combinedSum = Object.values(combinedResults).reduce((a, b) => a + b, 0);
+  const combinedPcts: Record<string, number> = {};
+  for (const opt of allOptions) {
+    combinedPcts[opt] = combinedSum > 0 ? Math.round((combinedResults[opt] / combinedSum) * 100) : 0;
+  }
+
+  return {
+    ...item,
+    totalCount: combinedTotal,
+    yesPercentage: combinedPcts["yes"] ?? combinedPcts[allOptions[0]] ?? item.yesPercentage,
+    noPercentage: combinedPcts["no"] ?? combinedPcts[allOptions[1]] ?? item.noPercentage,
+    optionResults: combinedPcts,
+    // Don't expose dummy fields publicly
+    dummyTotalCount: undefined,
+    dummyOptionResults: undefined,
+  };
+}
+
 router.get("/predictions", async (req, res) => {
   try {
     const items = await db
@@ -1584,7 +1629,7 @@ router.get("/predictions", async (req, res) => {
       .from(predictionsTable)
       .where(eq(predictionsTable.editorialStatus, "approved"))
       .orderBy(desc(predictionsTable.createdAt));
-    return res.json({ items });
+    return res.json({ items: items.map(toPredictionPublicResponse) });
   } catch (err) {
     console.error("Public predictions error:", err);
     return res.status(500).json({ error: "Failed to fetch predictions" });
@@ -1597,7 +1642,7 @@ router.get("/predictions/:id", async (req, res) => {
       and(eq(predictionsTable.id, Number(req.params.id)), eq(predictionsTable.editorialStatus, "approved"))
     );
     if (!item) return res.status(404).json({ error: "Not found" });
-    return res.json(item);
+    return res.json(toPredictionPublicResponse(item));
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Failed to fetch prediction" });
@@ -1737,6 +1782,97 @@ router.put("/cms/site-settings", requireCmsAuth, async (req, res) => {
   } catch (err) {
     console.error("Update site settings error:", err);
     return res.status(500).json({ error: "Failed to update site settings" });
+  }
+});
+
+// ── DUMMY VOTES: Boost endpoints ──
+
+router.post("/cms/boost", requireCmsAuth, async (req, res) => {
+  try {
+    const { scope, category } = req.body; // scope: "all" | "category", category: string (when scope=category)
+
+    // Get all approved polls, optionally filtered by category
+    const conditions: any[] = [eq(pollsTable.editorialStatus, "approved")];
+    if (scope === "category" && category) {
+      conditions.push(eq(pollsTable.category, category));
+    }
+
+    const polls = await db.select({ id: pollsTable.id }).from(pollsTable).where(and(...conditions));
+    const pollIds = polls.map(p => p.id);
+
+    if (pollIds.length > 0) {
+      // Boost each option's dummy count by 2-10% of current combined total
+      const allOptions = await db.select().from(pollOptionsTable).where(inArray(pollOptionsTable.pollId, pollIds));
+
+      for (const opt of allOptions) {
+        const currentTotal = opt.voteCount + (opt.dummyVoteCount ?? 0);
+        const boostPct = 2 + Math.random() * 8; // 2-10%
+        const boost = Math.max(1, Math.round(currentTotal * boostPct / 100));
+        await db.update(pollOptionsTable)
+          .set({ dummyVoteCount: sql`COALESCE(dummy_vote_count, 0) + ${boost}` })
+          .where(eq(pollOptionsTable.id, opt.id));
+      }
+    }
+
+    // Boost predictions too
+    const predConditions: any[] = [eq(predictionsTable.editorialStatus, "approved")];
+    if (scope === "category" && category) {
+      predConditions.push(eq(predictionsTable.category, category));
+    }
+
+    const predictions = await db.select().from(predictionsTable).where(and(...predConditions));
+
+    for (const pred of predictions) {
+      const currentTotal = pred.totalCount + (pred.dummyTotalCount ?? 0);
+      const boostPct = 2 + Math.random() * 8;
+      const boost = Math.max(1, Math.round(currentTotal * boostPct / 100));
+
+      const opts = pred.options || ["yes", "no"];
+      const existingDummy: Record<string, number> = (pred.dummyOptionResults as Record<string, number>) ?? {};
+
+      // Distribute boost across options proportionally to existing dummy ratios
+      const newDummy: Record<string, number> = { ...existingDummy };
+      let remaining = boost;
+      for (let i = 0; i < opts.length; i++) {
+        const share = i === opts.length - 1 ? remaining : Math.round(boost * (1 / opts.length));
+        newDummy[opts[i]] = (newDummy[opts[i]] ?? 0) + share;
+        remaining -= share;
+      }
+
+      await db.update(predictionsTable)
+        .set({
+          dummyTotalCount: sql`COALESCE(dummy_total_count, 0) + ${boost}`,
+          dummyOptionResults: newDummy,
+        })
+        .where(eq(predictionsTable.id, pred.id));
+    }
+
+    return res.json({
+      success: true,
+      boostedPolls: pollIds.length,
+      boostedPredictions: predictions.length,
+    });
+  } catch (err) {
+    console.error("Boost error:", err);
+    return res.status(500).json({ error: "Failed to boost votes" });
+  }
+});
+
+// Get available categories for boost UI
+router.get("/cms/boost/categories", requireCmsAuth, async (_req, res) => {
+  try {
+    const debateCats = await db
+      .select({ category: pollsTable.category, count: count() })
+      .from(pollsTable)
+      .where(eq(pollsTable.editorialStatus, "approved"))
+      .groupBy(pollsTable.category);
+
+    return res.json({
+      categories: debateCats.map(c => ({ name: c.category, count: c.count })).sort((a, b) => a.name.localeCompare(b.name)),
+    });
+  } catch (err) {
+    console.error("Boost categories error:", err);
+    return res.status(500).json({ error: "Failed to fetch categories" });
   }
 });
 

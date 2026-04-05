@@ -24,6 +24,7 @@ export const pollOptionsTable = pgTable("poll_options", {
   pollId: integer("poll_id").notNull(),
   text: text("text").notNull(),
   voteCount: integer("vote_count").notNull().default(0),
+  dummyVoteCount: integer("dummy_vote_count").notNull().default(0),
 });
 
 export const votesTable = pgTable("votes", {

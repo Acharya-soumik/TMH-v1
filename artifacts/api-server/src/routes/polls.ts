@@ -37,11 +37,14 @@ async function enrichWithProfiles(profileIds: number[]) {
   return rows.map((p) => ({ id: p.id, name: p.name, role: p.role, company: p.company ?? null, isVerified: p.isVerified }));
 }
 
-async function toPollResponse(poll: any, options: any[]) {
-  const totalVotes = options.reduce((s: number, o: any) => s + o.voteCount, 0);
+async function toPollResponse(poll: any, options: any[], includeDummyBreakdown = false) {
+  // Public totals include dummy votes
+  const totalReal = options.reduce((s: number, o: any) => s + o.voteCount, 0);
+  const totalDummy = options.reduce((s: number, o: any) => s + (o.dummyVoteCount ?? 0), 0);
+  const totalVotes = totalReal + totalDummy;
   const relatedProfileIds: number[] = poll.relatedProfileIds ?? [];
   const relatedProfiles = await enrichWithProfiles(relatedProfileIds.slice(0, 3));
-  return {
+  const response: any = {
     id: poll.id,
     question: poll.question,
     context: poll.context ?? null,
@@ -50,12 +53,20 @@ async function toPollResponse(poll: any, options: any[]) {
     tags: poll.tags ?? [],
     pollType: poll.pollType,
     cardLayout: poll.cardLayout ?? "standard",
-    options: options.map((o) => ({
-      id: o.id,
-      text: o.text,
-      voteCount: o.voteCount,
-      percentage: totalVotes > 0 ? Math.round((o.voteCount / totalVotes) * 1000) / 10 : 0,
-    })),
+    options: options.map((o) => {
+      const combined = o.voteCount + (o.dummyVoteCount ?? 0);
+      const opt: any = {
+        id: o.id,
+        text: o.text,
+        voteCount: combined,
+        percentage: totalVotes > 0 ? Math.round((combined / totalVotes) * 1000) / 10 : 0,
+      };
+      if (includeDummyBreakdown) {
+        opt.realVoteCount = o.voteCount;
+        opt.dummyVoteCount = o.dummyVoteCount ?? 0;
+      }
+      return opt;
+    }),
     totalVotes,
     isFeatured: poll.isFeatured,
     isEditorsPick: poll.isEditorsPick,
@@ -64,6 +75,11 @@ async function toPollResponse(poll: any, options: any[]) {
     relatedProfileIds,
     relatedProfiles,
   };
+  if (includeDummyBreakdown) {
+    response.realVotes = totalReal;
+    response.dummyVotes = totalDummy;
+  }
+  return response;
 }
 
 router.get("/polls", async (req, res) => {
@@ -91,7 +107,7 @@ router.get("/polls", async (req, res) => {
 
     let polls;
     if (filter === "trending" || filter === "most_voted") {
-      polls = await db.select().from(pollsTable).where(baseWhere).orderBy(desc(sql`(SELECT SUM(vote_count) FROM poll_options WHERE poll_id = polls.id)`)).limit(lim).offset(off);
+      polls = await db.select().from(pollsTable).where(baseWhere).orderBy(desc(sql`(SELECT SUM(vote_count + COALESCE(dummy_vote_count, 0)) FROM poll_options WHERE poll_id = polls.id)`)).limit(lim).offset(off);
     } else if (filter === "editors_picks") {
       const whereClause = categoryName
         ? and(eq(pollsTable.isEditorsPick, true), eq(pollsTable.category, categoryName), approvedFilter)
@@ -269,16 +285,14 @@ router.post("/polls/:id/vote", voteRateLimit, async (req, res) => {
       if (oldOptionId === optionId) {
         // Same option — no change needed
         const options = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
-        const total = options.reduce((s: number, o: any) => s + o.voteCount, 0);
+        const total = options.reduce((s: number, o: any) => s + o.voteCount + (o.dummyVoteCount ?? 0), 0);
         return res.json({
           success: true,
           unchanged: true,
-          options: options.map((o) => ({
-            id: o.id,
-            text: o.text,
-            voteCount: o.voteCount,
-            percentage: total > 0 ? Math.round((o.voteCount / total) * 1000) / 10 : 0,
-          })),
+          options: options.map((o) => {
+            const combined = o.voteCount + (o.dummyVoteCount ?? 0);
+            return { id: o.id, text: o.text, voteCount: combined, percentage: total > 0 ? Math.round((combined / total) * 1000) / 10 : 0 };
+          }),
           totalVotes: total,
         });
       }
@@ -328,30 +342,31 @@ router.post("/polls/:id/vote", voteRateLimit, async (req, res) => {
 
       if (!voteInserted && !voteChanged) {
         const options = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
-        const total = options.reduce((s: number, o: any) => s + o.voteCount, 0);
+        const total = options.reduce((s: number, o: any) => s + o.voteCount + (o.dummyVoteCount ?? 0), 0);
         return res.json({
           success: false,
           alreadyVoted: true,
-          options: options.map((o) => ({
-            id: o.id,
-            text: o.text,
-            voteCount: o.voteCount,
-            percentage: total > 0 ? Math.round((o.voteCount / total) * 1000) / 10 : 0,
-          })),
+          options: options.map((o) => {
+            const combined = o.voteCount + (o.dummyVoteCount ?? 0);
+            return { id: o.id, text: o.text, voteCount: combined, percentage: total > 0 ? Math.round((combined / total) * 1000) / 10 : 0 };
+          }),
           totalVotes: total,
         });
       }
     }
 
     const updatedOptions = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
-    const updatedTotal = updatedOptions.reduce((s: number, o: any) => s + o.voteCount, 0);
+    const updatedRealTotal = updatedOptions.reduce((s: number, o: any) => s + o.voteCount, 0);
+    const updatedDummyTotal = updatedOptions.reduce((s: number, o: any) => s + (o.dummyVoteCount ?? 0), 0);
+    const updatedTotal = updatedRealTotal + updatedDummyTotal;
 
     // Upsert today's snapshot for all options so the trend chart reflects real votes
-    if (updatedTotal > 0) {
+    if (updatedRealTotal > 0) {
       try {
         const snapshotValues = updatedOptions.map((o) => {
-          const pct = Math.round((o.voteCount / updatedTotal) * 1000) / 10;
-          return sql`(${pollId}, ${o.id}, DATE(NOW()), ${pct}, ${o.voteCount})`;
+          const combined = o.voteCount + (o.dummyVoteCount ?? 0);
+          const pct = updatedTotal > 0 ? Math.round((combined / updatedTotal) * 1000) / 10 : 0;
+          return sql`(${pollId}, ${o.id}, DATE(NOW()), ${pct}, ${combined})`;
         });
         await db.execute(sql`
           INSERT INTO poll_snapshots (poll_id, option_id, snapshot_date, percentage, vote_count)
@@ -368,12 +383,15 @@ router.post("/polls/:id/vote", voteRateLimit, async (req, res) => {
       success: true,
       changed: voteChanged,
       country: geoData ?? null,
-      options: updatedOptions.map((o) => ({
-        id: o.id,
-        text: o.text,
-        voteCount: o.voteCount,
-        percentage: updatedTotal > 0 ? Math.round((o.voteCount / updatedTotal) * 1000) / 10 : 0,
-      })),
+      options: updatedOptions.map((o) => {
+        const combined = o.voteCount + (o.dummyVoteCount ?? 0);
+        return {
+          id: o.id,
+          text: o.text,
+          voteCount: combined,
+          percentage: updatedTotal > 0 ? Math.round((combined / updatedTotal) * 1000) / 10 : 0,
+        };
+      }),
       totalVotes: updatedTotal,
     });
   } catch (err) {
