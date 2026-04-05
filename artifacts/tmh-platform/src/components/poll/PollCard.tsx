@@ -117,16 +117,28 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
   }
 
   const handleVote = (optionId: number) => {
-    if (isVoted) return
+    // If clicking the same option they already voted for, do nothing
+    if (votedOptionId === optionId) return
 
-    const firstVote = isFirstTimer
-    setWasFirstTimer(firstVote)
+    const isChangeVote = isVoted
+    const previousOptionId = votedOptionId
+
+    if (!isChangeVote) {
+      const firstVote = isFirstTimer
+      setWasFirstTimer(firstVote)
+    }
 
     recordVote(poll.id, optionId, poll.categorySlug)
-    const newTotal = localTotal + 1
+
+    // Optimistic UI update
+    let newTotal = localTotal
+    if (!isChangeVote) newTotal = localTotal + 1
+
     const newOptions = localOptions.map(opt => {
-      const newCount = opt.id === optionId ? opt.voteCount + 1 : opt.voteCount
-      return { ...opt, voteCount: newCount, percentage: Math.round((newCount / newTotal) * 100) }
+      let newCount = opt.voteCount
+      if (opt.id === optionId) newCount += 1
+      if (isChangeVote && opt.id === previousOptionId) newCount = Math.max(newCount - 1, 0)
+      return { ...opt, voteCount: newCount, percentage: newTotal > 0 ? Math.round((newCount / newTotal) * 100) : 0 }
     })
     setLocalOptions(newOptions)
     setLocalTotal(newTotal)
@@ -136,7 +148,6 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
       {
         onSuccess: (data) => {
           if (data.success) {
-            // Preserve the original option order to prevent voted option from jumping positions
             const serverMap = new Map(data.options.map((o: PollOption) => [o.id, o]))
             setLocalOptions(prev =>
               prev.map(opt => {
@@ -153,10 +164,13 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
       }
     )
 
-    const alreadyUnlocked = localStorage.getItem("tmh_email_submitted") || localStorage.getItem(`tmh_unlocked_${poll.id}`)
-    setTimeout(() => {
-      if (!shareGateEnabled || alreadyUnlocked) { unlock() } else { setShowGateModal(true); setPhase("gate") }
-    }, 500)
+    // Only transition phase on first vote, not on vote changes
+    if (!isChangeVote) {
+      const alreadyUnlocked = localStorage.getItem("tmh_email_submitted") || localStorage.getItem(`tmh_unlocked_${poll.id}`)
+      setTimeout(() => {
+        if (!shareGateEnabled || alreadyUnlocked) { unlock() } else { setShowGateModal(true); setPhase("gate") }
+      }, 500)
+    }
   }
 
   const handleShareWhatsApp = () => {
@@ -604,13 +618,19 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                   )
                 })()}
 
-                {/* Results bars */}
+                {/* Results bars — clickable to change vote */}
                 {localOptions.map((option, i) => (
-                  <div key={option.id} className="relative">
+                  <div
+                    key={option.id}
+                    className={cn("relative cursor-pointer group/bar", option.id !== votedOptionId && "hover:opacity-80")}
+                    onClick={() => handleVote(option.id)}
+                    role="button"
+                    aria-label={`Change vote to ${option.text}`}
+                  >
                     <div className="flex justify-between items-end mb-1">
                       <span className={cn(
                         "text-sm font-sans",
-                        option.id === votedOptionId ? "text-primary font-bold" : "text-foreground font-medium"
+                        option.id === votedOptionId ? "text-primary font-bold" : "text-foreground font-medium group-hover/bar:text-primary"
                       )}>
                         {option.text}
                       </span>

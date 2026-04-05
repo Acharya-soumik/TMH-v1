@@ -258,64 +258,89 @@ router.post("/polls/:id/vote", voteRateLimit, async (req, res) => {
       .from(votesTable)
       .where(and(eq(votesTable.pollId, pollId), eq(votesTable.voterToken, voterToken)));
 
-    if (existing.length > 0) {
-      const options = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
-      const total = options.reduce((s: number, o: any) => s + o.voteCount, 0);
-      return res.json({
-        success: false,
-        alreadyVoted: true,
-        options: options.map((o) => ({
-          id: o.id,
-          text: o.text,
-          voteCount: o.voteCount,
-          percentage: total > 0 ? Math.round((o.voteCount / total) * 1000) / 10 : 0,
-        })),
-        totalVotes: total,
-      });
-    }
-
     const ip = getClientIp(req);
     const geoData = await getCountryFromIp(ip);
 
     let voteInserted = false;
+    let voteChanged = false;
 
-    await db.transaction(async (tx) => {
-      const [vote] = await tx.insert(votesTable).values({
-        pollId,
-        optionId,
-        voterToken,
-        countryCode: geoData?.code ?? null,
-        countryName: geoData?.name ?? null,
-      }).onConflictDoNothing().returning({ id: votesTable.id });
-
-      if (!vote) {
-        // already voted — race condition caught by unique constraint
-        return;
+    if (existing.length > 0) {
+      const oldOptionId = existing[0].optionId;
+      if (oldOptionId === optionId) {
+        // Same option — no change needed
+        const options = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
+        const total = options.reduce((s: number, o: any) => s + o.voteCount, 0);
+        return res.json({
+          success: true,
+          unchanged: true,
+          options: options.map((o) => ({
+            id: o.id,
+            text: o.text,
+            voteCount: o.voteCount,
+            percentage: total > 0 ? Math.round((o.voteCount / total) * 1000) / 10 : 0,
+          })),
+          totalVotes: total,
+        });
       }
 
-      voteInserted = true;
+      // Different option — update the vote
+      await db.transaction(async (tx) => {
+        await tx
+          .update(votesTable)
+          .set({ optionId })
+          .where(eq(votesTable.id, existing[0].id));
 
-      // Increment count atomically within the same transaction
-      await tx
-        .update(pollOptionsTable)
-        .set({ voteCount: sql`vote_count + 1` })
-        .where(eq(pollOptionsTable.id, optionId));
-    });
+        // Decrement old option count
+        await tx
+          .update(pollOptionsTable)
+          .set({ voteCount: sql`GREATEST(vote_count - 1, 0)` })
+          .where(eq(pollOptionsTable.id, oldOptionId));
 
-    if (!voteInserted) {
-      const options = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
-      const total = options.reduce((s: number, o: any) => s + o.voteCount, 0);
-      return res.json({
-        success: false,
-        alreadyVoted: true,
-        options: options.map((o) => ({
-          id: o.id,
-          text: o.text,
-          voteCount: o.voteCount,
-          percentage: total > 0 ? Math.round((o.voteCount / total) * 1000) / 10 : 0,
-        })),
-        totalVotes: total,
+        // Increment new option count
+        await tx
+          .update(pollOptionsTable)
+          .set({ voteCount: sql`vote_count + 1` })
+          .where(eq(pollOptionsTable.id, optionId));
       });
+      voteChanged = true;
+    } else {
+      // New vote
+      await db.transaction(async (tx) => {
+        const [vote] = await tx.insert(votesTable).values({
+          pollId,
+          optionId,
+          voterToken,
+          countryCode: geoData?.code ?? null,
+          countryName: geoData?.name ?? null,
+        }).onConflictDoNothing().returning({ id: votesTable.id });
+
+        if (!vote) {
+          return;
+        }
+
+        voteInserted = true;
+
+        await tx
+          .update(pollOptionsTable)
+          .set({ voteCount: sql`vote_count + 1` })
+          .where(eq(pollOptionsTable.id, optionId));
+      });
+
+      if (!voteInserted && !voteChanged) {
+        const options = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
+        const total = options.reduce((s: number, o: any) => s + o.voteCount, 0);
+        return res.json({
+          success: false,
+          alreadyVoted: true,
+          options: options.map((o) => ({
+            id: o.id,
+            text: o.text,
+            voteCount: o.voteCount,
+            percentage: total > 0 ? Math.round((o.voteCount / total) * 1000) / 10 : 0,
+          })),
+          totalVotes: total,
+        });
+      }
     }
 
     const updatedOptions = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, pollId));
@@ -341,7 +366,7 @@ router.post("/polls/:id/vote", voteRateLimit, async (req, res) => {
 
     return res.json({
       success: true,
-      alreadyVoted: false,
+      changed: voteChanged,
       country: geoData ?? null,
       options: updatedOptions.map((o) => ({
         id: o.id,
