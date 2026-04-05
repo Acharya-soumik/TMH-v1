@@ -111,9 +111,6 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
   const [voted, setVoted] = useState<string | null>(() =>
     typeof window !== "undefined" ? localStorage.getItem(storageKey) : null
   )
-  const [confirmChoice, setConfirmChoice] = useState<string | null>(null)
-  const [isDeselecting, setIsDeselecting] = useState(false)
-  const [changing, setChanging] = useState(false)
   const [localYes, setLocalYes] = useState(prediction.yesPercentage)
   const [localNo, setLocalNo] = useState(prediction.noPercentage)
   const [localTotal, setLocalTotal] = useState(prediction.totalCount)
@@ -125,9 +122,6 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
   const submitVote = (choice: string) => {
     const isNewVote = !voted
     setVoted(choice)
-    setConfirmChoice(null)
-    setChanging(false)
-    setIsDeselecting(false)
     localStorage.setItem(storageKey, choice)
     // Only increment count for new votes, not vote changes
     if (isNewVote) setLocalTotal(prev => prev + 1)
@@ -149,50 +143,12 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
       .catch(() => {})
   }
 
-  const removeVote = () => {
-    setVoted(null)
-    setConfirmChoice(null)
-    setIsDeselecting(false)
-    setChanging(false)
-    localStorage.removeItem(storageKey)
-
-    // Optimistic: revert to original prediction percentages
-    setLocalTotal(prev => Math.max(0, prev - 1))
-    setLocalYes(prediction.yesPercentage)
-    setLocalNo(prediction.noPercentage)
-    setLocalOptionResults(prediction.optionResults ?? {})
-
-    let token = localStorage.getItem("tmh_voter_token")
-    if (!token) { token = crypto.randomUUID(); localStorage.setItem("tmh_voter_token", token) }
-    fetch(`/api/predictions/${prediction.id}/vote`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ voterToken: token }),
-    })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data) {
-          if (data.yesPercentage != null) setLocalYes(data.yesPercentage)
-          if (data.noPercentage != null) setLocalNo(data.noPercentage)
-          if (data.totalCount != null) setLocalTotal(data.totalCount)
-          if (data.optionResults) setLocalOptionResults(data.optionResults)
-        }
-      })
-      .catch(() => {})
-  }
-
+  // Click option → instant vote. Click different option → instant change.
+  // Click same option → no-op.
   const handleVote = (choice: string) => {
-    if (voted === choice && !changing) {
-      setIsDeselecting(true)
-      setConfirmChoice(choice)
-      return
-    }
-    if (voted && !changing) return
-    setIsDeselecting(false)
-    setConfirmChoice(choice)
+    if (voted === choice) return
+    submitVote(choice)
   }
-
-  const canClick = !voted || changing
 
   return (
     <div className="border border-border bg-card p-6 md:p-8">
@@ -257,10 +213,9 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
                     border: `2px solid ${color}`,
                     background: isSelected ? color : "transparent",
                     color: isSelected ? "#fff" : color,
-                    opacity: voted && !isSelected && !changing ? 0.4 : 1,
                   }}
                 >
-                  {isSelected && !changing ? `✓ ${choice.toUpperCase()}` : choice.toUpperCase()}
+                  {isSelected ? `✓ ${choice.toUpperCase()}` : choice.toUpperCase()}
                 </button>
               )
             })}
@@ -278,55 +233,19 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
                   border: `2px solid ${color}`,
                   background: isSelected ? color : "transparent",
                   color: isSelected ? "#fff" : color,
-                  opacity: voted && !isSelected && !changing ? 0.4 : 1,
                 }}
               >
-                {isSelected && !changing ? `✓ ${opt}` : opt}
+                {isSelected ? `✓ ${opt}` : opt}
               </button>
             )
           })
         )}
       </div>
 
-      {voted && !changing && (
-        <button
-          onClick={() => setChanging(true)}
-          className="mt-3 text-xs text-muted-foreground underline hover:text-foreground transition-colors cursor-pointer"
-        >
-          Change vote
-        </button>
-      )}
-
       <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border text-xs text-muted-foreground">
         <Users className="w-3.5 h-3.5" />
         <span>{localTotal.toLocaleString()} votes cast</span>
       </div>
-
-      {/* Confirmation overlay */}
-      {confirmChoice && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999]" onClick={() => { setConfirmChoice(null); setIsDeselecting(false) }}>
-          <div className="bg-[#1A1A1A] border border-white/10 rounded-lg p-6 max-w-sm w-[90%] text-center" onClick={e => e.stopPropagation()}>
-            <p className="text-white font-semibold mb-1">
-              {isDeselecting ? "Remove your vote?" : changing ? "Change your vote?" : "Confirm your vote"}
-            </p>
-            <p className="text-white/55 text-sm mb-5">
-              {isDeselecting
-                ? `Remove your vote for "${confirmChoice}"?`
-                : changing
-                  ? `Switch from "${voted}" to "${confirmChoice}"?`
-                  : `Vote for "${confirmChoice}"?`}
-            </p>
-            <div className="flex gap-3">
-              <button onClick={() => { setConfirmChoice(null); setIsDeselecting(false) }} className="flex-1 py-2.5 border border-white/20 text-white font-semibold text-sm rounded cursor-pointer hover:bg-white/5 transition-colors">
-                Cancel
-              </button>
-              <button onClick={() => isDeselecting ? removeVote() : submitVote(confirmChoice)} className="flex-1 py-2.5 border-none font-bold text-sm rounded cursor-pointer" style={{ background: isDeselecting ? "#DC143C" : "#C8A864", color: isDeselecting ? "#fff" : "#0D0D0D" }}>
-                {isDeselecting ? "Remove" : "Confirm"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

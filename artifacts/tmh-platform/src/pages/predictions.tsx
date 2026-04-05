@@ -490,9 +490,6 @@ function VoteButtons({
     if (typeof window === "undefined" || !storageKey) return null;
     return localStorage.getItem(storageKey);
   });
-  const [confirmChoice, setConfirmChoice] = useState<string | null>(null);
-  const [isDeselecting, setIsDeselecting] = useState(false);
-  const [changing, setChanging] = useState(false);
   if (locked) return null;
 
   const resolvedOptions = options?.length ? options : ["yes", "no"];
@@ -501,9 +498,6 @@ function VoteButtons({
   const submitVote = (choice: string) => {
     const previousVote = voted;
     setVoted(choice);
-    setConfirmChoice(null);
-    setChanging(false);
-    setIsDeselecting(false);
     if (storageKey) localStorage.setItem(storageKey, choice);
     if (predId != null) {
       // Optimistic update only for NEW votes (no server data yet)
@@ -533,254 +527,92 @@ function VoteButtons({
     }
   };
 
-  const removeVote = () => {
-    setVoted(null);
-    setConfirmChoice(null);
-    setIsDeselecting(false);
-    setChanging(false);
-    if (storageKey) localStorage.removeItem(storageKey);
-    if (predId != null) {
-      // Optimistic: revert to base percentages
-      onVote?.(predId, null);
-
-      let token = localStorage.getItem("tmh_voter_token");
-      if (!token) {
-        token = crypto.randomUUID();
-        localStorage.setItem("tmh_voter_token", token);
-      }
-      fetch(`/api/predictions/${predId}/vote`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ voterToken: token }),
-      })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data && onVote && data.yesPercentage != null) {
-            onVote(predId, null, data.yesPercentage, data.noPercentage ?? (100 - data.yesPercentage));
-          }
-        })
-        .catch(() => {});
-    }
-  };
-
+  // Click option → instant vote. Click different option → instant change.
+  // Click same option → no-op.
   const handleVote = (choice: string) => {
-    // Clicking the already-voted option triggers deselect confirmation
-    if (voted === choice && !changing) {
-      setIsDeselecting(true);
-      setConfirmChoice(choice);
-      return;
-    }
-    if (voted && !changing) return;
-    setIsDeselecting(false);
-    setConfirmChoice(choice);
+    if (voted === choice) return;
+    submitVote(choice);
   };
-
-  const confirmOverlay = confirmChoice && (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.6)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 9999,
-      }}
-      onClick={() => { setConfirmChoice(null); setIsDeselecting(false); }}
-    >
-      <div
-        style={{
-          background: "#1A1A1A",
-          border: "1px solid rgba(255,255,255,0.12)",
-          borderRadius: 8,
-          padding: "24px 28px",
-          maxWidth: 340,
-          width: "90%",
-          textAlign: "center",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <p
-          style={{
-            color: "#fff",
-            fontFamily: "DM Sans, sans-serif",
-            fontSize: "0.95rem",
-            margin: "0 0 6px",
-            fontWeight: 600,
-          }}
-        >
-          {isDeselecting
-            ? "Remove your vote?"
-            : changing
-              ? "Change your vote?"
-              : "Confirm your vote"}
-        </p>
-        <p
-          style={{
-            color: "rgba(255,255,255,0.55)",
-            fontFamily: "DM Sans, sans-serif",
-            fontSize: "0.8rem",
-            margin: "0 0 20px",
-          }}
-        >
-          {isDeselecting
-            ? `Are you sure you want to remove your vote for "${confirmChoice}"?`
-            : changing
-              ? `Switch from "${voted}" to "${confirmChoice}"?`
-              : `Are you sure you want to vote for "${confirmChoice}"?`}
-        </p>
-        <div style={{ display: "flex", gap: 10 }}>
-          <button
-            onClick={() => { setConfirmChoice(null); setIsDeselecting(false); }}
-            style={{
-              flex: 1,
-              padding: "10px 0",
-              border: "1px solid rgba(255,255,255,0.2)",
-              background: "transparent",
-              color: "#fff",
-              fontFamily: "DM Sans, sans-serif",
-              fontWeight: 600,
-              fontSize: "0.85rem",
-              borderRadius: 4,
-              cursor: "pointer",
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => isDeselecting ? removeVote() : submitVote(confirmChoice)}
-            style={{
-              flex: 1,
-              padding: "10px 0",
-              border: "none",
-              background: isDeselecting ? "#DC143C" : "#C8A864",
-              color: isDeselecting ? "#fff" : "#0D0D0D",
-              fontFamily: "DM Sans, sans-serif",
-              fontWeight: 700,
-              fontSize: "0.85rem",
-              borderRadius: 4,
-              cursor: "pointer",
-            }}
-          >
-            {isDeselecting ? "Remove" : "Confirm"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const changeBtn = voted && !changing && (
-    <button
-      onClick={() => setChanging(true)}
-      style={{
-        marginTop: 6,
-        padding: "4px 12px",
-        border: "none",
-        background: "transparent",
-        color: "rgba(255,255,255,0.4)",
-        fontFamily: "DM Sans, sans-serif",
-        fontSize: "0.7rem",
-        cursor: "pointer",
-        textDecoration: "underline",
-        alignSelf: "center",
-      }}
-    >
-      Change vote
-    </button>
-  );
-
-  const canClick = !voted || changing;
 
   if (isLegacy) {
     return (
-      <>
-        {confirmOverlay}
-        <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-          <div style={{ display: "flex", gap: 8, width: "100%" }}>
-            <button
-              onClick={() => handleVote("yes")}
-              style={{
-                flex: 1,
-                height,
-                border: `1.5px solid #10B981`,
-                background: voted === "yes" ? "#10B981" : "transparent",
-                color: voted === "yes" ? "#fff" : "#10B981",
-                fontFamily: "'Barlow Condensed', sans-serif",
-                fontWeight: 900,
-                fontSize: "1rem",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                cursor: canClick || voted === "yes" ? "pointer" : "default",
-                transition: "all 0.15s",
-                borderRadius: 4,
-                opacity: changing && voted !== "yes" ? 1 : undefined,
-              }}
-            >
-              {voted === "yes" && !changing ? "\u2713 YES" : "YES"}
-            </button>
-            <button
-              onClick={() => handleVote("no")}
-              style={{
-                flex: 1,
-                height,
-                border: `1.5px solid #DC143C`,
-                background: voted === "no" ? "#DC143C" : "transparent",
-                color: voted === "no" ? "#fff" : "#DC143C",
-                fontFamily: "'Barlow Condensed', sans-serif",
-                fontWeight: 900,
-                fontSize: "0.85rem",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                cursor: canClick || voted === "no" ? "pointer" : "default",
-                transition: "all 0.15s",
-                borderRadius: 4,
-                opacity: changing && voted !== "no" ? 1 : undefined,
-              }}
-            >
-              {voted === "no" && !changing ? "\u2713 NO" : "NO"}
-            </button>
-          </div>
-          {changeBtn}
+      <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+        <div style={{ display: "flex", gap: 8, width: "100%" }}>
+          <button
+            onClick={() => handleVote("yes")}
+            style={{
+              flex: 1,
+              height,
+              border: `1.5px solid #10B981`,
+              background: voted === "yes" ? "#10B981" : "transparent",
+              color: voted === "yes" ? "#fff" : "#10B981",
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 900,
+              fontSize: "1rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              cursor: "pointer",
+              transition: "all 0.15s",
+              borderRadius: 4,
+            }}
+          >
+            {voted === "yes" ? "\u2713 YES" : "YES"}
+          </button>
+          <button
+            onClick={() => handleVote("no")}
+            style={{
+              flex: 1,
+              height,
+              border: `1.5px solid #DC143C`,
+              background: voted === "no" ? "#DC143C" : "transparent",
+              color: voted === "no" ? "#fff" : "#DC143C",
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 900,
+              fontSize: "0.85rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              cursor: "pointer",
+              transition: "all 0.15s",
+              borderRadius: 4,
+            }}
+          >
+            {voted === "no" ? "\u2713 NO" : "NO"}
+          </button>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      {confirmOverlay}
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
-        {resolvedOptions.map((opt, i) => {
-          const color = OPTION_COLORS[i % OPTION_COLORS.length];
-          const isSelected = voted === opt;
-          return (
-            <button
-              key={opt}
-              onClick={() => handleVote(opt)}
-              style={{
-                width: "100%",
-                minHeight: 44,
-                padding: "10px 16px",
-                border: `1.5px solid ${color}`,
-                background: isSelected ? color : "transparent",
-                color: isSelected ? "#fff" : color,
-                fontFamily: "DM Sans, sans-serif",
-                fontWeight: 600,
-                fontSize: "0.85rem",
-                textAlign: "left",
-                cursor: canClick || isSelected ? "pointer" : "default",
-                transition: "all 0.15s",
-                borderRadius: 4,
-                opacity: voted && !isSelected && !changing ? 0.4 : 1,
-              }}
-            >
-              {isSelected && !changing ? `\u2713 ${opt}` : opt}
-            </button>
-          );
-        })}
-        {changeBtn}
-      </div>
-    </>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
+      {resolvedOptions.map((opt, i) => {
+        const color = OPTION_COLORS[i % OPTION_COLORS.length];
+        const isSelected = voted === opt;
+        return (
+          <button
+            key={opt}
+            onClick={() => handleVote(opt)}
+            style={{
+              width: "100%",
+              minHeight: 44,
+              padding: "10px 16px",
+              border: `1.5px solid ${color}`,
+              background: isSelected ? color : "transparent",
+              color: isSelected ? "#fff" : color,
+              fontFamily: "DM Sans, sans-serif",
+              fontWeight: 600,
+              fontSize: "0.85rem",
+              textAlign: "left",
+              cursor: "pointer",
+              transition: "all 0.15s",
+              borderRadius: 4,
+            }}
+          >
+            {isSelected ? `\u2713 ${opt}` : opt}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

@@ -257,11 +257,10 @@ export function Chatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-6 right-6 z-[600] w-[min(420px,calc(100vw-3rem))] flex flex-col rounded-2xl overflow-hidden origin-bottom-right"
+            className="fixed bottom-6 right-6 z-[600] w-[min(420px,calc(100vw-3rem))] flex flex-col rounded-2xl overflow-hidden origin-bottom-right bg-background"
             style={{
               height: "min(580px, calc(100vh - 6rem))",
               boxShadow: "0 25px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(220,20,60,0.2)",
-              background: "var(--background)",
             }}
           >
             {/* Header */}
@@ -299,12 +298,7 @@ export function Chatbot() {
             </div>
 
             {/* Messages */}
-            <div
-              className="flex-1 overflow-y-auto px-4 py-5 space-y-4"
-              style={{
-                background: "linear-gradient(180deg, rgba(220,20,60,0.02) 0%, var(--background) 100%)",
-              }}
-            >
+            <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4 bg-background">
               {messages.map(msg => {
                 const isUser = msg.role === "user"
                 const isStreaming = !isUser && !msg.content && isLoading
@@ -319,12 +313,12 @@ export function Chatbot() {
                         "max-w-[78%] px-4 py-3 text-sm leading-relaxed font-sans whitespace-pre-line",
                         isUser
                           ? "text-white rounded-2xl rounded-br-sm"
-                          : "rounded-2xl rounded-bl-sm border border-border"
+                          : "rounded-2xl rounded-bl-sm border border-border bg-secondary text-foreground"
                       )}
                       style={
                         isUser
                           ? { background: "linear-gradient(135deg, #DC143C 0%, #9A0E2C 100%)" }
-                          : { background: "var(--secondary)" }
+                          : undefined
                       }
                     >
                       {isStreaming ? (
@@ -342,7 +336,7 @@ export function Chatbot() {
             </div>
 
             {/* Input */}
-            <div className="border-t border-border px-4 py-3" style={{ background: "var(--background)" }}>
+            <div className="border-t border-border px-4 py-3 bg-background">
               <div className="flex items-center gap-2">
                 <input
                   ref={inputRef}
