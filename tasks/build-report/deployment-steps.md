@@ -4,6 +4,20 @@ Run these in order before/at launch.
 
 ---
 
+## ✅ Already executed on Supabase prod DB (2026-04-05)
+
+- **Migration applied** via `DATABASE_URL=... pnpm --filter @workspace/db run push`
+  - Added `poll_options.dummy_vote_count` (int, default 0)
+  - Added `predictions.dummy_total_count` (int, default 0)
+  - Added `predictions.dummy_option_results` (jsonb, nullable)
+- **Seed script run** via `DATABASE_URL=... npx tsx ./src/seed-dummy-votes.ts`
+  - Seeded dummy votes for **410 approved debates** (20-70 each with realistic ratios)
+  - Seeded dummy votes for **230 approved predictions**
+
+> **Note:** The DB has 410 approved debates — you mentioned wanting to launch with ~100 quality items. Archive low-quality AI-generated items in CMS before launch to curate the visible set. Dummy votes on archived items remain in the DB but won't be shown publicly (public API filters by `editorialStatus = 'approved'`).
+
+---
+
 ## 0. Pre-flight checks
 
 ```bash
