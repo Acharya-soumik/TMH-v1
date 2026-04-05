@@ -13,8 +13,15 @@ Run these in order before/at launch.
 - **Seed script run** via `DATABASE_URL=... npx tsx ./src/seed-dummy-votes.ts`
   - Seeded dummy votes for **410 approved debates** (20-70 each with realistic ratios)
   - Seeded dummy votes for **230 approved predictions**
+- **Content curation run** via `DATABASE_URL=... npx tsx ./src/curate-content.ts --apply`
+  - Archived **310 debates** (kept 100: 1 featured + 39 editor's picks + 60 oldest multi-option)
+  - Archived **130 predictions** (kept 100: 6 featured + 94 oldest non-featured)
+  - All remaining items have dummy votes seeded
 
-> **Note:** The DB has 410 approved debates — you mentioned wanting to launch with ~100 quality items. Archive low-quality AI-generated items in CMS before launch to curate the visible set. Dummy votes on archived items remain in the DB but won't be shown publicly (public API filters by `editorialStatus = 'approved'`).
+**Final DB state:**
+- 100 approved debates (all multi-option quality items)
+- 100 approved predictions
+- Archived items retained in DB (reversible via CMS if needed)
 
 ---
 

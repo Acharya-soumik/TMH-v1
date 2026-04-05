@@ -12,8 +12,10 @@
 | Phase 1 — Launch Blockers | 6 | Complete — shipped & pushed |
 | Phase 2 — Core Improvements | 3 | Complete — shipped & pushed |
 | Phase 3 — Experience Enhancement | 1 (Chatbot Noor) | Complete — shipped & pushed |
+| Follow-ups — Punctuation wire-up (4 pages) | 4 | Complete — shipped & pushed |
+| Follow-ups — Content curation (100 per pillar) | 1 | Complete — applied on prod |
 
-**All 11 items shipped. 20 tests passing. Typecheck clean.**
+**All 11 items shipped + both follow-ups closed. 20 tests passing. Typecheck clean. DB curated to 100 approved items per pillar.**
 
 ## Documents in this folder
 
@@ -29,6 +31,9 @@
 ## Commits (this session)
 
 ```
+205a1f0  feat: content curation script with dry-run and apply modes
+593042e  feat: wire colored punctuation into FAQ, Contact, Terms, Apply pages
+674e235  docs: add Phase 3 report and update build report with Noor coverage
 9d02dc3  feat: Noor chatbot overhaul with character, visual redesign, and smart linking
 bfb8c54  docs: note migration + seed already executed on prod Supabase
 f1f880e  docs: add build report for Phase 1 + Phase 2 with QA checklist
