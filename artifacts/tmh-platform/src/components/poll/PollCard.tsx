@@ -234,9 +234,12 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
 
   const handleCopyLink = async () => {
     const pollUrl = getPollUrl(poll.id)
+    const votedOpt = localOptions.find(o => o.id === votedOptionId)
+    const votePart = votedOpt ? `I voted "${votedOpt.text}"` : "Where do you stand?"
+    const fullText = `"${poll.question}" — ${votePart} on The Tribunal: ${pollUrl}`
     setLinkCopied(true)
     setTimeout(() => setLinkCopied(false), 2500)
-    await copyToClipboard(pollUrl)
+    await copyToClipboard(fullText)
     setTimeout(unlock, 500)
   }
 
@@ -622,41 +625,49 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                   )
                 })()}
 
-                {/* Results bars — clickable to change vote */}
-                {localOptions.map((option, i) => (
-                  <div
-                    key={option.id}
-                    className={cn("relative cursor-pointer group/bar", option.id !== votedOptionId && "hover:opacity-80")}
-                    onClick={() => handleVote(option.id)}
-                    role="button"
-                    aria-label={`Change vote to ${option.text}`}
-                  >
-                    <div className="flex justify-between items-end mb-1">
-                      <span className={cn(
-                        "text-sm font-sans",
-                        option.id === votedOptionId ? "text-primary font-bold" : "text-foreground font-medium group-hover/bar:text-primary"
-                      )}>
-                        {option.text}
-                      </span>
-                      <span className="font-serif font-bold text-lg text-foreground leading-none">{option.percentage}%</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-secondary overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${option.percentage}%` }}
-                        transition={{ duration: 0.6, delay: i * 0.1, ease: [0.25, 1, 0.5, 1] }}
-                        className={cn("h-full", option.id === votedOptionId ? "bg-primary" : "bg-foreground/20")}
-                      />
-                    </div>
-                  </div>
-                ))}
+                <PollViewToggle
+                  pollId={poll.id}
+                  totalVotes={localTotal}
+                  resultsView={
+                    <>
+                      {/* Results bars — clickable to change vote */}
+                      {localOptions.map((option, i) => (
+                        <div
+                          key={option.id}
+                          className={cn("relative cursor-pointer group/bar", option.id !== votedOptionId && "hover:opacity-80")}
+                          onClick={() => handleVote(option.id)}
+                          role="button"
+                          aria-label={`Change vote to ${option.text}`}
+                        >
+                          <div className="flex justify-between items-end mb-1">
+                            <span className={cn(
+                              "text-sm font-sans",
+                              option.id === votedOptionId ? "text-primary font-bold" : "text-foreground font-medium group-hover/bar:text-primary"
+                            )}>
+                              {option.text}
+                            </span>
+                            <span className="font-serif font-bold text-lg text-foreground leading-none">{option.percentage}%</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-secondary overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${option.percentage}%` }}
+                              transition={{ duration: 0.6, delay: i * 0.1, ease: [0.25, 1, 0.5, 1] }}
+                              className={cn("h-full", option.id === votedOptionId ? "bg-primary" : "bg-foreground/20")}
+                            />
+                          </div>
+                        </div>
+                      ))}
 
-                <div className="pt-4 border-t border-border flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse flex-shrink-0" />
-                  <p className="font-serif font-black uppercase tracking-widest text-sm text-primary">
-                    Voted — Results Live
-                  </p>
-                </div>
+                      <div className="pt-4 border-t border-border flex items-center gap-3">
+                        <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse flex-shrink-0" />
+                        <p className="font-serif font-black uppercase tracking-widest text-sm text-primary">
+                          Voted — Results Live
+                        </p>
+                      </div>
+                    </>
+                  }
+                />
 
                 {/* Share Your Stance */}
                 <div className="space-y-3">
@@ -672,8 +683,6 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                     Share Your Result
                   </button>
                 </div>
-
-                <PollViewToggle pollId={poll.id} totalVotes={localTotal} />
               </motion.div>
             )}
 

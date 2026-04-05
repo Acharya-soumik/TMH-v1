@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useRoute, Link } from "wouter"
 import { Layout } from "@/components/layout/Layout"
 import { ShareModal } from "@/components/ShareModal"
+import { ResultsTabsView, EmptyStateCard } from "@/components/poll/ResultsTabsView"
 import { ArrowLeft, AlertCircle, ArrowRight, Share2, TrendingUp, TrendingDown, Calendar, Users, Info } from "lucide-react"
 import { usePageTitle } from "@/hooks/use-page-title"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -150,11 +151,8 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
     submitVote(choice)
   }
 
-  return (
-    <div className="border border-border bg-card p-6 md:p-8">
-      <div className="h-px w-8 bg-primary mb-3" />
-      <h3 className="font-serif font-black uppercase text-lg tracking-wider mb-6">Cast Your Vote</h3>
-
+  const resultsPanel = (
+    <>
       {/* Confidence bars */}
       <div className="space-y-3 mb-6">
         {isLegacy ? (
@@ -246,6 +244,29 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
         <Users className="w-3.5 h-3.5" />
         <span>{localTotal.toLocaleString()} votes cast</span>
       </div>
+    </>
+  )
+
+  return (
+    <div className="border border-border bg-card p-6 md:p-8">
+      <div className="h-px w-8 bg-primary mb-3" />
+      <h3 className="font-serif font-black uppercase text-lg tracking-wider mb-6">Cast Your Vote</h3>
+
+      <ResultsTabsView
+        resultsView={resultsPanel}
+        countryView={
+          <EmptyStateCard
+            title="Still Gathering Data"
+            message="We don't have enough votes from different countries yet to show a breakdown for this prediction. Come back later."
+          />
+        }
+        timelineView={
+          <EmptyStateCard
+            title="Still Gathering Data"
+            message="We need more votes over time before we can show how confidence has shifted. Come back later."
+          />
+        }
+      />
     </div>
   )
 }

@@ -44,9 +44,11 @@ interface ResultsBreakdownProps {
   pollId: number
   totalVotes: number
   userCountry?: string | null
+  /** When true, don't render the top border + "By Country" label (useful when inside a tab that already labels the view) */
+  hideHeader?: boolean
 }
 
-export function ResultsBreakdown({ pollId, totalVotes, userCountry }: ResultsBreakdownProps) {
+export function ResultsBreakdown({ pollId, totalVotes, userCountry, hideHeader = false }: ResultsBreakdownProps) {
   const [countries, setCountries] = useState<CountryRow[]>([])
   const [isFallback, setIsFallback] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -60,33 +62,52 @@ export function ResultsBreakdown({ pollId, totalVotes, userCountry }: ResultsBre
           setCountries(data.countries.slice(0, 6))
           setIsFallback(false)
         } else {
-          setCountries(makeFallback(pollId))
+          setCountries([])
           setIsFallback(true)
         }
         setLoaded(true)
       })
       .catch(() => {
-        setCountries(makeFallback(pollId))
+        setCountries([])
         setIsFallback(true)
         setLoaded(true)
       })
   }, [pollId])
 
-  if (!loaded) return null
+  const wrapperClass = hideHeader ? "" : "border-t-2 border-foreground mt-6 pt-5"
 
-  // Hide the entire section when no real country data exists (geo IP not yet implemented)
+  if (!loaded) {
+    return (
+      <div className={wrapperClass}>
+        <div className="py-8 text-center">
+          <div className="inline-block w-5 h-5 border-2 border-muted-foreground/30 border-t-primary rounded-full animate-spin" />
+        </div>
+      </div>
+    )
+  }
+
+  // Empty / not enough data state
   if (isFallback) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7, duration: 0.4 }}
-        className="border-t-2 border-foreground mt-6 pt-5"
+        transition={{ duration: 0.4 }}
+        className={wrapperClass}
       >
-        <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-muted-foreground mb-2">
-          By Country
-        </p>
-        <p className="text-xs text-muted-foreground italic">Geographic breakdown available after launch.</p>
+        {!hideHeader && (
+          <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-muted-foreground mb-2">
+            By Country
+          </p>
+        )}
+        <div className="py-10 px-4 text-center border border-dashed border-border">
+          <p className="text-[10px] uppercase tracking-[0.25em] font-bold text-primary mb-2 font-serif">
+            Still Gathering Data
+          </p>
+          <p className="text-xs text-muted-foreground font-sans max-w-xs mx-auto leading-relaxed">
+            We don't have enough votes from different countries yet to show a breakdown. Come back later.
+          </p>
+        </div>
       </motion.div>
     )
   }
@@ -97,14 +118,16 @@ export function ResultsBreakdown({ pollId, totalVotes, userCountry }: ResultsBre
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.7, duration: 0.4 }}
-      className="border-t-2 border-foreground mt-6 pt-5"
+      transition={{ duration: 0.4 }}
+      className={wrapperClass}
     >
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-muted-foreground">
-          By Country
-        </p>
-      </div>
+      {!hideHeader && (
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-muted-foreground">
+            By Country
+          </p>
+        </div>
+      )}
 
       <div className="space-y-3">
         {countries.map((country, i) => {

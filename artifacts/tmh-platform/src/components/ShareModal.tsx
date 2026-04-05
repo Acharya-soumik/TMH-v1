@@ -185,11 +185,13 @@ export function ShareModal({
   }
 
   const handleCopy = async () => {
-    const ok = await copyToClipboard(url)
+    // Copy the full formatted post text + URL, not just the URL
+    const fullText = buildShareText("generic")
+    const ok = await copyToClipboard(fullText)
     if (ok) {
       setLinkCopied(true)
       setTimeout(() => setLinkCopied(false), 2500)
-      toast({ title: "Link copied!" })
+      toast({ title: "Copied!", description: "Full post text + link copied to clipboard." })
     }
   }
 
