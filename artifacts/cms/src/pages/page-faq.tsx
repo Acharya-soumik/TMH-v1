@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Save, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { TitlePunctuationEditor, type TitlePunctuationConfig } from "@/components/TitlePunctuationEditor";
 
 interface FaqQuestion {
   q: string;
@@ -14,6 +15,7 @@ interface FaqSection {
 
 interface FaqConfig {
   sections: FaqSection[];
+  titlePunctuation?: TitlePunctuationConfig;
 }
 
 export default function PageFaq() {
@@ -24,7 +26,12 @@ export default function PageFaq() {
   const [expandedSection, setExpandedSection] = useState<number | null>(0);
 
   useEffect(() => {
-    api.getPage("faq").then(setConfig).catch(console.error).finally(() => setLoading(false));
+    api.getPage("faq").then((data: any) => {
+      setConfig({
+        sections: data?.sections ?? [],
+        titlePunctuation: data?.titlePunctuation,
+      });
+    }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   const save = async () => {
@@ -101,6 +108,11 @@ export default function PageFaq() {
           </button>
         </div>
       </div>
+
+      <TitlePunctuationEditor
+        value={config.titlePunctuation}
+        onChange={(punct) => setConfig({ ...config, titlePunctuation: punct })}
+      />
 
       {config.sections.map((section, si) => (
         <section key={si} className="border border-border rounded-sm bg-card overflow-hidden">

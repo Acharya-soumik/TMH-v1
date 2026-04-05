@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Save, Plus, Trash2 } from "lucide-react";
+import { TitlePunctuationEditor, type TitlePunctuationConfig } from "@/components/TitlePunctuationEditor";
 
 interface ApplyConfig {
   hero: { tagline: string; title: string; subtitle: string };
@@ -10,6 +11,7 @@ interface ApplyConfig {
   sectors: string[];
   successMessage: { title: string; subtitle: string; cta: string };
   disclaimer: string;
+  titlePunctuation?: TitlePunctuationConfig;
 }
 
 export default function PageApply() {
@@ -28,6 +30,7 @@ export default function PageApply() {
         sectors: data?.sectors ?? [],
         successMessage: { title: "", subtitle: "", cta: "", ...data?.successMessage },
         disclaimer: data?.disclaimer ?? "",
+        titlePunctuation: data?.titlePunctuation,
       });
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
@@ -54,6 +57,11 @@ export default function PageApply() {
           <Save className="w-4 h-4" /> {saving ? "Saving..." : saved ? "Saved!" : "Save Changes"}
         </button>
       </div>
+
+      <TitlePunctuationEditor
+        value={config.titlePunctuation}
+        onChange={(punct) => setConfig({ ...config, titlePunctuation: punct })}
+      />
 
       <section className="border border-border rounded-sm p-4 space-y-3">
         <h2 className="font-serif text-lg font-bold uppercase tracking-wide">Hero Section</h2>

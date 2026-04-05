@@ -1,6 +1,8 @@
 import { Link } from "wouter"
 import { Layout } from "@/components/layout/Layout"
 import { usePageTitle } from "@/hooks/use-page-title"
+import { usePageConfig } from "@/hooks/use-cms-data"
+import { TitlePunctuation, type TitlePunctuationConfig } from "@/components/TitlePunctuation"
 
 const SECTIONS = [
   {
@@ -75,13 +77,14 @@ export default function Terms() {
     title: "Terms of Service",
     description: "Terms of service and usage policies for The Tribunal platform.",
   });
+  const { data: pageConfig } = usePageConfig<{ titlePunctuation?: TitlePunctuationConfig }>("terms")
   return (
     <Layout>
       <div className="bg-foreground text-background py-16 border-b border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-4 font-serif">Legal</p>
           <h1 className="font-display font-black text-4xl md:text-6xl uppercase tracking-tight">
-            Terms &amp; Conditions
+            Terms &amp; Conditions<TitlePunctuation config={pageConfig?.titlePunctuation} />
           </h1>
           <p className="text-background/75 font-sans text-sm mt-4">
             Last updated: March 2026 · Governed by UAE Law

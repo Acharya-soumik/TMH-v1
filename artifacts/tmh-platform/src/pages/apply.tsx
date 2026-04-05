@@ -4,6 +4,7 @@ import { CheckCircle2, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePageConfig } from "@/hooks/use-cms-data"
 import { usePageTitle } from "@/hooks/use-page-title"
+import { TitlePunctuation, type TitlePunctuationConfig } from "@/components/TitlePunctuation"
 
 const FALLBACK_CRITERIA = [
   "Real, verifiable impact — named outcomes, not just job titles",
@@ -34,6 +35,7 @@ interface ApplyConfig {
   sectors?: string[]
   successMessage?: { title?: string; subtitle?: string; cta?: string }
   disclaimer?: string
+  titlePunctuation?: TitlePunctuationConfig
 }
 
 type Status = "idle" | "submitting" | "success" | "error"
@@ -134,9 +136,10 @@ export default function Apply() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-4 font-serif">{hero?.tagline || "The Voices"}</p>
           <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
-            {(hero?.title || "Think You Belong\nIn The Voices?").split("\n").map((line, i, arr) => (
+            {((hero?.title || "Think You Belong\nIn The Voices?").replace(/[.?!]+$/, "")).split("\n").map((line, i, arr) => (
               <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
             ))}
+            <TitlePunctuation config={pageConfig?.titlePunctuation} style={{ color: "#DC143C" }} />
           </h1>
           <p className="text-background/75 font-sans text-base mt-4 max-w-xl">
             {hero?.subtitle || "We're building the most credible founder directory in the Middle East. Not everyone makes the cut. The bar is high — because our audience is discerning."}

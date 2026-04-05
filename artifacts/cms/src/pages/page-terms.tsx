@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Save, Plus, Trash2, GripVertical } from "lucide-react";
+import { TitlePunctuationEditor, type TitlePunctuationConfig } from "@/components/TitlePunctuationEditor";
 
 interface TermsSection {
   id: string;
@@ -11,6 +12,7 @@ interface TermsSection {
 interface TermsConfig {
   lastUpdated: string;
   sections: TermsSection[];
+  titlePunctuation?: TitlePunctuationConfig;
 }
 
 export default function PageTerms() {
@@ -20,7 +22,13 @@ export default function PageTerms() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    api.getPage("terms").then(setConfig).catch(console.error).finally(() => setLoading(false));
+    api.getPage("terms").then((data: any) => {
+      setConfig({
+        lastUpdated: data?.lastUpdated ?? "",
+        sections: data?.sections ?? [],
+        titlePunctuation: data?.titlePunctuation,
+      });
+    }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   const save = async () => {
@@ -72,6 +80,11 @@ export default function PageTerms() {
           </button>
         </div>
       </div>
+
+      <TitlePunctuationEditor
+        value={config.titlePunctuation}
+        onChange={(punct) => setConfig({ ...config, titlePunctuation: punct })}
+      />
 
       <div className="border border-border rounded-sm p-4">
         <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Last Updated</label>

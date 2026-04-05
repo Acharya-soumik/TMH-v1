@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Save, Plus, Trash2, Mail, Globe, MapPin } from "lucide-react";
+import { TitlePunctuationEditor, type TitlePunctuationConfig } from "@/components/TitlePunctuationEditor";
 
 interface ContactEmail {
   label: string;
@@ -17,6 +18,7 @@ interface ContactConfig {
   emails: ContactEmail[];
   socialLinks: SocialLink[];
   officeLocation: string;
+  titlePunctuation?: TitlePunctuationConfig;
 }
 
 export default function PageContact() {
@@ -26,7 +28,14 @@ export default function PageContact() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    api.getPage("contact").then(setConfig).catch(console.error).finally(() => setLoading(false));
+    api.getPage("contact").then((data: any) => {
+      setConfig({
+        emails: data?.emails ?? [],
+        socialLinks: data?.socialLinks ?? [],
+        officeLocation: data?.officeLocation ?? "",
+        titlePunctuation: data?.titlePunctuation,
+      });
+    }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   const save = async () => {
@@ -63,6 +72,11 @@ export default function PageContact() {
           <Save className="w-4 h-4" /> {saving ? "Saving..." : saved ? "Saved!" : "Save Changes"}
         </button>
       </div>
+
+      <TitlePunctuationEditor
+        value={config.titlePunctuation}
+        onChange={(punct) => setConfig({ ...config, titlePunctuation: punct })}
+      />
 
       <section className="border border-border rounded-sm p-4 space-y-3">
         <div className="flex items-center justify-between">
