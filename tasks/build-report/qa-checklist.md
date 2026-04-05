@@ -177,6 +177,56 @@ Organized by feature area. Check each item and mark ✅ / ❌ / ⚠️ (needs fi
 
 ---
 
+## Phase 3 — Chatbot Noor
+
+### Visual + entry point
+- [ ] Open the website → "Ask Noor" pill bubble appears bottom-right
+- [ ] Pill has Noor avatar (gold/red gradient with sparkles) + "ASK NOOR" text
+- [ ] Small green pulsing dot in top-right corner of pill
+- [ ] Click pill → panel slides in from bottom-right
+- [ ] Header: red gradient with gold radial glow, Noor avatar, "Noor." name with gold period, "Your guide to The Tribunal" tagline with pulsing green dot
+- [ ] Close button (X) in top-right works
+
+### Greeting
+- [ ] Greeting appears as first Noor message when panel opens
+- [ ] Says "Hi — I'm Noor, your guide to The Tribunal. ✨"
+- [ ] Second paragraph mentions debates, predictions, MENA trends, voices
+- [ ] If Majlis toggle is ON, greeting also mentions Majlis
+- [ ] If Majlis toggle is OFF, greeting does NOT mention Majlis
+
+### Conversation
+- [ ] Type "what is The Tribunal?" → Noor responds warmly, briefly, natural tone
+- [ ] Type "show me a trending debate" → Noor replies with a markdown link like `[title](/debates/X)`
+- [ ] Link in Noor's message is clickable (crimson, bold)
+- [ ] Clicking the link navigates to the debate → panel closes automatically
+- [ ] Reopen panel → conversation history preserved
+- [ ] Type "how many votes?" → Noor responds with actual numbers from DB context
+- [ ] Type off-topic ("weather?") → Noor gently redirects
+- [ ] With Majlis OFF: type "tell me about Majlis" → Noor doesn't pitch Majlis (or says unavailable)
+- [ ] With Majlis ON: type "tell me about Majlis" → Noor explains and links to /majlis
+
+### Typing indicator
+- [ ] While waiting for response: 3 bouncing dots show in a Noor message bubble
+- [ ] When first token arrives: dots replaced with streaming text
+
+### Input
+- [ ] Input is rounded-full pill, "Ask Noor anything..." placeholder
+- [ ] Send button is circular, crimson gradient, disabled when input empty
+- [ ] Enter key sends message
+- [ ] Shift+Enter does NOT send (reserved for newlines, though single-line input)
+- [ ] While sending: send button shows spinner
+
+### Mobile
+- [ ] Panel fits mobile viewport (max-width calc prevents overflow)
+- [ ] Trigger bubble stays bottom-right on scroll
+
+### API / backend
+- [ ] Check CMS dashboard stats — Noor should reference these numbers in responses
+- [ ] After changing Majlis toggle in CMS, wait ~60s, refresh panel → new greeting + Noor no longer mentions Majlis
+- [ ] Rate limit works: send 30+ messages in 15 min → error toast/message
+
+---
+
 ## Regression Checks (existing features should still work)
 
 - [ ] Can log into CMS with existing credentials
@@ -204,4 +254,4 @@ Organized by feature area. Check each item and mark ✅ / ❌ / ⚠️ (needs fi
 - ip-api.com free tier uses HTTP — may need upgrade to paid/alt provider if strict HTTPS enforcement is needed
 - LinkedIn OG image is static (not per-poll) — requires server-side image generation (deferred)
 - Title punctuation only wired to About page — follow-up wire-up needed for other pages
-- Chatbot "Noor" character overhaul is Phase 3 — not started
+- Chatbot "Noor" character overhaul: ✅ Phase 3 shipped. Streaming SSE responses are hard to mock in unit tests — fully tested via manual QA

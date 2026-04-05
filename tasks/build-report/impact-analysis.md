@@ -112,9 +112,9 @@ What's affected by these changes and where to look for regressions.
 
 ## Medium-risk areas
 
-### 6. Chatbot system prompt still references Majlis
+### 6. Chatbot system prompt (✅ now respects Majlis toggle)
 
-When Majlis is toggled off, the chatbot might still tell users about it because the API's system prompt doesn't check the feature toggle. Low priority — chatbot is scheduled for Phase 3 overhaul.
+**Fixed in Phase 3:** The chatbot API route now fetches `site_settings` config, reads `featureToggles.majlis.enabled`, and omits Majlis from the system prompt entirely when off. The frontend greeting also adapts. Context cached 60s — toggle changes propagate within a minute.
 
 ### 7. OG tags middleware
 
@@ -194,13 +194,21 @@ Pages still to wire:
 - Debates listing hero (`polls.tsx`)
 - Voices listing hero (`profiles.tsx`)
 
-### Phase 3 — Chatbot "Noor" overhaul (not started)
+### Phase 3 — Chatbot "Noor" overhaul (✅ shipped)
 
-- Character/personality (Noor = light)
-- Visual redesign (avatar, branded bubbles, header)
-- Smart content linking (debates/predictions/voices)
-- Respect `featureToggles.majlis` in system prompt
-- Current base: `artifacts/tmh-platform/src/components/Chatbot.tsx` + `artifacts/api-server/src/routes/chatbot.ts`
+See `phase-3-report.md` for full details. All objectives met:
+- ✅ Noor character (Arabic "light")
+- ✅ Visual redesign (avatar, branded bubbles, header, greeting)
+- ✅ Smart content linking via markdown `[text](/path)` parser
+- ✅ Respects `featureToggles.majlis` in both API and frontend
+- ✅ Platform context injected from live DB (stats, top trending, featured voices)
+
+**New impact area:** Chatbot now depends on:
+- `pollOptionsTable` (for dummy_vote_count column — already migrated)
+- `predictionsTable.dummy_total_count`
+- `pulseTopicsTable` (new import)
+- `cmsConfigsTable` for site settings lookup
+- All reads are SELECT-only, low risk
 
 ### Per-poll OG images (for LinkedIn/Twitter preview cards)
 

@@ -11,13 +11,16 @@
 |------|-------|--------|
 | Phase 1 — Launch Blockers | 6 | Complete — shipped & pushed |
 | Phase 2 — Core Improvements | 3 | Complete — shipped & pushed |
-| Phase 3 — Experience Enhancement | 1 (Chatbot) | Not started |
+| Phase 3 — Experience Enhancement | 1 (Chatbot Noor) | Complete — shipped & pushed |
+
+**All 11 items shipped. 20 tests passing. Typecheck clean.**
 
 ## Documents in this folder
 
 - `README.md` — this file, overview + status
 - `phase-1-report.md` — Phase 1 items: what changed, files touched, behavior
 - `phase-2-report.md` — Phase 2 items: what changed, files touched, behavior
+- `phase-3-report.md` — Phase 3 (Noor chatbot overhaul)
 - `qa-checklist.md` — Manual QA checklist for human testing (organized by feature)
 - `code-review.md` — Self-review notes, trade-offs, follow-ups
 - `impact-analysis.md` — Things that might be affected by these changes (blast radius)
@@ -26,6 +29,9 @@
 ## Commits (this session)
 
 ```
+9d02dc3  feat: Noor chatbot overhaul with character, visual redesign, and smart linking
+bfb8c54  docs: note migration + seed already executed on prod Supabase
+f1f880e  docs: add build report for Phase 1 + Phase 2 with QA checklist
 d655bc4  feat: configurable title punctuation (colored period) via CMS
 3f05f3e  feat: professional share card generation with branded images
 fd4ecbb  feat: IP consent banner, country view toggle, and geolocation API

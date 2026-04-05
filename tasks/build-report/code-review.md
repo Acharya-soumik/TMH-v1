@@ -181,6 +181,34 @@ Self-review of every change shipped in this session. Flags trade-offs, follow-up
 
 ---
 
+---
+
+## Phase 3 — Chatbot Noor Overhaul
+
+**Good:**
+- Character name "Noor" fits the brand (Arabic "light", warm, welcoming)
+- Platform context injected from live DB = Noor can reference real numbers and specific content
+- 60s cache on platform context prevents per-request DB load
+- Respects Majlis toggle in both system prompt AND frontend greeting
+- Smart content linking via markdown `[text](/path)` — frontend parses and renders as clickable nav buttons
+- 4 new tests covering trigger, greeting (with/without Majlis), branding
+- Visual redesign is production-quality: avatar, gradients, animated typing dots, polished header
+
+**Trade-offs:**
+- Streaming SSE is hard to unit test — coverage is for visual/static behavior only. End-to-end tests would cover streaming properly.
+- Context cache is in-memory — in a multi-instance deployment, each instance has its own cache. Still bounded at 60s so eventual consistency is fine.
+- Top debates/predictions queries use subqueries in ORDER BY — works but could be slow at scale. Consider materializing trending stats in a background job if performance becomes an issue.
+- Noor's link formatting is prompt-driven. Claude may occasionally not follow the markdown format exactly. The frontend parser handles plain text gracefully (just renders without links).
+
+**Follow-ups:**
+- Add a "Reset conversation" button in the panel header
+- Persist conversation history to localStorage so it survives page reloads
+- Add quick-reply suggestion chips ("Show me trending debates", "What's new?")
+- Add proactive greeting: Noor could notice repeat visitors and welcome them back
+- E2E tests for the full send → receive → link navigation flow
+
+---
+
 ## General Follow-ups (not blocking launch)
 
 1. **API-level tests** — zero test coverage on the backend, high risk
