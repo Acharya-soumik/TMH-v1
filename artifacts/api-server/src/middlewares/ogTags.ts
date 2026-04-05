@@ -105,7 +105,14 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
       .then((poll) => {
         const title = poll.question ?? "The Middle East's boldest question"
         const totalVotes = poll.totalVotes ?? 0
-        const description = `${totalVotes.toLocaleString()} votes and counting. What do YOU think? Vote on The Tribunal — the region's most honest opinion platform.`
+        const topOption = (poll.options ?? []).reduce(
+          (top: any, opt: any) => (!top || opt.voteCount > top.voteCount ? opt : top),
+          null,
+        )
+        const leadText = topOption
+          ? `${topOption.percentage}% say "${topOption.text}". ${totalVotes.toLocaleString()} MENA voices weighed in.`
+          : `${totalVotes.toLocaleString()} voices from across MENA. Where do you stand?`
+        const description = `${leadText} Vote on The Tribunal — the region's most honest opinion platform.`
         const image = poll.ogImage ?? DEFAULT_IMAGE
         const html = buildHtml({ title, description, url: fullUrl, image, type: "article" })
         res.setHeader("Content-Type", "text/html")

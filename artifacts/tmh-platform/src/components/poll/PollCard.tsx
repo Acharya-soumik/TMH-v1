@@ -837,6 +837,11 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
             ? "See what others have to say — share and spark a conversation."
             : "We keep The Tribunal free by making opinion data shareable. Share this debate to see the full breakdown."
           }
+          category={poll.category}
+          totalVotes={localTotal}
+          votedOptionText={votedOption?.text}
+          votedPct={votedOption?.percentage}
+          options={localOptions.map(o => ({ text: o.text, percentage: o.percentage ?? 0 }))}
           onClose={() => {
             setShowShareModal(false)
             // After modal closes, check if email was submitted and unlock if so
