@@ -361,12 +361,12 @@ function ShareMenu({
           <button
             onClick={() =>
               doShare(
-                `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(title)}`,
+                `https://www.instagram.com/`,
               )
             }
             className="w-full text-left px-3 py-2 text-[11px] font-serif uppercase tracking-wider hover:bg-white/5 rounded-sm flex items-center gap-2"
           >
-            <span className="text-[#26A5E4]">●</span> Telegram
+            <span className="text-[#E4405F]">●</span> Instagram
           </button>
           <div className="border-t border-border mt-1 pt-1">
             <button
@@ -1644,12 +1644,12 @@ export default function Home() {
                   />
                 </motion.p>
                 <motion.p
-                  className="text-[9px] font-serif font-semibold tracking-[0.18em] uppercase text-muted-foreground mt-1 hidden lg:block"
+                  className="text-[10px] font-serif font-semibold tracking-[0.18em] uppercase text-muted-foreground mt-1 hidden lg:block"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 1.1 }}
                 >
-                  {t("and counting, one more every 4 seconds")}
+                  {t("MENA Population, with a new born every 4 seconds.")}
                 </motion.p>
                 {(homepageConfig?.masthead?.countries?.length ?? 0) > 0 && (
                   <motion.p

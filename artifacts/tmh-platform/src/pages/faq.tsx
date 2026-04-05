@@ -39,7 +39,7 @@ const FAQ_SECTIONS_DEFAULT: FaqSection[] = [
     questions: [
       {
         q: "How do the debates work?",
-        a: "Every debate is a single question with multiple options. You click your answer. Your vote is anonymous — we don't store your IP address or personally identify you. After voting, you unlock full results by sharing the debate on social media (WhatsApp, X, LinkedIn, Telegram) or entering your email. This Share Gate is what makes The Tribunal viral — the results spread with every share.",
+        a: "Every debate is a single question with multiple options. You click your answer. Your vote is anonymous — we don't store your IP address or personally identify you. After voting, you unlock full results by sharing the debate on social media (WhatsApp, X, LinkedIn, Instagram) or entering your email. This Share Gate is what makes The Tribunal viral — the results spread with every share.",
       },
       {
         q: "Can I vote more than once?",
@@ -51,7 +51,7 @@ const FAQ_SECTIONS_DEFAULT: FaqSection[] = [
       },
       {
         q: "What is the Share Gate?",
-        a: "The Share Gate sits between your vote and the full results. After you vote, you can unlock results immediately by sharing the debate on WhatsApp, X, LinkedIn, or Telegram, or by entering your email. It's our growth engine: every share brings new voters.",
+        a: "The Share Gate sits between your vote and the full results. After you vote, you can unlock results immediately by sharing the debate on WhatsApp, X, LinkedIn, or Instagram, or by entering your email. It's our growth engine: every share brings new voters.",
       },
       {
         q: "What is the Country Breakdown?",
