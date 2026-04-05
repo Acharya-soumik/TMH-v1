@@ -9,7 +9,8 @@ import { useVoter } from "@/hooks/use-voter"
 import { useToast } from "@/hooks/use-toast"
 import { useSiteSettings } from "@/hooks/use-cms-data"
 import { cn } from "@/lib/utils"
-import { ResultsBreakdown } from "./ResultsBreakdown"
+import { PollViewToggle } from "./PollViewToggle"
+import { getIpConsent } from "@/components/IpConsentBanner"
 import { generateShareCard, generateStoryCard, getPollUrl, getWhatsAppUrl, getLinkedInUrl } from "@/lib/shareCard"
 import { ShareToMajlisModal } from "@/components/ShareToMajlisModal"
 import { ShareModal } from "@/components/ShareModal"
@@ -145,8 +146,9 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
     setLocalOptions(newOptions)
     setLocalTotal(newTotal)
 
+    const consent = getIpConsent()
     voteMutation.mutate(
-      { id: poll.id, data: { optionId, voterToken: token } },
+      { id: poll.id, data: { optionId, voterToken: token, ipConsent: consent !== "rejected" } },
       {
         onSuccess: (data) => {
           if (data.success) {
@@ -671,7 +673,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                   </button>
                 </div>
 
-                <ResultsBreakdown pollId={poll.id} totalVotes={localTotal} />
+                <PollViewToggle pollId={poll.id} totalVotes={localTotal} />
               </motion.div>
             )}
 

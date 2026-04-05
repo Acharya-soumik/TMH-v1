@@ -68,6 +68,7 @@ export interface PollListResponse {
 export interface VoteRequest {
   optionId: number;
   voterToken: string;
+  ipConsent?: boolean;
 }
 
 export interface VoteResult {

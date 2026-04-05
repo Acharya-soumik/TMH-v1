@@ -14,8 +14,41 @@ const voteRateLimit = rateLimit({
   message: { error: "Too many votes from this IP, please try again later" },
 });
 
-async function getCountryFromIp(_ip: string): Promise<{ code: string; name: string } | null> {
-  return null;
+// In-memory cache to avoid repeated API calls for the same IP
+const geoCache = new Map<string, { code: string; name: string } | null>();
+const GEO_CACHE_MAX = 5000;
+
+async function getCountryFromIp(ip: string): Promise<{ code: string; name: string } | null> {
+  if (!ip || ip === "127.0.0.1" || ip === "::1" || ip.startsWith("10.") || ip.startsWith("192.168.")) {
+    return null;
+  }
+  if (geoCache.has(ip)) {
+    return geoCache.get(ip) ?? null;
+  }
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,countryCode,country`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const data = await res.json() as { status?: string; countryCode?: string; country?: string };
+    if (data.status !== "success" || !data.countryCode || !data.country) {
+      geoCache.set(ip, null);
+      return null;
+    }
+    const result = { code: data.countryCode, name: data.country };
+    // Prevent unbounded cache growth
+    if (geoCache.size >= GEO_CACHE_MAX) {
+      const firstKey = geoCache.keys().next().value;
+      if (firstKey) geoCache.delete(firstKey);
+    }
+    geoCache.set(ip, result);
+    return result;
+  } catch {
+    return null;
+  }
 }
 
 function getClientIp(req: any): string {
@@ -263,7 +296,7 @@ router.get("/polls/:id", async (req, res) => {
 router.post("/polls/:id/vote", voteRateLimit, async (req, res) => {
   try {
     const pollId = parseInt(req.params.id as string);
-    const { optionId, voterToken } = req.body;
+    const { optionId, voterToken, ipConsent } = req.body;
 
     if (!optionId || !voterToken) {
       return res.status(400).json({ error: "optionId and voterToken are required" });
@@ -275,7 +308,8 @@ router.post("/polls/:id/vote", voteRateLimit, async (req, res) => {
       .where(and(eq(votesTable.pollId, pollId), eq(votesTable.voterToken, voterToken)));
 
     const ip = getClientIp(req);
-    const geoData = await getCountryFromIp(ip);
+    // Only look up country if user hasn't rejected IP consent
+    const geoData = ipConsent === false ? null : await getCountryFromIp(ip);
 
     let voteInserted = false;
     let voteChanged = false;

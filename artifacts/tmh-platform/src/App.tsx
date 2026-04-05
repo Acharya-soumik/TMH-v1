@@ -24,6 +24,7 @@ import MajlisLogin from "@/pages/majlis-login"
 import Contact from "@/pages/contact"
 import NotFound from "@/pages/not-found"
 import { Chatbot } from "@/components/Chatbot"
+import { IpConsentBanner } from "@/components/IpConsentBanner"
 import { useSiteSettings } from "@/hooks/use-cms-data"
 
 const queryClient = new QueryClient({
@@ -91,6 +92,7 @@ function App() {
           </WouterRouter>
           <Toaster />
           <Chatbot />
+          <IpConsentBanner />
         </I18nProvider>
       </TooltipProvider>
     </QueryClientProvider>
