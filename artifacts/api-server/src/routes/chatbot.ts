@@ -1,5 +1,15 @@
 import { Router, type IRouter } from "express";
 import rateLimit from "express-rate-limit";
+import {
+  db,
+  pollsTable,
+  pollOptionsTable,
+  predictionsTable,
+  profilesTable,
+  cmsConfigsTable,
+  pulseTopicsTable,
+} from "@workspace/db";
+import { eq, desc, sql, count } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -11,19 +21,206 @@ const chatbotRateLimit = rateLimit({
   message: { error: "Too many messages, please try again later" },
 });
 
-const SYSTEM_PROMPT = `You are The Tribunal's AI assistant. Reply like a WhatsApp message — short, direct, no fluff.
+// ── Platform context cache (60 seconds) ──────────────────────────
+interface PlatformContext {
+  debateCount: number;
+  predictionCount: number;
+  voiceCount: number;
+  pulseCount: number;
+  totalVotes: number;
+  topDebates: Array<{ id: number; question: string; category: string; totalVotes: number }>;
+  topPredictions: Array<{ id: number; question: string; category: string; yesPercentage: number }>;
+  featuredVoices: Array<{ id: number; name: string; role: string; company: string | null }>;
+  majlisEnabled: boolean;
+}
 
-Rules:
-- Max 2-3 sentences per reply
-- No filler words, no "certainly", no "I'd be happy to"
-- Skip grammar perfection, be natural
-- Use line breaks not paragraphs
-- If they ask about the platform, answer directly
-- If off-topic, one line redirect: "that's outside what we cover here — ask me about debates, predictions, pulse, or voices"
+let contextCache: { data: PlatformContext; expiresAt: number } | null = null;
+const CONTEXT_TTL_MS = 60_000;
 
-The Tribunal = digital platform for 541M people across 19 MENA countries.
-Features: Debates (anonymous polls on MENA issues), Predictions (crowd forecasts), Pulse (live MENA trends/stats), Voices (thought leader profiles), Majlis (private member chat).
-Values: no editorial agenda, private opinions public data, real people only.`;
+async function getPlatformContext(): Promise<PlatformContext> {
+  if (contextCache && contextCache.expiresAt > Date.now()) {
+    return contextCache.data;
+  }
+
+  try {
+    const [
+      [debateCountRow],
+      [predictionCountRow],
+      [voiceCountRow],
+      [pulseCountRow],
+      siteSettingsRow,
+    ] = await Promise.all([
+      db.select({ count: count() }).from(pollsTable).where(eq(pollsTable.editorialStatus, "approved")),
+      db.select({ count: count() }).from(predictionsTable).where(eq(predictionsTable.editorialStatus, "approved")),
+      db.select({ count: count() }).from(profilesTable).where(eq(profilesTable.editorialStatus, "approved")),
+      db.select({ count: count() }).from(pulseTopicsTable).where(eq(pulseTopicsTable.editorialStatus, "approved")),
+      db.select().from(cmsConfigsTable).where(eq(cmsConfigsTable.key, "site_settings")),
+    ]);
+
+    // Total votes = real + dummy, across all approved polls and predictions
+    const [voteTotalRow] = await db.select({
+      total: sql<number>`COALESCE(SUM(vote_count), 0) + COALESCE(SUM(dummy_vote_count), 0)`,
+    }).from(pollOptionsTable);
+
+    const [predVoteTotalRow] = await db.select({
+      total: sql<number>`COALESCE(SUM(total_count), 0) + COALESCE(SUM(dummy_total_count), 0)`,
+    }).from(predictionsTable).where(eq(predictionsTable.editorialStatus, "approved"));
+
+    const totalVotes = Number(voteTotalRow.total) + Number(predVoteTotalRow.total);
+
+    // Top 5 trending debates (by combined vote count)
+    const topDebatesRaw = await db
+      .select({
+        id: pollsTable.id,
+        question: pollsTable.question,
+        category: pollsTable.category,
+      })
+      .from(pollsTable)
+      .where(eq(pollsTable.editorialStatus, "approved"))
+      .orderBy(desc(sql`(SELECT SUM(vote_count + COALESCE(dummy_vote_count, 0)) FROM poll_options WHERE poll_id = polls.id)`))
+      .limit(5);
+
+    const topDebates = await Promise.all(
+      topDebatesRaw.map(async (d) => {
+        const opts = await db.select().from(pollOptionsTable).where(eq(pollOptionsTable.pollId, d.id));
+        const total = opts.reduce((s, o) => s + o.voteCount + (o.dummyVoteCount ?? 0), 0);
+        return { id: d.id, question: d.question, category: d.category, totalVotes: total };
+      })
+    );
+
+    // Top 5 predictions by engagement
+    const topPredictionsRaw = await db
+      .select({
+        id: predictionsTable.id,
+        question: predictionsTable.question,
+        category: predictionsTable.category,
+        yesPercentage: predictionsTable.yesPercentage,
+      })
+      .from(predictionsTable)
+      .where(eq(predictionsTable.editorialStatus, "approved"))
+      .orderBy(desc(sql`total_count + COALESCE(dummy_total_count, 0)`))
+      .limit(5);
+
+    // 3 featured voices
+    const featuredVoicesRaw = await db
+      .select({
+        id: profilesTable.id,
+        name: profilesTable.name,
+        role: profilesTable.role,
+        company: profilesTable.company,
+      })
+      .from(profilesTable)
+      .where(eq(profilesTable.editorialStatus, "approved"))
+      .orderBy(desc(profilesTable.isFeatured), desc(profilesTable.viewCount))
+      .limit(3);
+
+    const siteSettings = siteSettingsRow[0]?.value as Record<string, any> | undefined;
+    const majlisEnabled = siteSettings?.featureToggles?.majlis?.enabled ?? false;
+
+    const data: PlatformContext = {
+      debateCount: Number(debateCountRow.count),
+      predictionCount: Number(predictionCountRow.count),
+      voiceCount: Number(voiceCountRow.count),
+      pulseCount: Number(pulseCountRow.count),
+      totalVotes,
+      topDebates,
+      topPredictions: topPredictionsRaw,
+      featuredVoices: featuredVoicesRaw,
+      majlisEnabled,
+    };
+
+    contextCache = { data, expiresAt: Date.now() + CONTEXT_TTL_MS };
+    return data;
+  } catch (err) {
+    console.error("[CHATBOT] Failed to load platform context:", err);
+    // Return minimal fallback
+    return {
+      debateCount: 0,
+      predictionCount: 0,
+      voiceCount: 0,
+      pulseCount: 0,
+      totalVotes: 0,
+      topDebates: [],
+      topPredictions: [],
+      featuredVoices: [],
+      majlisEnabled: false,
+    };
+  }
+}
+
+function buildSystemPrompt(ctx: PlatformContext): string {
+  const majlisSection = ctx.majlisEnabled
+    ? "- Majlis: private invite-only chat for verified voices"
+    : "";
+
+  const topDebatesList = ctx.topDebates
+    .slice(0, 5)
+    .map((d) => `  • "${d.question}" (${d.totalVotes} votes) → /debates/${d.id}`)
+    .join("\n");
+
+  const topPredictionsList = ctx.topPredictions
+    .slice(0, 5)
+    .map((p) => `  • "${p.question}" (${p.yesPercentage}% YES) → /predictions/${p.id}`)
+    .join("\n");
+
+  const featuredVoicesList = ctx.featuredVoices
+    .map((v) => `  • ${v.name} — ${v.role}${v.company ? ` at ${v.company}` : ""} → /voices/${v.id}`)
+    .join("\n");
+
+  return `You are Noor — The Tribunal's AI guide. Noor means "light" in Arabic — you illuminate, guide, and welcome.
+
+## Your personality
+- Warm, friendly, approachable — like a knowledgeable friend, not a corporate bot
+- Curious and thoughtful, never pushy
+- Brief: 2-3 sentences max unless the user asks for more detail
+- Natural conversational tone — skip corporate filler ("I'd be happy to", "certainly", etc.)
+- Light touches of MENA cultural warmth welcome, but don't overdo it
+- When someone says hi, greet warmly and offer to show them around
+
+## How you help
+- Answer questions about The Tribunal platform, its features, and how it works
+- Point people to specific content using markdown links: [text](/path)
+- Show platform stats when relevant
+- If off-topic, one gentle redirect: "I stick to The Tribunal and MENA topics — but I'd love to show you a debate or voice that might interest you."
+
+## Link formatting — IMPORTANT
+When pointing to specific content, use markdown links:
+- Debates: [debate title](/debates/ID)
+- Predictions: [prediction title](/predictions/ID)
+- Voices: [name](/voices/ID)
+- Section pages: [Debates](/debates), [Predictions](/predictions), [Voices](/voices), [Pulse](/pulse)
+Always include links when naming specific content — make them clickable.
+
+## Platform overview
+The Tribunal is a digital platform for 541M people across 19 MENA countries — the region's most honest opinion layer.
+
+Features:
+- Debates: anonymous polls on MENA issues, with country-level vote breakdowns
+- Predictions: crowd forecasts on future events, YES/NO with confidence over time
+- Pulse: live MENA trends and data cards across 8 categories
+- Voices: curated profiles of founders, operators, and changemakers
+${majlisSection}
+
+Values: no editorial agenda, private opinions become public data, real people only, anonymous voting.
+
+## Live platform stats
+- ${ctx.debateCount} active debates
+- ${ctx.predictionCount} open predictions
+- ${ctx.voiceCount} curated voices
+- ${ctx.pulseCount} pulse topics
+- ${ctx.totalVotes.toLocaleString()} total votes cast
+
+## Top trending debates right now
+${topDebatesList || "  (none yet)"}
+
+## Top predictions right now
+${topPredictionsList || "  (none yet)"}
+
+## Featured voices
+${featuredVoicesList || "  (none yet)"}
+
+Remember: be warm, be brief, use markdown links for anything clickable, and never make up content. Only reference debates, predictions, and voices from the lists above.`;
+}
 
 interface ChatMessage {
   role: string;
@@ -51,6 +248,9 @@ router.post("/chatbot/message", chatbotRateLimit, async (req, res) => {
       return res.status(503).json({ error: "Chatbot is not configured" });
     }
 
+    const platformCtx = await getPlatformContext();
+    const systemPrompt = buildSystemPrompt(platformCtx);
+
     const messages: { role: string; content: string }[] = [];
     if (Array.isArray(history)) {
       const recentHistory = history.slice(-20);
@@ -71,9 +271,9 @@ router.post("/chatbot/message", chatbotRateLimit, async (req, res) => {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 256,
+        max_tokens: 400,
         temperature: 0.7,
-        system: SYSTEM_PROMPT,
+        system: systemPrompt,
         messages,
         stream: !!stream,
       }),
@@ -133,7 +333,7 @@ router.post("/chatbot/message", chatbotRateLimit, async (req, res) => {
     const data = (await response.json()) as {
       content?: { type: string; text?: string }[];
     };
-    const text = data.content?.find((c) => c.type === "text")?.text ?? "couldn't generate a response, try again";
+    const text = data.content?.find((c) => c.type === "text")?.text ?? "hmm, couldn't generate a response — try again?";
     return res.json({ response: text });
   } catch (err) {
     console.error("[CHATBOT] Error:", err);
