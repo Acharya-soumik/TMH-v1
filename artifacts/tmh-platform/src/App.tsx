@@ -24,6 +24,7 @@ import MajlisLogin from "@/pages/majlis-login"
 import Contact from "@/pages/contact"
 import NotFound from "@/pages/not-found"
 import { Chatbot } from "@/components/Chatbot"
+import { useSiteSettings } from "@/hooks/use-cms-data"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +36,9 @@ const queryClient = new QueryClient({
 })
 
 function Router() {
+  const { data: siteSettings } = useSiteSettings()
+  const majlisEnabled = siteSettings?.featureToggles?.majlis?.enabled ?? false
+
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -51,8 +55,17 @@ function Router() {
       <Route path="/terms" component={Terms} />
       <Route path="/faq" component={FAQ} />
       <Route path="/pulse" component={MenaPulse} />
-      <Route path="/majlis/login" component={MajlisLogin} />
-      <Route path="/majlis" component={Majlis} />
+      {majlisEnabled ? (
+        <>
+          <Route path="/majlis/login" component={MajlisLogin} />
+          <Route path="/majlis" component={Majlis} />
+        </>
+      ) : (
+        <>
+          <Route path="/majlis/login"><Redirect to="/" /></Route>
+          <Route path="/majlis"><Redirect to="/" /></Route>
+        </>
+      )}
       <Route path="/contact" component={Contact} />
       <Route path="/admin" component={Admin} />
       {/* URL redirects */}

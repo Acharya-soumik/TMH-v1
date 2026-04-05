@@ -58,16 +58,18 @@ export function Navbar() {
     }
   }, [mobileMenuOpen])
 
+  const majlisEnabled = settings?.featureToggles?.majlis?.enabled ?? false
+
   const defaultLinks = [
     { label: t("About"), href: "/about" },
     { label: t("Pulse"), href: "/pulse" },
     { label: t("Debates"), href: "/debates" },
     { label: t("Predictions"), href: "/predictions" },
     { label: t("Voices"), href: "/voices" },
-    { label: t("The Majlis"), href: "/majlis", icon: "lock" },
+    ...(majlisEnabled ? [{ label: t("The Majlis"), href: "/majlis", icon: "lock" }] : []),
   ]
 
-  const cmsLinks = settings?.navigation?.links?.filter(link => link.enabled !== false)
+  const cmsLinks = settings?.navigation?.links?.filter(link => link.enabled !== false && (majlisEnabled || !link.href?.startsWith("/majlis")))
   const navLinks = (cmsLinks?.length ? cmsLinks : defaultLinks).map(link => ({
     ...link,
     icon: link.icon === "lock" ? Lock : undefined,

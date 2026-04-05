@@ -87,7 +87,9 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
   const [showShareModal, setShowShareModal] = useState(false)
   const [showGateModal, setShowGateModal] = useState(true)
   const shareTooltipRef = useRef<HTMLDivElement>(null)
-  const hasMajlisToken = typeof window !== "undefined" && !!localStorage.getItem("majlis_token")
+  const majlisEnabled = siteSettings?.featureToggles?.majlis?.enabled ?? false
+  const emailCaptureEnabled = siteSettings?.featureToggles?.emailCapture?.enabled ?? true
+  const hasMajlisToken = majlisEnabled && typeof window !== "undefined" && !!localStorage.getItem("majlis_token")
 
   const isVoted = hasVoted(poll.id)
   const votedOptionId = getVotedOption(poll.id)
@@ -763,52 +765,56 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
               ))}
             </div>
 
-            {/* OR divider */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold font-serif">or</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
+            {emailCaptureEnabled && (
+              <>
+                {/* OR divider */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold font-serif">or</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
 
-            {/* Email unlock */}
-            {emailSubmitted ? (
-              <div className="flex items-center gap-2 text-[11px] font-bold text-primary uppercase tracking-widest">
-                <CheckCircle2 className="w-4 h-4" />
-                Unlocking results…
-              </div>
-            ) : (
-              <form onSubmit={handleEmailUnlock} className="flex gap-2">
-                <input
-                  type="email"
-                  required
-                  placeholder={shareGate?.emailPlaceholder || "your@email.com"}
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="flex-1 px-4 py-3 text-white text-sm font-sans focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground rounded-sm"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
-                />
-                <button
-                  type="submit"
-                  className="px-5 py-3 text-white font-black uppercase tracking-[0.1em] text-[11px] hover:opacity-90 transition-opacity whitespace-nowrap rounded-sm font-serif"
-                  style={{ background: "#DC143C" }}
-                >
-                  Unlock Results
-                </button>
-              </form>
+                {/* Email unlock */}
+                {emailSubmitted ? (
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-primary uppercase tracking-widest">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Unlocking results…
+                  </div>
+                ) : (
+                  <form onSubmit={handleEmailUnlock} className="flex gap-2">
+                    <input
+                      type="email"
+                      required
+                      placeholder={shareGate?.emailPlaceholder || "your@email.com"}
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      className="flex-1 px-4 py-3 text-white text-sm font-sans focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground rounded-sm"
+                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+                    />
+                    <button
+                      type="submit"
+                      className="px-5 py-3 text-white font-black uppercase tracking-[0.1em] text-[11px] hover:opacity-90 transition-opacity whitespace-nowrap rounded-sm font-serif"
+                      style={{ background: "#DC143C" }}
+                    >
+                      Unlock Results
+                    </button>
+                  </form>
+                )}
+
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={newsletterOptIn}
+                    onChange={e => setNewsletterOptIn(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded-sm accent-primary cursor-pointer"
+                  />
+                  <span className="text-[10px] text-muted-foreground font-sans">
+                    Send me The Tribunal newsletter with insights & results
+                  </span>
+                </label>
+                <p className="text-[10px] text-muted-foreground font-sans">No spam. Unsubscribe anytime.</p>
+              </>
             )}
-
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={newsletterOptIn}
-                onChange={e => setNewsletterOptIn(e.target.checked)}
-                className="w-3.5 h-3.5 rounded-sm accent-primary cursor-pointer"
-              />
-              <span className="text-[10px] text-muted-foreground font-sans">
-                Send me The Tribunal newsletter with insights & results
-              </span>
-            </label>
-            <p className="text-[10px] text-muted-foreground font-sans">No spam. Unsubscribe anytime.</p>
           </div>
         </div>
       )}

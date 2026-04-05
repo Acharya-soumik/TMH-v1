@@ -20,6 +20,11 @@ vi.mock("@workspace/api-client-react", () => ({
   useListProfiles: (...args: any[]) => mockUseListProfiles(...args),
 }))
 
+vi.mock("@/hooks/use-cms-data", () => ({
+  usePageConfig: () => ({ data: null }),
+  useSiteSettings: () => ({ data: { featureToggles: { majlis: { enabled: false } } } }),
+}))
+
 vi.mock("wouter", () => ({
   useLocation: () => ["/voices", vi.fn()],
   Link: ({ children, ...props }: any) => <a {...props}>{children}</a>,
@@ -33,10 +38,6 @@ vi.mock("@/components/profile/ProfileCard", () => ({
   ProfileCard: ({ profile }: any) => (
     <div data-testid={`profile-card-${profile.id}`}>{profile.name}</div>
   ),
-}))
-
-vi.mock("@/hooks/use-cms-data", () => ({
-  usePageConfig: () => ({ data: null }),
 }))
 
 vi.mock("@/hooks/use-page-title", () => ({

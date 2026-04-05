@@ -19,6 +19,13 @@ interface SocialLink {
   icon: string;
 }
 
+interface FeatureToggles {
+  majlis: { enabled: boolean };
+  shareGate: { enabled: boolean };
+  emailCapture: { enabled: boolean };
+  ipConsent: { enabled: boolean };
+}
+
 interface SiteSettings {
   navigation: {
     links: NavLink[];
@@ -51,6 +58,7 @@ interface SiteSettings {
     skipText: string;
     emailPlaceholder: string;
   };
+  featureToggles: FeatureToggles;
 }
 
 export default function PageSiteSettings() {
@@ -58,7 +66,7 @@ export default function PageSiteSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [activeTab, setActiveTab] = useState<"navigation" | "footer" | "seo" | "cookie" | "sharegate">("navigation");
+  const [activeTab, setActiveTab] = useState<"toggles" | "navigation" | "footer" | "seo" | "cookie" | "sharegate">("toggles");
 
   useEffect(() => {
     api.getSiteSettings().then((data: any) => {
@@ -68,6 +76,12 @@ export default function PageSiteSettings() {
         seo: { siteTitle: "", siteDescription: "", ogImage: "", ...data?.seo },
         cookieConsent: { enabled: false, message: "", acceptLabel: "", dismissLabel: "", linkText: "", linkHref: "", ...data?.cookieConsent },
         shareGate: { enabled: false, heading: "", body: "", shareButtonText: "", skipText: "", emailPlaceholder: "", ...data?.shareGate },
+        featureToggles: {
+          majlis: { enabled: data?.featureToggles?.majlis?.enabled ?? false },
+          shareGate: { enabled: data?.featureToggles?.shareGate?.enabled ?? true },
+          emailCapture: { enabled: data?.featureToggles?.emailCapture?.enabled ?? true },
+          ipConsent: { enabled: data?.featureToggles?.ipConsent?.enabled ?? false },
+        },
       });
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
@@ -96,12 +110,75 @@ export default function PageSiteSettings() {
       </div>
 
       <div className="flex gap-1 border-b border-border">
-        {(["navigation", "footer", "seo", "cookie", "sharegate"] as const).map(tab => (
+        {(["toggles", "navigation", "footer", "seo", "cookie", "sharegate"] as const).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${activeTab === tab ? "text-primary border-b-2 border-primary" : "text-muted-foreground hover:text-foreground"}`}>
-            {tab === "sharegate" ? "Share Gate" : tab === "cookie" ? "Cookie Consent" : tab}
+            {tab === "toggles" ? "Feature Toggles" : tab === "sharegate" ? "Share Gate" : tab === "cookie" ? "Cookie Consent" : tab}
           </button>
         ))}
       </div>
+
+      {activeTab === "toggles" && (
+        <div className="space-y-4">
+          <section className="border border-border rounded-sm p-4 space-y-4">
+            <h2 className="font-serif text-lg font-bold uppercase tracking-wide">Feature Toggles</h2>
+            <p className="text-xs text-muted-foreground">Toggle major features on/off across the website. Changes apply immediately to all visitors.</p>
+
+            <div className="space-y-3">
+              <label className="flex items-start gap-3 p-3 border border-border rounded-sm hover:border-primary/50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.featureToggles.majlis.enabled}
+                  onChange={e => setConfig({ ...config, featureToggles: { ...config.featureToggles, majlis: { enabled: e.target.checked } } })}
+                  className="mt-1 accent-primary"
+                />
+                <div className="flex-1">
+                  <p className="font-bold text-sm">Majlis</p>
+                  <p className="text-xs text-muted-foreground">Private community chat. When off: hidden from nav, footer, homepage, share buttons, and /majlis routes redirect to home.</p>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 p-3 border border-border rounded-sm hover:border-primary/50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.featureToggles.shareGate.enabled}
+                  onChange={e => setConfig({ ...config, featureToggles: { ...config.featureToggles, shareGate: { enabled: e.target.checked } }, shareGate: { ...config.shareGate, enabled: e.target.checked } })}
+                  className="mt-1 accent-primary"
+                />
+                <div className="flex-1">
+                  <p className="font-bold text-sm">Share Gate</p>
+                  <p className="text-xs text-muted-foreground">After voting, gate full results behind sharing or email unlock. When off: results visible immediately after voting.</p>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 p-3 border border-border rounded-sm hover:border-primary/50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.featureToggles.emailCapture.enabled}
+                  onChange={e => setConfig({ ...config, featureToggles: { ...config.featureToggles, emailCapture: { enabled: e.target.checked } } })}
+                  className="mt-1 accent-primary"
+                />
+                <div className="flex-1">
+                  <p className="font-bold text-sm">Email Capture</p>
+                  <p className="text-xs text-muted-foreground">Show email input option in the share gate to unlock results. When off: only social share options shown.</p>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 p-3 border border-border rounded-sm hover:border-primary/50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.featureToggles.ipConsent.enabled}
+                  onChange={e => setConfig({ ...config, featureToggles: { ...config.featureToggles, ipConsent: { enabled: e.target.checked } } })}
+                  className="mt-1 accent-primary"
+                />
+                <div className="flex-1">
+                  <p className="font-bold text-sm">IP Consent Banner</p>
+                  <p className="text-xs text-muted-foreground">Show banner asking for consent to detect country from IP. Used for country-based vote breakdowns.</p>
+                </div>
+              </label>
+            </div>
+          </section>
+        </div>
+      )}
 
       {activeTab === "navigation" && (
         <div className="space-y-4">

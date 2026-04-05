@@ -83,6 +83,12 @@ export interface SiteSettings {
     siteDescription?: string
     ogImage?: string
   }
+  featureToggles?: {
+    majlis?: { enabled: boolean }
+    shareGate?: { enabled: boolean }
+    emailCapture?: { enabled: boolean }
+    ipConsent?: { enabled: boolean }
+  }
 }
 
 export function usePredictions(category?: string) {

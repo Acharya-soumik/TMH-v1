@@ -5,7 +5,7 @@ import { ProfileCard } from "@/components/profile/ProfileCard";
 import { Search, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
-import { usePageConfig } from "@/hooks/use-cms-data";
+import { usePageConfig, useSiteSettings } from "@/hooks/use-cms-data";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { motion } from "motion/react";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
@@ -179,6 +179,8 @@ export default function Profiles() {
   const { data: pageConfig } = usePageConfig<{
     impactStatements?: Record<string, string>;
   }>("profiles");
+  const { data: siteSettings } = useSiteSettings();
+  const majlisEnabled = siteSettings?.featureToggles?.majlis?.enabled ?? false;
 
   const IMPACT_STATEMENTS = useMemo(() => {
     if (
@@ -268,19 +270,21 @@ export default function Profiles() {
           >
             Founders. Operators. Changemakers. Finally counted.
           </p>
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.2 }}
-          >
-            <Link
-              href="/majlis"
-              className="inline-flex items-center gap-2 mt-4 bg-primary text-white text-[11px] font-bold uppercase tracking-[0.15em] px-5 py-2.5 hover:bg-primary/90 transition-colors font-serif"
+          {majlisEnabled && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.2 }}
             >
-              <Lock className="w-3.5 h-3.5" />
-              Enter The Majlis
-            </Link>
-          </motion.div>
+              <Link
+                href="/majlis"
+                className="inline-flex items-center gap-2 mt-4 bg-primary text-white text-[11px] font-bold uppercase tracking-[0.15em] px-5 py-2.5 hover:bg-primary/90 transition-colors font-serif"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                Enter The Majlis
+              </Link>
+            </motion.div>
+          )}
         </motion.div>
 
         {data?.profiles && (

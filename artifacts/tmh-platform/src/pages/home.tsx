@@ -232,6 +232,7 @@ import {
   usePulseTopics,
   useHomepageConfig,
   useLiveCounts,
+  useSiteSettings,
   type ApiPrediction,
 } from "@/hooks/use-cms-data";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -1365,6 +1366,8 @@ export default function Home() {
   const { data: apiPredictions } = usePredictions();
   const { data: apiPulseTopics } = usePulseTopics();
   const { data: liveCounts } = useLiveCounts();
+  const { data: siteSettings } = useSiteSettings();
+  const majlisEnabled = siteSettings?.featureToggles?.majlis?.enabled ?? false;
   const { data: homepageConfig } = useHomepageConfig<{
     masthead?: { basePopulation?: number; growthRate?: number; countries?: string[] };
     populationBase?: number;
@@ -2610,15 +2613,17 @@ export default function Home() {
               {t("View All Voices")} <ArrowRight className="w-3 h-3" />
             </Link>
             </motion.div>
-            <motion.div whileTap={{ scale: 0.97 }} className="inline-flex">
-            <Link
-              href="/majlis/login"
-              className="inline-flex items-center gap-2 border border-background/30 text-background font-bold uppercase tracking-widest text-xs px-8 py-3 hover:bg-background/10 transition-colors font-serif"
-            >
-              <Lock className="w-3 h-3" />
-              {t("Enter The Majlis")}
-            </Link>
-            </motion.div>
+            {majlisEnabled && (
+              <motion.div whileTap={{ scale: 0.97 }} className="inline-flex">
+              <Link
+                href="/majlis/login"
+                className="inline-flex items-center gap-2 border border-background/30 text-background font-bold uppercase tracking-widest text-xs px-8 py-3 hover:bg-background/10 transition-colors font-serif"
+              >
+                <Lock className="w-3 h-3" />
+                {t("Enter The Majlis")}
+              </Link>
+              </motion.div>
+            )}
           </div>
           </FadeUp>
         </div>
