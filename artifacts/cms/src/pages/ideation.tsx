@@ -381,9 +381,21 @@ export default function IdeationPage() {
     }
   };
 
-  const categories = taxonomy
-    ? [...new Set([...(taxonomy.debateCategories || []), ...(taxonomy.predictionCategories || [])])].sort()
-    : [];
+  const categories = (() => {
+    if (!taxonomy) return [];
+    if (mode === "focused") {
+      if (focusedPillar === "debates") return (taxonomy.debateCategories || []).sort();
+      if (focusedPillar === "predictions") return (taxonomy.predictionCategories || []).sort();
+      return []; // pulse doesn't use categories
+    }
+    // Explore mode: merge both but normalize similar names (case-insensitive dedup)
+    const seen = new Map<string, string>();
+    for (const cat of [...(taxonomy.debateCategories || []), ...(taxonomy.predictionCategories || [])]) {
+      const key = cat.toLowerCase().replace(/[&\s]+/g, " ").trim();
+      if (!seen.has(key)) seen.set(key, cat);
+    }
+    return [...seen.values()].sort();
+  })();
 
   const tabs: { key: ViewTab; label: string; icon: typeof Lightbulb }[] = [
     { key: "generate", label: "Generate", icon: Sparkles },
