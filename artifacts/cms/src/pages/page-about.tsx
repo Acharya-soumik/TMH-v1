@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Save, Plus, Trash2 } from "lucide-react";
+import { TitlePunctuationEditor, type TitlePunctuationConfig } from "@/components/TitlePunctuationEditor";
 
 interface Pillar {
   num: string;
@@ -28,6 +29,7 @@ interface AboutConfig {
   beliefs: Belief[];
   founderStatement?: { text: string; author: string };
   regionCoverage?: RegionCountry[];
+  titlePunctuation?: TitlePunctuationConfig;
 }
 
 export default function PageAbout() {
@@ -44,6 +46,7 @@ export default function PageAbout() {
         beliefs: data?.beliefs ?? [],
         founderStatement: data?.founderStatement ?? { text: "", author: "" },
         regionCoverage: data?.regionCoverage ?? [],
+        titlePunctuation: data?.titlePunctuation,
       });
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
@@ -86,6 +89,11 @@ export default function PageAbout() {
           <textarea value={config?.hero?.subtitle ?? ""} onChange={e => setConfig({ ...config, hero: { ...config?.hero, subtitle: e.target.value } } as AboutConfig)} rows={3} className="w-full px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
         </div>
       </section>
+
+      <TitlePunctuationEditor
+        value={config.titlePunctuation}
+        onChange={(punct) => setConfig({ ...config, titlePunctuation: punct })}
+      />
 
       <section className="border border-border rounded-sm p-4 space-y-3">
         <div className="flex items-center justify-between">
