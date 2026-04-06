@@ -88,6 +88,7 @@ export interface SiteSettings {
     shareGate?: { enabled: boolean }
     emailCapture?: { enabled: boolean }
     ipConsent?: { enabled: boolean }
+    chatbot?: { enabled: boolean }
   }
 }
 
