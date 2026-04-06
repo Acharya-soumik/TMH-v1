@@ -104,12 +104,7 @@ interface AboutConfig {
   beliefs?: Array<{ num: string; title: string; body: string }>
   founderStatement?: { text?: string; author?: string; quote?: string }
   regionCoverage?: Array<{ name: string; flag: string; population: string }>
-  titlePunctuation?: {
-    character?: string
-    color?: string
-    fontStyle?: "normal" | "italic"
-    fontWeight?: "normal" | "bold"
-  }
+  punctuations?: string[]
 }
 
 export default function About() {
@@ -147,11 +142,11 @@ export default function About() {
           </p>
           <h1 style={{ fontFamily: isAr ? "'IBM Plex Sans Arabic', sans-serif" : "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
             {isAr ? (
-              <>{t((hero?.title || "The Region's First Collective Mirror").replace(/[.]+$/, ""))}<TitlePunctuation config={pageConfig?.titlePunctuation} /></>
+              <>{t((hero?.title || "The Region's First Collective Mirror").replace(/[.]+$/, ""))}<TitlePunctuation punctuations={pageConfig?.punctuations} /></>
             ) : (
               <>{((hero?.title || "The Region's First\nCollective Mirror").replace(/[.]+$/, "")).split("\n").map((line, i, arr) => (
                 <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
-              ))}<TitlePunctuation config={pageConfig?.titlePunctuation} /></>
+              ))}<TitlePunctuation punctuations={pageConfig?.punctuations} /></>
             )}
           </h1>
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>

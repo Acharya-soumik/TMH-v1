@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Save, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
-import { TitlePunctuationEditor, type TitlePunctuationConfig } from "@/components/TitlePunctuationEditor";
-
 interface FaqQuestion {
   q: string;
   a: string;
@@ -14,8 +12,9 @@ interface FaqSection {
 }
 
 interface FaqConfig {
+  title: string;
   sections: FaqSection[];
-  titlePunctuation?: TitlePunctuationConfig;
+  punctuations?: string[];
 }
 
 export default function PageFaq() {
@@ -28,8 +27,9 @@ export default function PageFaq() {
   useEffect(() => {
     api.getPage("faq").then((data: any) => {
       setConfig({
+        title: data?.title ?? "Frequently Asked Questions",
         sections: data?.sections ?? [],
-        titlePunctuation: data?.titlePunctuation,
+        punctuations: data?.punctuations ?? ["."],
       });
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
@@ -109,10 +109,13 @@ export default function PageFaq() {
         </div>
       </div>
 
-      <TitlePunctuationEditor
-        value={config.titlePunctuation}
-        onChange={(punct) => setConfig({ ...config, titlePunctuation: punct })}
-      />
+      <div className="border border-border rounded-sm p-4">
+        <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Page Title</label>
+        <div className="flex items-center gap-2">
+          <input value={config.title} onChange={e => setConfig({ ...config, title: e.target.value })} className="flex-1 px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+          <input value={(config.punctuations ?? ["."]).join("")} onChange={e => setConfig({ ...config, punctuations: e.target.value ? e.target.value.split("") : [] })} placeholder="." className="w-16 px-2 py-2 bg-background border border-border rounded-sm text-sm text-primary font-bold text-center focus:outline-none focus:ring-1 focus:ring-primary" title="Punctuation (renders in primary color)" />
+        </div>
+      </div>
 
       {config.sections.map((section, si) => (
         <section key={si} className="border border-border rounded-sm bg-card overflow-hidden">

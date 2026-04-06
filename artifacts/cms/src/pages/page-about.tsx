@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Save, Plus, Trash2 } from "lucide-react";
-import { TitlePunctuationEditor, type TitlePunctuationConfig } from "@/components/TitlePunctuationEditor";
 
 interface Pillar {
   num: string;
@@ -29,7 +28,7 @@ interface AboutConfig {
   beliefs: Belief[];
   founderStatement?: { text: string; author: string };
   regionCoverage?: RegionCountry[];
-  titlePunctuation?: TitlePunctuationConfig;
+  punctuations?: string[];
 }
 
 export default function PageAbout() {
@@ -41,12 +40,12 @@ export default function PageAbout() {
   useEffect(() => {
     api.getPage("about").then((data: any) => {
       setConfig({
-        hero: { tagline: "", title: "", subtitle: "", ...data?.hero },
+        hero: { tagline: "Est. 2026 · Founded by Kareem Kaddoura", title: "The Region's First\nCollective Mirror", subtitle: "541 million people. Zero platforms asking what they think. Until now.", ...data?.hero },
         pillars: data?.pillars ?? [],
         beliefs: data?.beliefs ?? [],
         founderStatement: data?.founderStatement ?? { text: "", author: "" },
         regionCoverage: data?.regionCoverage ?? [],
-        titlePunctuation: data?.titlePunctuation,
+        punctuations: data?.punctuations ?? ["."],
       });
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
@@ -82,18 +81,16 @@ export default function PageAbout() {
         </div>
         <div>
           <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Title</label>
-          <input value={config?.hero?.title ?? ""} onChange={e => setConfig({ ...config, hero: { ...config?.hero, title: e.target.value } } as AboutConfig)} className="w-full px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+          <div className="flex items-center gap-2">
+            <input value={config?.hero?.title ?? ""} onChange={e => setConfig({ ...config, hero: { ...config?.hero, title: e.target.value } } as AboutConfig)} className="flex-1 px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+            <input value={(config.punctuations ?? ["."]).join("")} onChange={e => setConfig({ ...config, punctuations: e.target.value ? e.target.value.split("") : [] })} placeholder="." className="w-16 px-2 py-2 bg-background border border-border rounded-sm text-sm text-primary font-bold text-center focus:outline-none focus:ring-1 focus:ring-primary" title="Punctuation (renders in primary color)" />
+          </div>
         </div>
         <div>
           <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Subtitle</label>
           <textarea value={config?.hero?.subtitle ?? ""} onChange={e => setConfig({ ...config, hero: { ...config?.hero, subtitle: e.target.value } } as AboutConfig)} rows={3} className="w-full px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
         </div>
       </section>
-
-      <TitlePunctuationEditor
-        value={config.titlePunctuation}
-        onChange={(punct) => setConfig({ ...config, titlePunctuation: punct })}
-      />
 
       <section className="border border-border rounded-sm p-4 space-y-3">
         <div className="flex items-center justify-between">

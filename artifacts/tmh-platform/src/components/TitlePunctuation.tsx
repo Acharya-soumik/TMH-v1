@@ -1,41 +1,23 @@
-export interface TitlePunctuationConfig {
-  character?: string
-  color?: string
-  fontStyle?: "normal" | "italic"
-  fontWeight?: "normal" | "bold"
-}
-
-export const DEFAULT_PUNCTUATION: TitlePunctuationConfig = {
-  character: ".",
-  color: "#DC143C",
-  fontStyle: "normal",
-  fontWeight: "bold",
-}
-
 interface TitlePunctuationProps {
-  config?: TitlePunctuationConfig | null
-  /** Inline style overrides applied to the span */
-  style?: React.CSSProperties
+  punctuations?: string[]
 }
 
 /**
- * Renders a styled end-of-title punctuation mark (e.g., a red period).
- * Falls back to the default red period if no config is provided.
+ * Renders punctuation characters after a title in primary color (crimson red).
+ * Usage: <h1>The Tribunal<TitlePunctuation punctuations={["."]} /></h1>
  */
-export function TitlePunctuation({ config, style }: TitlePunctuationProps) {
-  const cfg = { ...DEFAULT_PUNCTUATION, ...(config ?? {}) }
-  if (!cfg.character) return null
+export function TitlePunctuation({ punctuations }: TitlePunctuationProps) {
+  if (!punctuations?.length) return null
   return (
-    <span
-      style={{
-        color: cfg.color,
-        fontStyle: cfg.fontStyle,
-        fontWeight: cfg.fontWeight === "bold" ? 900 : 400,
-        display: "inline",
-        ...style,
-      }}
-    >
-      {cfg.character}
-    </span>
+    <>
+      {punctuations.map((char, i) => (
+        <span
+          key={i}
+          style={{ color: "#DC143C", fontWeight: 900, display: "inline" }}
+        >
+          {char}
+        </span>
+      ))}
+    </>
   )
 }

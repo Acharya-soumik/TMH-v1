@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import {
   useGetFeaturedPoll,
+  useGetPoll,
   useListPolls,
   useListProfiles,
   useListCategories,
@@ -1354,8 +1355,34 @@ export default function Home() {
   usePageTitle({
     description: "The voice of 541 million. Real debates, predictions, and voices from across MENA.",
   });
-  const { data: featuredPoll, isLoading: featuredLoading } =
+  // Fetch homepage CMS config first (needed for content selection)
+  const { data: homepageConfig } = useHomepageConfig<{
+    masthead?: { basePopulation?: number; growthRate?: number; countries?: string[] };
+    populationBase?: number;
+    populationBaseDate?: string;
+    growthRate?: number;
+    sectionStats?: {
+      debates?: string;
+      predictions?: string;
+      pulse?: string;
+      voices?: string;
+    };
+    sections?: Array<{ id: string; type: string; config: Record<string, unknown> }>;
+  }>();
+
+  // Extract CMS-selected content IDs
+  const cmsSelectedDebateId = homepageConfig?.sections?.find(s => s.type === "lead_debate")?.config?.selectedDebateId as number | undefined;
+
+  // Lead debate: use CMS-selected debate if set, otherwise fall back to featured
+  const { data: defaultFeaturedPoll, isLoading: defaultFeaturedLoading } =
     useGetFeaturedPoll();
+  const { data: cmsSelectedPoll, isLoading: cmsSelectedLoading } = useGetPoll(
+    cmsSelectedDebateId ?? 0,
+    { query: { enabled: !!cmsSelectedDebateId } as any },
+  );
+  const featuredPoll = cmsSelectedPoll ?? defaultFeaturedPoll;
+  const featuredLoading = cmsSelectedDebateId ? cmsSelectedLoading : defaultFeaturedLoading;
+
   const { data: trendingPolls, isLoading: trendingLoading } = useListPolls({
     filter: "trending",
     limit: 5,
@@ -1368,18 +1395,6 @@ export default function Home() {
   const { data: liveCounts } = useLiveCounts();
   const { data: siteSettings } = useSiteSettings();
   const majlisEnabled = siteSettings?.featureToggles?.majlis?.enabled ?? false;
-  const { data: homepageConfig } = useHomepageConfig<{
-    masthead?: { basePopulation?: number; growthRate?: number; countries?: string[] };
-    populationBase?: number;
-    populationBaseDate?: string;
-    growthRate?: number;
-    sectionStats?: {
-      debates?: string;
-      predictions?: string;
-      pulse?: string;
-      voices?: string;
-    };
-  }>();
   const [ctaEmail, setCtaEmail] = useState("");
   const [ctaJoined, setCtaJoined] = useState(
     () => !!localStorage.getItem("tmh_cta_joined"),

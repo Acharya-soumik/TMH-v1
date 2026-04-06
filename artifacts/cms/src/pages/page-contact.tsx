@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Save, Plus, Trash2, Mail, Globe, MapPin } from "lucide-react";
-import { TitlePunctuationEditor, type TitlePunctuationConfig } from "@/components/TitlePunctuationEditor";
-
 interface ContactEmail {
   label: string;
   email: string;
@@ -15,10 +13,11 @@ interface SocialLink {
 }
 
 interface ContactConfig {
+  title: string;
   emails: ContactEmail[];
   socialLinks: SocialLink[];
   officeLocation: string;
-  titlePunctuation?: TitlePunctuationConfig;
+  punctuations?: string[];
 }
 
 export default function PageContact() {
@@ -30,10 +29,11 @@ export default function PageContact() {
   useEffect(() => {
     api.getPage("contact").then((data: any) => {
       setConfig({
+        title: data?.title ?? "Contact Us",
         emails: data?.emails ?? [],
         socialLinks: data?.socialLinks ?? [],
         officeLocation: data?.officeLocation ?? "",
-        titlePunctuation: data?.titlePunctuation,
+        punctuations: data?.punctuations ?? ["."],
       });
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
@@ -73,10 +73,15 @@ export default function PageContact() {
         </button>
       </div>
 
-      <TitlePunctuationEditor
-        value={config.titlePunctuation}
-        onChange={(punct) => setConfig({ ...config, titlePunctuation: punct })}
-      />
+      <div className="border border-border rounded-sm p-4 space-y-3">
+        <div>
+          <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Page Title</label>
+          <div className="flex items-center gap-2">
+            <input value={config.title} onChange={e => setConfig({ ...config, title: e.target.value })} className="flex-1 px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+            <input value={(config.punctuations ?? ["."]).join("")} onChange={e => setConfig({ ...config, punctuations: e.target.value ? e.target.value.split("") : [] })} placeholder="." className="w-16 px-2 py-2 bg-background border border-border rounded-sm text-sm text-primary font-bold text-center focus:outline-none focus:ring-1 focus:ring-primary" title="Punctuation (renders in primary color)" />
+          </div>
+        </div>
+      </div>
 
       <section className="border border-border rounded-sm p-4 space-y-3">
         <div className="flex items-center justify-between">
