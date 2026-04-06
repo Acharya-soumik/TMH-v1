@@ -286,7 +286,7 @@ async function handleDownload(
 
 async function handleNative(
   ctx: ShareContext,
-  options: ExecuteShareOptions,
+  _options: ExecuteShareOptions,
 ): Promise<ShareResult> {
   if (typeof navigator === "undefined" || !navigator.share) {
     return {
@@ -296,43 +296,12 @@ async function handleNative(
     }
   }
 
+  // Share text + URL only (no files). When files are included, most
+  // mobile browsers drop the text and url fields entirely — the user
+  // only sees the image with no link. The "Save Card" button in the
+  // modal lets users grab the image separately if they want it.
   const text = buildShareText(ctx, "generic")
-  const names = fileNames(ctx)
 
-  // Attempt to share with an image file first
-  let blob: Blob | null = null
-  try {
-    blob = await resolveOgCard(ctx, options)
-  } catch {
-    // Proceed without image
-  }
-
-  if (blob) {
-    const file = new File([blob], names.og, { type: "image/png" })
-    const canShareFiles =
-      navigator.canShare?.({
-        files: [new File([], "t.png", { type: "image/png" })],
-      }) ?? false
-
-    if (canShareFiles) {
-      try {
-        await navigator.share({
-          title: ctx.title,
-          text,
-          url: ctx.url,
-          files: [file],
-        })
-        return { platform: "native", outcome: "shared" }
-      } catch (err: unknown) {
-        if (err instanceof DOMException && err.name === "AbortError") {
-          return { platform: "native", outcome: "cancelled" }
-        }
-        // File sharing failed — fall through to share without file
-      }
-    }
-  }
-
-  // Share without file
   try {
     await navigator.share({
       title: ctx.title,
