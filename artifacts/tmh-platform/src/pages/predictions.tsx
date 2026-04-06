@@ -418,12 +418,23 @@ async function predCopyText(text: string): Promise<boolean> {
   }
 }
 
-function PredShareBtn({ question, id }: { question: string; id: number }) {
+function PredShareBtn({ card }: { card: PredictionCard }) {
   const [showModal, setShowModal] = useState(false);
   const url =
     typeof window !== "undefined"
-      ? `${window.location.origin}/predictions?shared=${id}`
-      : `/predictions?shared=${id}`;
+      ? `${window.location.origin}/predictions?shared=${card.id}`
+      : `/predictions?shared=${card.id}`;
+
+  const totalVotes = parseInt(card.count.replace(/,/g, ""), 10) || 0;
+  const options = card.options?.length
+    ? card.options.map((text) => {
+        const pct = card.optionResults?.[text] ?? 0;
+        return { text, percentage: pct };
+      })
+    : [
+        { text: "Yes", percentage: card.yes },
+        { text: "No", percentage: card.no },
+      ];
 
   return (
     <>
@@ -444,10 +455,13 @@ function PredShareBtn({ question, id }: { question: string; id: number }) {
       {showModal && (
         <ShareModal
           url={url}
-          title={question}
+          title={card.question}
           heading="Share to Unlock Full Results"
           body="We keep The Tribunal free by making opinion data shareable. Share this prediction to see the full breakdown."
           onClose={() => setShowModal(false)}
+          category={card.category}
+          totalVotes={totalVotes}
+          options={options}
         />
       )}
     </>
@@ -875,7 +889,7 @@ function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
               <PredMajlisShareBtn card={card} />
-              <PredShareBtn question={card.question} id={card.id} />
+              <PredShareBtn card={card} />
             </div>
           </div>
 
@@ -934,17 +948,6 @@ function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (
 
           <VoteButtons height={52} predId={card.id} options={card.options} onVote={onVote} />
 
-          <p
-            style={{
-              fontFamily: "DM Sans, sans-serif",
-              fontStyle: "italic",
-              fontSize: "0.72rem",
-              color: "var(--muted-foreground)",
-            }}
-          >
-            Your prediction is locked until the resolution date. No changing
-            your mind.
-          </p>
         </div>
       </div>
     </div>
@@ -1047,7 +1050,7 @@ function PredictionGridCard({
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
           <PredMajlisShareBtn card={card} />
-          <PredShareBtn question={card.question} id={card.id} />
+          <PredShareBtn card={card} />
           {/* Info tooltip button */}
           <div ref={infoRef} style={{ position: "relative", display: "inline-flex" }}>
             <button
@@ -1200,17 +1203,6 @@ function PredictionGridCard({
         <VoteButtons height={44} predId={card.id} options={card.options} onVote={onVote} />
       </div>
 
-      {/* Lock notice */}
-      <p
-        style={{
-          fontFamily: "DM Sans, sans-serif",
-          fontStyle: "italic",
-          fontSize: "0.7rem",
-          color: "var(--muted-foreground)",
-        }}
-      >
-        Your prediction is locked until the resolution date.
-      </p>
     </div>
   );
 }

@@ -584,6 +584,19 @@ export default function PredictionDetail() {
           onClose={() => setShareOpen(false)}
           url={shareUrl}
           title={shareTitle}
+          category={prediction.category}
+          totalVotes={prediction.totalCount}
+          options={
+            prediction.options?.length
+              ? prediction.options.map((text: string) => ({
+                  text,
+                  percentage: prediction.optionResults?.[text] ?? 0,
+                }))
+              : [
+                  { text: "Yes", percentage: prediction.yesPercentage },
+                  { text: "No", percentage: prediction.noPercentage },
+                ]
+          }
         />
       )}
     </Layout>
