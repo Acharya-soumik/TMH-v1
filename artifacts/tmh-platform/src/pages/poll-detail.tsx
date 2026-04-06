@@ -187,6 +187,16 @@ export default function PollDetail() {
                     <PollCard key={p.id} poll={p} />
                   ))}
                 </div>
+                {categoryLeft > 0 && (
+                  <div className="mt-8 text-center">
+                    <Link
+                      href={`/debates?category=${poll.categorySlug}`}
+                      className="inline-flex items-center gap-2 px-6 py-3 border border-primary text-primary font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-all duration-200"
+                    >
+                      Browse {categoryLeft} More in {poll.category} <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </div>

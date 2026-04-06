@@ -162,6 +162,34 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
     return
   }
 
+  const predictionMatch = req.path.match(/^\/predictions\/(\d+)/)
+  if (predictionMatch) {
+    const predId = predictionMatch[1]
+    fetch(`${INTERNAL_API_BASE}/api/predictions/${predId}`)
+      .then(r => r.json() as Promise<Record<string, any>>)
+      .then((pred) => {
+        const title = pred.question ?? "MENA Prediction"
+        const yesP = pred.yesPercentage ?? 50
+        const totalVotes = pred.totalCount ?? 0
+        const description = `${yesP}% say yes. ${totalVotes.toLocaleString()} predictions locked in. Vote on The Tribunal.`
+        const html = buildHtml({ title, description, url: fullUrl, image: DEFAULT_IMAGE, type: "article" })
+        res.setHeader("Content-Type", "text/html")
+        return res.send(html)
+      })
+      .catch(() => {
+        const html = buildHtml({
+          title: "Prediction | The Tribunal",
+          description: "MENA's prediction market. Track confidence, watch consensus shift, and call the future.",
+          url: fullUrl,
+          image: DEFAULT_IMAGE,
+          type: "article",
+        })
+        res.setHeader("Content-Type", "text/html")
+        return res.send(html)
+      })
+    return
+  }
+
   // Default OG for all other pages
   const pageMeta: Record<string, { title: string; description: string }> = {
     "/": {

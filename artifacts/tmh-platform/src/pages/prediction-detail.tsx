@@ -24,6 +24,23 @@ import {
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const OPTION_COLORS = ["#10B981", "#3B82F6", "#F59E0B", "#DC143C", "#8B5CF6", "#EC4899"]
 
+function formatResolvesText(resolves: string | null): string {
+  if (!resolves || resolves === "TBD") return "Resolves: TBD"
+  const date = new Date(resolves)
+  if (isNaN(date.getTime())) return `Resolves: ${resolves}`
+  const now = new Date()
+  if (date <= now) return "Resolved"
+  const diffMs = date.getTime() - now.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays < 30) return `Ends in ${diffDays}d`
+  const diffMonths = Math.round(diffDays / 30)
+  if (diffMonths < 12) return `Ends in ${diffMonths}mo`
+  const years = Math.floor(diffMonths / 12)
+  const remainingMonths = diffMonths % 12
+  if (remainingMonths === 0) return `Ends in ${years}y`
+  return `Ends in ${years}y ${remainingMonths}mo`
+}
+
 function DetailSkeleton() {
   return (
     <div className="flex flex-col lg:flex-row gap-10">
@@ -56,7 +73,35 @@ function DetailSkeleton() {
   )
 }
 
+function ConfidenceTooltip({ active, payload, label, chartData }: any) {
+  if (!active || !payload?.length) return null
+  const current = payload.find((p: any) => p.dataKey === "yes")?.value ?? 0
+  const idx = chartData.findIndex((d: any) => d.month === label)
+  const prev = idx > 0 ? chartData[idx - 1].yes : null
+  const diff = prev != null ? current - prev : null
+
+  return (
+    <div style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 6, padding: "8px 12px", fontSize: 13, boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+      <div style={{ color: "hsl(var(--foreground))", fontWeight: 700, marginBottom: 4 }}>{label}</div>
+      <div style={{ color: "hsl(var(--foreground))" }}>Now: <strong>{current}%</strong></div>
+      {prev != null && (
+        <div style={{ color: "hsl(var(--muted-foreground))", fontSize: 11, marginTop: 2 }}>
+          Prev month: {prev}%
+          {diff !== null && diff !== 0 && (
+            <span style={{ color: diff > 0 ? "#10B981" : "#DC143C", fontWeight: 600, marginLeft: 4 }}>
+              {diff > 0 ? "+" : ""}{diff}%
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ConfidenceChart({ data, momentum, up }: { data: number[]; momentum: number; up: boolean }) {
+  const lineColor = up ? "#10B981" : "#DC143C"
+  const maColor = "#C8A864"
+
   const chartData = data.map((yes, i) => {
     const monthIdx = (new Date().getMonth() - data.length + 1 + i + 12) % 12
     return {
@@ -85,24 +130,30 @@ function ConfidenceChart({ data, momentum, up }: { data: number[]; momentum: num
         <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="predGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={up ? "#10B981" : "#DC143C"} stopOpacity={0.25} />
-              <stop offset="100%" stopColor={up ? "#10B981" : "#DC143C"} stopOpacity={0} />
+              <stop offset="0%" stopColor={lineColor} stopOpacity={0.2} />
+              <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-          <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} />
-          <YAxis domain={[0, 100]} tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
-          <ReferenceLine y={50} stroke="rgba(255,255,255,0.15)" strokeDasharray="4 4" />
-          <Tooltip
-            contentStyle={{ background: "#1a1a1a", border: "1px solid rgba(220,20,60,0.3)", borderRadius: 6, fontSize: 13 }}
-            labelStyle={{ color: "#fff" }}
-            formatter={(v: number) => [`${v}%`, "Confidence"]}
-          />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+          <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
+          <YAxis domain={[0, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+          <ReferenceLine y={50} stroke="hsl(var(--border))" strokeDasharray="4 4" />
+          <Tooltip content={<ConfidenceTooltip chartData={chartData} />} cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "3 3" }} />
           <Area type="monotone" dataKey="yes" fill="url(#predGrad)" stroke="none" />
-          <Line type="monotone" dataKey="yes" stroke={up ? "#10B981" : "#DC143C"} strokeWidth={2.5} dot={false} />
-          <Line type="monotone" dataKey="ma" stroke="rgba(200,168,100,0.5)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+          <Line type="monotone" dataKey="yes" stroke={lineColor} strokeWidth={2.5} dot={false} />
+          <Line type="monotone" dataKey="ma" stroke={maColor} strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
         </ComposedChart>
       </ResponsiveContainer>
+      <div className="flex items-center gap-5 mt-4 pt-4 border-t border-border">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-0.5 rounded-full" style={{ background: lineColor }} />
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Yes Confidence</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-0 border-t-2 border-dashed" style={{ borderColor: maColor }} />
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">3-Month Avg</span>
+        </div>
+      </div>
     </div>
   )
 }
@@ -121,11 +172,39 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
   const isLegacy = !prediction.options?.length
 
   const submitVote = (choice: string) => {
+    const previousVote = voted
+    const prevYes = localYes
+    const prevNo = localNo
+    const prevTotal = localTotal
+    const prevOptionResults = { ...localOptionResults }
     const isNewVote = !voted
     setVoted(choice)
     localStorage.setItem(storageKey, choice)
-    // Only increment count for new votes, not vote changes
-    if (isNewVote) setLocalTotal(prev => prev + 1)
+
+    // Optimistic: estimate new percentages using combined total
+    if (isNewVote) {
+      const newTotal = localTotal + 1
+      setLocalTotal(newTotal)
+      if (isLegacy) {
+        const yesVotes = Math.round((localYes / 100) * localTotal)
+        const newYesVotes = choice === "yes" ? yesVotes + 1 : yesVotes
+        const newYes = Math.max(1, Math.min(99, Math.round((newYesVotes / newTotal) * 100)))
+        setLocalYes(newYes)
+        setLocalNo(100 - newYes)
+      } else {
+        const newResults: Record<string, number> = {}
+        const counts: Record<string, number> = {}
+        for (const opt of options) {
+          counts[opt] = Math.round(((localOptionResults[opt] ?? 0) / 100) * localTotal)
+        }
+        counts[choice] = (counts[choice] ?? 0) + 1
+        for (const opt of options) {
+          newResults[opt] = Math.round(((counts[opt] ?? 0) / newTotal) * 100)
+        }
+        setLocalOptionResults(newResults)
+      }
+    }
+
     onVoteUpdate(choice)
     let token = localStorage.getItem("tmh_voter_token")
     if (!token) { token = crypto.randomUUID(); localStorage.setItem("tmh_voter_token", token) }
@@ -134,14 +213,26 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ choice, voterToken: token }),
     })
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error("Vote failed")
+        return r.json()
+      })
       .then(data => {
         if (data.yesPercentage != null) setLocalYes(data.yesPercentage)
         if (data.noPercentage != null) setLocalNo(data.noPercentage)
         if (data.totalCount != null) setLocalTotal(data.totalCount)
         if (data.optionResults) setLocalOptionResults(data.optionResults)
       })
-      .catch(() => {})
+      .catch(() => {
+        // Revert optimistic state
+        setVoted(previousVote)
+        setLocalYes(prevYes)
+        setLocalNo(prevNo)
+        setLocalTotal(prevTotal)
+        setLocalOptionResults(prevOptionResults)
+        if (previousVote) localStorage.setItem(storageKey, previousVote)
+        else localStorage.removeItem(storageKey)
+      })
   }
 
   // Click option → instant vote. Click different option → instant change.
@@ -249,8 +340,6 @@ function VoteSection({ prediction, onVoteUpdate }: { prediction: ApiPrediction; 
 
   return (
     <div className="border border-border bg-card p-6 md:p-8">
-      <div className="h-px w-8 bg-primary mb-3" />
-      <h3 className="font-serif font-black uppercase text-lg tracking-wider mb-6">Cast Your Vote</h3>
 
       <ResultsTabsView
         resultsView={resultsPanel}
@@ -345,7 +434,7 @@ export default function PredictionDetail() {
                 </span>
                 <span className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
                   <Calendar className="w-3.5 h-3.5" />
-                  Resolves: {prediction.resolvesAt ?? "TBD"}
+                  {formatResolvesText(prediction.resolvesAt)}
                 </span>
                 {prediction.tags?.length > 0 && prediction.tags.map(tag => (
                   <span key={tag} className="text-[9px] uppercase tracking-widest px-2 py-0.5 border border-border text-muted-foreground font-bold">

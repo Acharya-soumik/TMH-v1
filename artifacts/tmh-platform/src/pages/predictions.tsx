@@ -85,6 +85,23 @@ const FALLBACK_TICKER_DATA = FALLBACK_TICKER;
 const CLOSED_RAW = [55, 58, 60, 62, 63, 65, 67, 67, 67, 80];
 const CLOSED_DATA = CLOSED_RAW.map((yes, i) => ({ week: i + 1, yes }));
 
+function formatResolvesText(resolves: string): string {
+  if (!resolves || resolves === "TBD") return "Resolves: TBD";
+  const date = new Date(resolves);
+  if (isNaN(date.getTime())) return `Resolves: ${resolves}`;
+  const now = new Date();
+  if (date <= now) return "Resolved";
+  const diffMs = date.getTime() - now.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays < 30) return `Ends in ${diffDays}d`;
+  const diffMonths = Math.round(diffDays / 30);
+  if (diffMonths < 12) return `Ends in ${diffMonths}mo`;
+  const years = Math.floor(diffMonths / 12);
+  const remainingMonths = diffMonths % 12;
+  if (remainingMonths === 0) return `Ends in ${years}y`;
+  return `Ends in ${years}y ${remainingMonths}mo`;
+}
+
 // ─── CUSTOM TOOLTIP ──────────────────────────────────────────────────────────
 
 function FeaturedTooltip({ active, payload, label, chartData }: any) {
@@ -485,6 +502,7 @@ function VoteButtons({
   options?: string[];
   onVote?: (predId: number, choice: string | null, serverYes?: number, serverNo?: number) => void;
 }) {
+  const { toast } = useToast();
   const storageKey = predId != null ? `tmh_pred_${predId}` : null;
   const [voted, setVoted] = useState<string | null>(() => {
     if (typeof window === "undefined" || !storageKey) return null;
@@ -514,16 +532,28 @@ function VoteButtons({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ choice, voterToken: token }),
       })
-        .then(r => r.ok ? r.json() : null)
+        .then(r => {
+          if (!r.ok) throw new Error("Vote failed");
+          return r.json();
+        })
         .then(data => {
           if (data && onVote) {
-            // Server-authoritative: overwrite with real percentages
+            // Server-authoritative: overwrite with combined percentages
             if (data.yesPercentage != null) {
               onVote(predId, choice, data.yesPercentage, data.noPercentage ?? (100 - data.yesPercentage));
             }
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          // Revert optimistic state on failure
+          setVoted(previousVote);
+          if (storageKey) {
+            if (previousVote) localStorage.setItem(storageKey, previousVote);
+            else localStorage.removeItem(storageKey);
+          }
+          if (previousVote && onVote) onVote(predId, previousVote);
+          toast({ title: "Failed to vote", description: "Please try again.", variant: "destructive" });
+        });
     }
   };
 
@@ -840,7 +870,7 @@ function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (
                 borderRadius: 2,
               }}
             >
-              Resolves: {card.resolves}
+              {formatResolvesText(card.resolves)}
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
               <PredMajlisShareBtn card={card} />
@@ -1012,7 +1042,7 @@ function PredictionGridCard({
             borderRadius: 2,
           }}
         >
-          Resolves: {card.resolves}
+          {formatResolvesText(card.resolves)}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
           <PredMajlisShareBtn card={card} />
@@ -1075,7 +1105,7 @@ function PredictionGridCard({
                   color: "rgba(255,255,255,0.7)",
                   margin: "0 0 4px",
                 }}>
-                  Resolves: {card.resolves !== "TBD" ? new Date(card.resolves).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "To be determined"}
+                  {formatResolvesText(card.resolves)}
                 </p>
                 <p style={{
                   fontFamily: "DM Sans, sans-serif",
@@ -1148,7 +1178,7 @@ function PredictionGridCard({
       />
 
       {/* Resolution date (always visible) */}
-      {card.resolves && card.resolves !== "TBD" && (
+      {card.resolves && (
         <span
           data-testid="grid-resolves-date"
           style={{
@@ -1160,7 +1190,7 @@ function PredictionGridCard({
             color: "var(--muted-foreground)",
           }}
         >
-          Resolves {new Date(card.resolves).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+          {formatResolvesText(card.resolves)}
         </span>
       )}
 
@@ -1428,6 +1458,46 @@ export default function Predictions() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("ALL");
 
+  // Server-side search with 400ms debounce
+  const [searchResults, setSearchResults] = useState<PredictionCard[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (searchAbortRef.current) searchAbortRef.current.abort();
+
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchResults(null);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    searchTimerRef.current = setTimeout(() => {
+      const controller = new AbortController();
+      searchAbortRef.current = controller;
+      const params = new URLSearchParams({ search: q, limit: "100" });
+      fetch(`/api/public/predictions?${params}`, { signal: controller.signal })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.items) {
+            setSearchResults(data.items.map((p: any) => apiToPredictionCard(p)));
+          }
+          setIsSearching(false);
+        })
+        .catch(err => {
+          if (err.name !== "AbortError") setIsSearching(false);
+        });
+    }, 400);
+
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, [searchQuery]);
+
   const [voteOverrides, setVoteOverrides] = useState<Record<number, { yes: number; no: number }>>({});
   const [highlightedId, setHighlightedId] = useState<string | null>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1481,16 +1551,34 @@ export default function Predictions() {
       if (serverYes != null) {
         return { ...prev, [predId]: { yes: serverYes, no: serverNo ?? (100 - serverYes) } };
       }
-      // Optimistic fallback: shift by 1 (only used before server responds)
+      // Optimistic fallback: estimate new percentage using combined total
       const card = PREDICTIONS.find((c) => c.id === predId);
       if (!card) return prev;
       const currentYes = prev[predId]?.yes ?? card.yes;
-      const newYes = choice === "yes" ? Math.min(currentYes + 1, 99) : Math.max(currentYes - 1, 1);
+      // card.count is a locale string like "44" - parse it; total includes seed
+      const total = parseInt(String(card.count).replace(/,/g, ""), 10) || 1;
+      const yesVotes = Math.round((currentYes / 100) * total);
+      const newTotal = total + 1;
+      const newYesVotes = choice === "yes" ? yesVotes + 1 : yesVotes;
+      const newYes = Math.max(1, Math.min(99, Math.round((newYesVotes / newTotal) * 100)));
       return { ...prev, [predId]: { yes: newYes, no: 100 - newYes } };
     });
   }, [PREDICTIONS]);
 
   const filteredCards = useMemo(() => {
+    // When searching, use server results
+    if (searchQuery.trim() && searchResults) {
+      let result = searchResults.map((c) => {
+        const ov = voteOverrides[c.id];
+        if (ov) return { ...c, yes: ov.yes, no: ov.no };
+        return c;
+      });
+      if (activeCategory !== "ALL") {
+        result = result.filter((c) => c.category === activeCategory);
+      }
+      return result;
+    }
+
     let result = PREDICTIONS.map((c) => {
       const ov = voteOverrides[c.id];
       if (ov) return { ...c, yes: ov.yes, no: ov.no };
@@ -1499,17 +1587,8 @@ export default function Predictions() {
     if (activeCategory !== "ALL") {
       result = result.filter((c) => c.category === activeCategory);
     }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.question.toLowerCase().includes(q) ||
-          c.category.toLowerCase().includes(q) ||
-          c.resolves.toLowerCase().includes(q),
-      );
-    }
     return result;
-  }, [searchQuery, activeCategory, PREDICTIONS, voteOverrides]);
+  }, [searchQuery, searchResults, activeCategory, PREDICTIONS, voteOverrides]);
 
   const { sentinelRef, visibleItems: visibleCards, hasMore, expandTo } = useInfiniteScroll(filteredCards, 10);
 
@@ -1851,7 +1930,11 @@ export default function Predictions() {
                 : `Active Predictions (${PREDICTIONS.length})${isLoading ? " — loading…" : ""}`}
             </p>
           </div>
-          {filteredCards.length === 0 ? (
+          {isSearching ? (
+            <div className="flex justify-center py-16">
+              <LoadingDots text={`Searching for "${searchQuery}"`} />
+            </div>
+          ) : filteredCards.length === 0 ? (
             <div
               className="text-center py-16 border border-border border-dashed"
               style={{ background: "rgba(255,255,255,0.02)" }}

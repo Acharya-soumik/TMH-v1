@@ -32,12 +32,49 @@ async function recalculateVotePercentages(predictionId: number, validOptions: st
     ? (optionResults[validOptions[1]] ?? 50)
     : (100 - yesPercentage);
 
+  // Persist real-only stats to DB
   await db
     .update(predictionsTable)
     .set({ yesPercentage, noPercentage, totalCount: total, optionResults, updatedAt: new Date() })
     .where(eq(predictionsTable.id, predictionId));
 
-  return { yesPercentage, noPercentage, optionResults, totalCount: total };
+  // Fetch dummy data and return combined results for the API response
+  const [prediction] = await db
+    .select({
+      dummyTotalCount: predictionsTable.dummyTotalCount,
+      dummyOptionResults: predictionsTable.dummyOptionResults,
+    })
+    .from(predictionsTable)
+    .where(eq(predictionsTable.id, predictionId));
+
+  const dummyTotal = prediction?.dummyTotalCount ?? 0;
+  const dummyResults: Record<string, number> = (prediction?.dummyOptionResults as Record<string, number>) ?? {};
+
+  // Build combined counts (real vote counts + dummy counts)
+  const realCounts: Record<string, number> = {};
+  for (const opt of validOptions) {
+    const voteRow = allVotes.find(v => v.choice === opt);
+    realCounts[opt] = voteRow?.count ?? 0;
+  }
+
+  const combinedTotal = total + dummyTotal;
+  const combinedOptionResults: Record<string, number> = {};
+  for (const opt of validOptions) {
+    const combinedCount = realCounts[opt] + (dummyResults[opt] ?? 0);
+    combinedOptionResults[opt] = combinedTotal > 0 ? Math.round((combinedCount / combinedTotal) * 100) : 0;
+  }
+
+  const combinedYes = combinedOptionResults["yes"] ?? combinedOptionResults[validOptions[0]] ?? 50;
+  const combinedNo = isMultiOption
+    ? (combinedOptionResults[validOptions[1]] ?? 50)
+    : (100 - combinedYes);
+
+  return {
+    yesPercentage: combinedYes,
+    noPercentage: combinedNo,
+    optionResults: combinedOptionResults,
+    totalCount: combinedTotal,
+  };
 }
 
 router.post("/:id/vote", voteRateLimit, async (req, res) => {
@@ -167,11 +204,31 @@ router.get("/:id/results", async (req, res) => {
       return res.status(404).json({ error: "Prediction not found" });
     }
 
+    // Return combined (real + dummy) percentages
+    const dummyTotal = prediction.dummyTotalCount ?? 0;
+    const dummyResults: Record<string, number> = (prediction.dummyOptionResults as Record<string, number>) ?? {}; // raw counts
+    const realPcts: Record<string, number> = (prediction.optionResults as Record<string, number>) ?? {}; // percentages
+    const realTotal = prediction.totalCount ?? 0;
+    const allOptions = (prediction.options as string[]) || ["yes", "no"];
+    const combinedTotal = realTotal + dummyTotal;
+
+    // Convert real percentages to counts, then add dummy counts
+    const combinedCounts: Record<string, number> = {};
+    for (const opt of allOptions) {
+      const realCount = realTotal > 0 ? Math.round(((realPcts[opt] ?? 0) / 100) * realTotal) : 0;
+      combinedCounts[opt] = realCount + (dummyResults[opt] ?? 0);
+    }
+    const combinedSum = Object.values(combinedCounts).reduce((a, b) => a + b, 0);
+    const combinedPcts: Record<string, number> = {};
+    for (const opt of allOptions) {
+      combinedPcts[opt] = combinedSum > 0 ? Math.round((combinedCounts[opt] / combinedSum) * 100) : 0;
+    }
+
     return res.json({
-      yesPercentage: prediction.yesPercentage,
-      noPercentage: prediction.noPercentage,
-      totalCount: prediction.totalCount,
-      optionResults: prediction.optionResults,
+      yesPercentage: combinedPcts["yes"] ?? combinedPcts[allOptions[0]] ?? prediction.yesPercentage,
+      noPercentage: combinedPcts["no"] ?? combinedPcts[allOptions[1]] ?? prediction.noPercentage,
+      totalCount: combinedTotal,
+      optionResults: combinedPcts,
     });
   } catch (err) {
     console.error("Prediction results error:", err);

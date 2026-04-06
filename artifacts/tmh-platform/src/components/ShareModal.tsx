@@ -53,6 +53,10 @@ export function ShareModal({
   const hasEmail = typeof window !== "undefined" && !!localStorage.getItem("tmh_email_submitted")
   const hasImageData = totalVotes > 0 || !!votedOptionText || (options && options.length > 0)
 
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60)
+  const cardFileName = `tribunal-${slug}.png`
+  const storyFileName = `tribunal-story-${slug}.png`
+
   const displayHeading = hasEmail
     ? "Share This"
     : (heading || "Share to Unlock Full Results")
@@ -103,7 +107,7 @@ export function ShareModal({
       try {
         const blob = await generateCard()
         if (blob) {
-          const result = await shareWithImage({ blob, title, text: msg, url, fileName: "tribunal-debate.png" })
+          const result = await shareWithImage({ blob, title, text: msg, url, fileName: cardFileName })
           if (result === "downloaded") {
             toast({ title: "Image saved!", description: "Attach it to your WhatsApp message with this link." })
           }
@@ -126,12 +130,12 @@ export function ShareModal({
           const dlUrl = URL.createObjectURL(blob)
           const a = document.createElement("a")
           a.href = dlUrl
-          a.download = "tribunal-debate.png"
+          a.download = cardFileName
           document.body.appendChild(a)
           a.click()
           document.body.removeChild(a)
           URL.revokeObjectURL(dlUrl)
-          toast({ title: "Image downloaded!", description: "Upload it with your LinkedIn post. Text is already copied." })
+          toast({ title: "Image downloaded + text copied!", description: "Upload the image with your LinkedIn post — paste the text from your clipboard." })
         }
       } catch {}
       setGenerating(null)
@@ -150,7 +154,7 @@ export function ShareModal({
       try {
         const blob = await generateCard()
         if (blob) {
-          const result = await shareWithImage({ blob, title, text: shareText, url, fileName: "tribunal-debate.png" })
+          const result = await shareWithImage({ blob, title, text: shareText, url, fileName: cardFileName })
           if (result === "downloaded") {
             toast({ title: "Image downloaded!", description: "Attach it to your X post." })
           }
@@ -170,7 +174,7 @@ export function ShareModal({
       try {
         const blob = await generateStory()
         if (blob) {
-          const result = await shareWithImage({ blob, title, text: url, url, fileName: "tribunal-story.png" })
+          const result = await shareWithImage({ blob, title, text: url, url, fileName: storyFileName })
           if (result === "downloaded") {
             toast({ title: "Story saved!", description: "Open Instagram and add it to your Story. Link is copied." })
           }
@@ -203,7 +207,7 @@ export function ShareModal({
         const dlUrl = URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = dlUrl
-        a.download = "tribunal-debate.png"
+        a.download = cardFileName
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)

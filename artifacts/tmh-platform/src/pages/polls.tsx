@@ -72,6 +72,48 @@ export default function Polls() {
   const [loadingMore, setLoadingMore] = useState(false);
   const prevKey = useRef("");
 
+  // Server-side search with 400ms debounce
+  const [searchResults, setSearchResults] = useState<Poll[] | null>(null);
+  const [searchTotal, setSearchTotal] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (searchAbortRef.current) searchAbortRef.current.abort();
+
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchResults(null);
+      setSearchTotal(0);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    searchTimerRef.current = setTimeout(() => {
+      const controller = new AbortController();
+      searchAbortRef.current = controller;
+      fetch(`/api/polls?search=${encodeURIComponent(q)}&limit=50`, { signal: controller.signal })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.polls) {
+            setSearchResults(data.polls);
+            setSearchTotal(data.total ?? data.polls.length);
+          }
+          setIsSearching(false);
+        })
+        .catch(err => {
+          if (err.name !== "AbortError") setIsSearching(false);
+        });
+    }, 400);
+
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, [searchQuery]);
+
   const { data: pollsData, isLoading } = useListPolls({
     filter,
     category,
@@ -123,28 +165,9 @@ export default function Polls() {
   }, [loadingMore, canLoadMore, allPolls.length, filter, category, serverTotal]);
 
   const filteredPolls = useMemo(() => {
-    if (!allPolls.length) return [];
-    if (!searchQuery.trim()) return allPolls;
-    const q = searchQuery.toLowerCase().trim();
-    const words = q.split(/\s+/).filter(Boolean);
-    return allPolls
-      .map(p => {
-        let score = 0;
-        const question = p.question?.toLowerCase() ?? "";
-        if (question === q) score += 15;
-        if (question.includes(q)) score += 8;
-        const wordMatches = words.filter(w => question.includes(w)).length;
-        if (wordMatches > 0) score += wordMatches * 3;
-        if (p.category?.toLowerCase() === q) score += 10;
-        if (p.category?.toLowerCase().includes(q)) score += 5;
-        if ((p.tags as string[])?.some(t => t.toLowerCase() === q)) score += 8;
-        if ((p.tags as string[])?.some(t => t.toLowerCase().includes(q))) score += 3;
-        return { poll: p, score };
-      })
-      .filter(({ score }) => score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map(({ poll }) => poll);
-  }, [allPolls, searchQuery]);
+    if (searchQuery.trim()) return searchResults ?? [];
+    return allPolls;
+  }, [allPolls, searchResults, searchQuery]);
 
   const { sentinelRef, visibleItems: visiblePolls, hasMore } = useInfiniteScroll(filteredPolls, 10);
   const tabs = [
@@ -423,8 +446,15 @@ export default function Polls() {
         </motion.div>
 
         <div className="flex-1">
-          {isLoading ? (
-            <DebateGridSkeleton />
+          {isLoading || isSearching ? (
+            <div className="space-y-4">
+              {isSearching && (
+                <div className="flex items-center gap-2 py-4">
+                  <LoadingDots text={`Searching for "${searchQuery}"`} />
+                </div>
+              )}
+              <DebateGridSkeleton />
+            </div>
           ) : filteredPolls.length === 0 ? (
             <motion.div
               className="text-center py-20 border border-border border-dashed bg-secondary/30"

@@ -1507,11 +1507,18 @@ router.put("/cms/pages/:page", requireCmsAuth, async (req, res) => {
 router.get("/public/predictions", async (req, res) => {
   try {
     const category = req.query.category as string | undefined;
+    const search = req.query.search as string | undefined;
     const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 50));
     const offset = Math.max(0, Number(req.query.offset) || 0);
 
-    const conditions = [eq(predictionsTable.editorialStatus, "approved")];
+    const conditions: any[] = [eq(predictionsTable.editorialStatus, "approved")];
     if (category) conditions.push(eq(predictionsTable.category, category));
+    if (search?.trim()) {
+      const term = `%${search.trim().toLowerCase()}%`;
+      conditions.push(
+        sql`(LOWER(question) LIKE ${term} OR LOWER(category) LIKE ${term} OR LOWER(resolves_at) LIKE ${term} OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(tags) t WHERE LOWER(t) LIKE ${term}))`
+      );
+    }
 
     const items = await db
       .select()
@@ -1526,7 +1533,7 @@ router.get("/public/predictions", async (req, res) => {
       .from(predictionsTable)
       .where(and(...conditions));
 
-    return res.json({ items, total: totalResult.count });
+    return res.json({ items: items.map(toPredictionPublicResponse), total: totalResult.count });
   } catch (err) {
     console.error("Public predictions error:", err);
     return res.status(500).json({ error: "Failed to fetch predictions" });
@@ -1539,7 +1546,7 @@ router.get("/public/predictions/:id", async (req, res) => {
       and(eq(predictionsTable.id, Number(req.params.id)), eq(predictionsTable.editorialStatus, "approved"))
     );
     if (!item) return res.status(404).json({ error: "Not found" });
-    return res.json(item);
+    return res.json(toPredictionPublicResponse(item));
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Failed to fetch prediction" });
@@ -1592,30 +1599,78 @@ router.get("/public/design-tokens", async (_req, res) => {
   }
 });
 
+// Seeded pseudo-random for deterministic trend generation per prediction
+function seededRandom(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s = (s * 16807 + 12345) & 0x7fffffff;
+    return (s & 0xffff) / 0xffff;
+  };
+}
+
+function generateSyntheticTrend(predictionId: number, targetYes: number): number[] {
+  const rng = seededRandom(predictionId * 31 + 7);
+  const points: number[] = [];
+  let current = 50; // Start from neutral
+  for (let i = 0; i < 12; i++) {
+    // Gradually trend toward current yes%, with random noise
+    const pull = (targetYes - current) * 0.15;
+    const noise = (rng() - 0.5) * 6; // ±3% noise
+    current = Math.max(5, Math.min(95, current + pull + noise));
+    points.push(Math.round(current));
+  }
+  // Ensure last point lands close to actual percentage
+  points[11] = targetYes;
+  return points;
+}
+
 function toPredictionPublicResponse(item: any) {
   const dummyTotal = item.dummyTotalCount ?? 0;
-  const dummyResults: Record<string, number> = item.dummyOptionResults ?? {};
-  const realResults: Record<string, number> = item.optionResults ?? {};
-  const combinedTotal = item.totalCount + dummyTotal;
+  const dummyResults: Record<string, number> = item.dummyOptionResults ?? {}; // raw counts
+  const realPcts: Record<string, number> = item.optionResults ?? {}; // percentages
+  const realTotal = item.totalCount ?? 0;
+  const combinedTotal = realTotal + dummyTotal;
 
-  // Merge real + dummy option results and recalculate percentages
+  // Convert real percentages to approximate counts, then add dummy raw counts
   const allOptions = item.options || ["yes", "no"];
-  const combinedResults: Record<string, number> = {};
+  const combinedCounts: Record<string, number> = {};
   for (const opt of allOptions) {
-    combinedResults[opt] = (realResults[opt] ?? 0) + (dummyResults[opt] ?? 0);
+    const realCount = realTotal > 0 ? Math.round(((realPcts[opt] ?? 0) / 100) * realTotal) : 0;
+    combinedCounts[opt] = realCount + (dummyResults[opt] ?? 0);
   }
-  const combinedSum = Object.values(combinedResults).reduce((a, b) => a + b, 0);
+  const combinedSum = Object.values(combinedCounts).reduce((a, b) => a + b, 0);
   const combinedPcts: Record<string, number> = {};
   for (const opt of allOptions) {
-    combinedPcts[opt] = combinedSum > 0 ? Math.round((combinedResults[opt] / combinedSum) * 100) : 0;
+    combinedPcts[opt] = combinedSum > 0 ? Math.round((combinedCounts[opt] / combinedSum) * 100) : 0;
+  }
+
+  const combinedYes = combinedPcts["yes"] ?? combinedPcts[allOptions[0]] ?? item.yesPercentage;
+
+  // Generate synthetic trend data if DB has none
+  let trendData: number[] = item.trendData;
+  if (!trendData || !Array.isArray(trendData) || trendData.length === 0) {
+    trendData = generateSyntheticTrend(item.id, combinedYes);
+  }
+
+  // Compute momentum from trend data (last point vs 5 steps back)
+  let momentum = item.momentum ?? 0;
+  let momentumDirection = item.momentumDirection ?? "up";
+  if (trendData.length >= 6) {
+    const recent = trendData[trendData.length - 1];
+    const earlier = trendData[trendData.length - 6];
+    momentum = parseFloat(Math.abs(recent - earlier).toFixed(1));
+    momentumDirection = recent >= earlier ? "up" : "down";
   }
 
   return {
     ...item,
     totalCount: combinedTotal,
-    yesPercentage: combinedPcts["yes"] ?? combinedPcts[allOptions[0]] ?? item.yesPercentage,
+    yesPercentage: combinedYes,
     noPercentage: combinedPcts["no"] ?? combinedPcts[allOptions[1]] ?? item.noPercentage,
     optionResults: combinedPcts,
+    trendData,
+    momentum,
+    momentumDirection,
     // Don't expose dummy fields publicly
     dummyTotalCount: undefined,
     dummyOptionResults: undefined,

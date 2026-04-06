@@ -117,7 +117,7 @@ async function toPollResponse(poll: any, options: any[], includeDummyBreakdown =
 
 router.get("/polls", async (req, res) => {
   try {
-    const { filter, category, limit = "20", offset = "0" } = req.query as Record<string, string>;
+    const { filter, category, limit = "20", offset = "0", search } = req.query as Record<string, string>;
     const lim = Math.min(parseInt(limit) || 20, 50);
     const off = parseInt(offset) || 0;
 
@@ -136,6 +136,33 @@ router.get("/polls", async (req, res) => {
     let baseWhere: any = approvedFilter;
     if (categoryName) {
       baseWhere = and(approvedFilter, eq(pollsTable.category, categoryName));
+    }
+
+    // Server-side search: ILIKE across question, category, tags
+    if (search && search.trim()) {
+      const term = `%${search.trim().toLowerCase()}%`;
+      const searchWhere = and(
+        approvedFilter,
+        sql`(LOWER(question) LIKE ${term} OR LOWER(category) LIKE ${term} OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(tags) t WHERE LOWER(t) LIKE ${term}))`,
+      );
+      const polls = await db.select().from(pollsTable).where(searchWhere)
+        .orderBy(desc(sql`(SELECT SUM(vote_count + COALESCE(dummy_vote_count, 0)) FROM poll_options WHERE poll_id = polls.id)`))
+        .limit(lim).offset(off);
+
+      const pollIds = polls.map((p: any) => p.id);
+      const allOptions = pollIds.length > 0
+        ? await db.select().from(pollOptionsTable).where(inArray(pollOptionsTable.pollId, pollIds))
+        : [];
+      const optionsByPoll = new Map<number, typeof allOptions>();
+      for (const opt of allOptions) {
+        if (!optionsByPoll.has(opt.pollId)) optionsByPoll.set(opt.pollId, []);
+        optionsByPoll.get(opt.pollId)!.push(opt);
+      }
+      const result = await Promise.all(
+        polls.map(async (poll: any) => toPollResponse(poll, optionsByPoll.get(poll.id) ?? []))
+      );
+      const [countRow] = await db.select({ count: sql<number>`count(*)` }).from(pollsTable).where(searchWhere);
+      return res.json({ polls: result, total: Number(countRow.count) });
     }
 
     let polls;
