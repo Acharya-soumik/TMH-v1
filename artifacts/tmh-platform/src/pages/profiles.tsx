@@ -178,7 +178,7 @@ export default function Profiles() {
 
   const { data, isLoading } = useListProfiles({ search, filter: filter === "all" ? undefined : filter as any, limit: 200 });
   const { data: pageConfig } = usePageConfig<{
-    hero?: { title?: string; subtitle?: string };
+    hero?: { titleLine1?: string; titleLine2?: string; subtitle?: string };
     punctuations?: string[];
     impactStatements?: Record<string, string>;
   }>("voices_page");
@@ -258,15 +258,8 @@ export default function Profiles() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.1 }}
           >
-            {(pageConfig?.hero?.title || "Meet the People\nMoving This Region.")
-              .split("\n")
-              .map((line, i, arr) => (
-                <span key={i}>
-                  {line}
-                  {i < arr.length - 1 && <br />}
-                </span>
-              ))}
-            <TitlePunctuation punctuations={pageConfig?.punctuations} />
+            {pageConfig?.hero?.titleLine1 || "Meet the People"}<br />
+            {pageConfig?.hero?.titleLine2 || "Moving This Region."}<TitlePunctuation punctuations={pageConfig?.punctuations} />
           </motion.h1>
           <p
             style={{

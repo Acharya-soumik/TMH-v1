@@ -29,7 +29,7 @@ const FALLBACK_SECTORS = [
 ]
 
 interface ApplyConfig {
-  hero?: { title?: string; tagline?: string; subtitle?: string }
+  hero?: { titleLine1?: string; titleLine2?: string; tagline?: string; subtitle?: string }
   criteria?: string[]
   countries?: string[]
   sectors?: string[]
@@ -136,10 +136,8 @@ export default function Apply() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-4 font-serif">{hero?.tagline || "The Voices"}</p>
           <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
-            {((hero?.title || "Think You Belong\nIn The Voices?").replace(/[.?!]+$/, "")).split("\n").map((line, i, arr) => (
-              <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
-            ))}
-            <TitlePunctuation punctuations={pageConfig?.punctuations} />
+            {hero?.titleLine1 || "Think You Belong"}<br />
+            {hero?.titleLine2 || "In The Voices?"}<TitlePunctuation punctuations={pageConfig?.punctuations} />
           </h1>
           <p className="text-background/75 font-sans text-base mt-4 max-w-xl">
             {hero?.subtitle || "We're building the most credible founder directory in the Middle East. Not everyone makes the cut. The bar is high — because our audience is discerning."}

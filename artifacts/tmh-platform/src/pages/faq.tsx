@@ -151,7 +151,7 @@ export default function FAQ() {
     description: "Frequently asked questions about The Tribunal -- how it works, who it's for, and why anonymity matters.",
   });
   const { t, isAr } = useI18n()
-  const { data: cmsConfig } = usePageConfig<{ title?: string; sections?: FaqSection[]; punctuations?: string[] }>("faq")
+  const { data: cmsConfig } = usePageConfig<{ titleLine1?: string; titleLine2?: string; sections?: FaqSection[]; punctuations?: string[] }>("faq")
   const FAQ_SECTIONS = cmsConfig?.sections?.length ? cmsConfig.sections : FAQ_SECTIONS_DEFAULT
 
   return (
@@ -162,7 +162,8 @@ export default function FAQ() {
             {t("Help")}
           </p>
           <h1 style={{ fontFamily: isAr ? "'IBM Plex Sans Arabic', sans-serif" : "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
-            {t(cmsConfig?.title || "Frequently Asked Questions")}<TitlePunctuation punctuations={cmsConfig?.punctuations} />
+            {t(cmsConfig?.titleLine1 || "Frequently Asked")}<br />
+            {t(cmsConfig?.titleLine2 || "Questions")}<TitlePunctuation punctuations={cmsConfig?.punctuations} />
           </h1>
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>
             {t("Everything you need to know about The Tribunal.")}

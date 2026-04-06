@@ -13,7 +13,7 @@ export default function Contact() {
     description: "Get in touch with The Tribunal team. Partnerships, press, feedback, or just say hello.",
   });
   const { t, isAr } = useI18n()
-  const { data: pageConfig } = usePageConfig<{ title?: string; punctuations?: string[] }>("contact")
+  const { data: pageConfig } = usePageConfig<{ titleLine1?: string; titleLine2?: string; punctuations?: string[] }>("contact")
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" })
   const [submitted, setSubmitted] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -56,7 +56,8 @@ export default function Contact() {
             {t("Get In Touch")}
           </p>
           <h1 style={{ fontFamily: isAr ? "'IBM Plex Sans Arabic', sans-serif" : "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
-            {t(pageConfig?.title || "Contact Us")}<TitlePunctuation punctuations={pageConfig?.punctuations} />
+            {t(pageConfig?.titleLine1 || "Contact")}<br />
+            {t(pageConfig?.titleLine2 || "Us")}<TitlePunctuation punctuations={pageConfig?.punctuations} />
           </h1>
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>
             {t("Questions, partnerships, press inquiries, or just want to say hello.")}

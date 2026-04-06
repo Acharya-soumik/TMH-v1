@@ -99,7 +99,7 @@ const COUNTRIES_DEFAULT = [
 ]
 
 interface AboutConfig {
-  hero?: { title?: string; tagline?: string; subtitle?: string }
+  hero?: { titleLine1?: string; titleLine2?: string; tagline?: string; subtitle?: string }
   pillars?: Array<{ num: string; title: string; body: string; link: string; cta: string }>
   beliefs?: Array<{ num: string; title: string; body: string }>
   founderStatement?: { text?: string; author?: string; quote?: string }
@@ -141,13 +141,8 @@ export default function About() {
             {t(hero?.tagline || "Est. 2026 · Founded by Kareem Kaddoura")}
           </p>
           <h1 style={{ fontFamily: isAr ? "'IBM Plex Sans Arabic', sans-serif" : "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
-            {isAr ? (
-              <>{t((hero?.title || "The Region's First Collective Mirror").replace(/[.]+$/, ""))}<TitlePunctuation punctuations={pageConfig?.punctuations} /></>
-            ) : (
-              <>{((hero?.title || "The Region's First\nCollective Mirror").replace(/[.]+$/, "")).split("\n").map((line, i, arr) => (
-                <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
-              ))}<TitlePunctuation punctuations={pageConfig?.punctuations} /></>
-            )}
+            {t(hero?.titleLine1 || "The Region's First")}<br />
+            {t(hero?.titleLine2 || "Collective Mirror")}<TitlePunctuation punctuations={pageConfig?.punctuations} />
           </h1>
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(250,250,250,0.65)" }}>
             {t(hero?.subtitle || "541 million people. Zero platforms asking what they think. Until now.")}

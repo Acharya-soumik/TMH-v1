@@ -12,7 +12,8 @@ interface FaqSection {
 }
 
 interface FaqConfig {
-  title: string;
+  titleLine1: string;
+  titleLine2: string;
   sections: FaqSection[];
   punctuations?: string[];
 }
@@ -27,7 +28,8 @@ export default function PageFaq() {
   useEffect(() => {
     api.getPage("faq").then((data: any) => {
       setConfig({
-        title: data?.title ?? "Frequently Asked Questions",
+        titleLine1: data?.titleLine1 ?? "Frequently Asked",
+        titleLine2: data?.titleLine2 ?? "Questions",
         sections: data?.sections ?? [],
         punctuations: data?.punctuations ?? ["."],
       });
@@ -109,11 +111,17 @@ export default function PageFaq() {
         </div>
       </div>
 
-      <div className="border border-border rounded-sm p-4">
-        <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Page Title</label>
-        <div className="flex items-center gap-2">
-          <input value={config.title} onChange={e => setConfig({ ...config, title: e.target.value })} className="flex-1 px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
-          <input value={(config.punctuations ?? ["."]).join("")} onChange={e => setConfig({ ...config, punctuations: e.target.value ? e.target.value.split("") : [] })} placeholder="." className="w-16 px-2 py-2 bg-background border border-border rounded-sm text-sm text-primary font-bold text-center focus:outline-none focus:ring-1 focus:ring-primary" title="Punctuation (renders in primary color)" />
+      <div className="border border-border rounded-sm p-4 space-y-3">
+        <div>
+          <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Title Line 1</label>
+          <input value={config.titleLine1} onChange={e => setConfig({ ...config, titleLine1: e.target.value })} className="w-full px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+        </div>
+        <div>
+          <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Title Line 2</label>
+          <div className="flex items-center gap-2">
+            <input value={config.titleLine2} onChange={e => setConfig({ ...config, titleLine2: e.target.value })} className="flex-1 px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+            <input value={(config.punctuations ?? ["."]).join("")} onChange={e => setConfig({ ...config, punctuations: e.target.value ? e.target.value.split("") : [] })} placeholder="." className="w-16 px-2 py-2 bg-background border border-border rounded-sm text-sm text-primary font-bold text-center focus:outline-none focus:ring-1 focus:ring-primary" title="Punctuation (renders in primary color)" />
+          </div>
         </div>
       </div>
 

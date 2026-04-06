@@ -1456,7 +1456,7 @@ export default function Predictions() {
     title: "Predictions",
     description: "A prediction market for MENA's biggest questions. Track confidence, watch consensus shift, and see where the region is headed.",
   });
-  const { data: pageConfig } = usePageConfig<{ hero?: { title?: string; subtitle?: string }; punctuations?: string[] }>("predictions_page");
+  const { data: pageConfig } = usePageConfig<{ hero?: { titleLine1?: string; titleLine2?: string; subtitle?: string }; punctuations?: string[] }>("predictions_page");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("ALL");
 
@@ -1651,15 +1651,8 @@ export default function Predictions() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.1 }}
           >
-            {(pageConfig?.hero?.title || "What Do You Think\nActually Happens?")
-              .split("\n")
-              .map((line, i, arr) => (
-                <span key={i}>
-                  {line}
-                  {i < arr.length - 1 && <br />}
-                </span>
-              ))}
-            <TitlePunctuation punctuations={pageConfig?.punctuations} />
+            {pageConfig?.hero?.titleLine1 || "What Do You Think"}<br />
+            {pageConfig?.hero?.titleLine2 || "Actually Happens?"}<TitlePunctuation punctuations={pageConfig?.punctuations} />
           </motion.h1>
           <p
             className="text-text2"

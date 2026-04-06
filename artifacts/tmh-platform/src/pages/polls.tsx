@@ -43,7 +43,7 @@ const FALLBACK_DEBATE_TICKER = [
 ];
 
 interface PollsConfig {
-  hero?: { title?: string; subtitle?: string };
+  hero?: { titleLine1?: string; titleLine2?: string; subtitle?: string };
   punctuations?: string[];
   tickerItems?: Array<{ topic: string; votes: string }>;
   tickerSource?: string;
@@ -232,15 +232,8 @@ export default function Polls() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.1 }}
           >
-            {(hero?.title || "What Does the Region\nActually Think?")
-              .split("\n")
-              .map((line, i, arr) => (
-                <span key={i}>
-                  {line}
-                  {i < arr.length - 1 && <br />}
-                </span>
-              ))}
-            <TitlePunctuation punctuations={config?.punctuations} />
+            {hero?.titleLine1 || "What Does the Region"}<br />
+            {hero?.titleLine2 || "Actually Think?"}<TitlePunctuation punctuations={config?.punctuations} />
           </motion.h1>
           <p
             className="text-text2/60 pl-2"

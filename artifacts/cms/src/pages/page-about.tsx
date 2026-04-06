@@ -23,7 +23,7 @@ interface RegionCountry {
 }
 
 interface AboutConfig {
-  hero: { tagline: string; title: string; subtitle: string };
+  hero: { tagline: string; titleLine1: string; titleLine2: string; subtitle: string };
   pillars: Pillar[];
   beliefs: Belief[];
   founderStatement?: { text: string; author: string };
@@ -40,7 +40,7 @@ export default function PageAbout() {
   useEffect(() => {
     api.getPage("about").then((data: any) => {
       setConfig({
-        hero: { tagline: "Est. 2026 · Founded by Kareem Kaddoura", title: "The Region's First\nCollective Mirror", subtitle: "541 million people. Zero platforms asking what they think. Until now.", ...data?.hero },
+        hero: { tagline: "Est. 2026 · Founded by Kareem Kaddoura", titleLine1: "The Region's First", titleLine2: "Collective Mirror", subtitle: "541 million people. Zero platforms asking what they think. Until now.", ...data?.hero },
         pillars: data?.pillars ?? [],
         beliefs: data?.beliefs ?? [],
         founderStatement: data?.founderStatement ?? { text: "", author: "" },
@@ -80,9 +80,13 @@ export default function PageAbout() {
           <input value={config?.hero?.tagline ?? ""} onChange={e => setConfig({ ...config, hero: { ...config?.hero, tagline: e.target.value } } as AboutConfig)} className="w-full px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
         </div>
         <div>
-          <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Title</label>
+          <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Title Line 1</label>
+          <input value={config?.hero?.titleLine1 ?? ""} onChange={e => setConfig({ ...config, hero: { ...config?.hero, titleLine1: e.target.value } } as AboutConfig)} className="w-full px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+        </div>
+        <div>
+          <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">Title Line 2</label>
           <div className="flex items-center gap-2">
-            <input value={config?.hero?.title ?? ""} onChange={e => setConfig({ ...config, hero: { ...config?.hero, title: e.target.value } } as AboutConfig)} className="flex-1 px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+            <input value={config?.hero?.titleLine2 ?? ""} onChange={e => setConfig({ ...config, hero: { ...config?.hero, titleLine2: e.target.value } } as AboutConfig)} className="flex-1 px-3 py-2 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
             <input value={(config.punctuations ?? ["."]).join("")} onChange={e => setConfig({ ...config, punctuations: e.target.value ? e.target.value.split("") : [] })} placeholder="." className="w-16 px-2 py-2 bg-background border border-border rounded-sm text-sm text-primary font-bold text-center focus:outline-none focus:ring-1 focus:ring-primary" title="Punctuation (renders in primary color)" />
           </div>
         </div>
