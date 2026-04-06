@@ -7,15 +7,47 @@ import { useSiteSettings } from "@/hooks/use-cms-data"
 
 const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL ?? ""
 
+// CSS for character fade-in — injected once
+const FADE_STYLE_ID = "noor-char-fade"
+if (typeof document !== "undefined" && !document.getElementById(FADE_STYLE_ID)) {
+  const style = document.createElement("style")
+  style.id = FADE_STYLE_ID
+  style.textContent = `@keyframes noorCharFade{from{opacity:0}to{opacity:1}}.noor-char{display:inline;animation:noorCharFade .3s ease-out forwards}`
+  document.head.appendChild(style)
+}
+
 interface Message {
   id: string
   role: "user" | "assistant"
   content: string
   time: string
+  /** Number of characters already rendered (for fade-in boundary) */
+  renderedLen?: number
 }
 
 function getTimeStr(): string {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+}
+
+// ── Streaming text with per-char fade-in ────────────────────────
+function StreamingText({ content, renderedLen, navigate, closePanel }: {
+  content: string
+  renderedLen: number
+  navigate: (path: string) => void
+  closePanel: () => void
+}) {
+  // Split into already-visible and newly-arriving characters
+  const stableText = content.slice(0, renderedLen)
+  const newText = content.slice(renderedLen)
+
+  return (
+    <>
+      {stableText.length > 0 && <>{parseInlineLinks(stableText, navigate, closePanel)}</>}
+      {newText.split("").map((char, i) => (
+        <span key={renderedLen + i} className="noor-char">{char}</span>
+      ))}
+    </>
+  )
 }
 
 // ── Markdown-style link parser ───────────────────────────────────
@@ -147,16 +179,6 @@ export function Chatbot() {
 
       const decoder = new TextDecoder()
       let accumulated = ""
-      let buffer = ""
-      let flushTimer: ReturnType<typeof setTimeout> | null = null
-
-      const flush = () => {
-        if (!buffer) return
-        accumulated += buffer
-        buffer = ""
-        const snapshot = accumulated
-        setMessages(prev => prev.map(m => m.id === botId ? { ...m, content: snapshot } : m))
-      }
 
       while (true) {
         const { done, value } = await reader.read()
@@ -172,23 +194,25 @@ export function Chatbot() {
             try {
               const parsed = JSON.parse(data)
               if (parsed.text) {
-                buffer += parsed.text
-                // Batch: flush every 50ms so React renders ~5-10 words at a time
-                if (!flushTimer) {
-                  flushTimer = setTimeout(() => {
-                    flush()
-                    flushTimer = null
-                  }, 50)
-                }
+                const prevLen = accumulated.length
+                accumulated += parsed.text
+                const snapshot = accumulated
+                setMessages(prev => prev.map(m =>
+                  m.id === botId ? { ...m, content: snapshot, renderedLen: prevLen } : m
+                ))
               }
             } catch {}
           }
         }
       }
 
-      // Final flush for any remaining buffer
-      if (flushTimer) clearTimeout(flushTimer)
-      flush()
+      // Mark fully rendered — no more fade-in needed
+      if (accumulated) {
+        const final = accumulated
+        setMessages(prev => prev.map(m =>
+          m.id === botId ? { ...m, content: final, renderedLen: final.length } : m
+        ))
+      }
 
       if (!accumulated) {
         setMessages(prev => prev.map(m => m.id === botId ? { ...m, content: "hmm couldnt get a response — try again?" } : m))
@@ -335,6 +359,13 @@ export function Chatbot() {
                           <TypingDots />
                         ) : isUser ? (
                           msg.content
+                        ) : msg.renderedLen != null && msg.renderedLen < msg.content.length ? (
+                          <StreamingText
+                            content={msg.content}
+                            renderedLen={msg.renderedLen}
+                            navigate={navigate}
+                            closePanel={closePanel}
+                          />
                         ) : (
                           parseInlineLinks(msg.content, navigate, closePanel)
                         )}
