@@ -15,7 +15,7 @@ const MUTED = "#9A9690"
 const BORDER = "#2A2A2A"
 
 const HEADING_FONT = "Barlow Condensed"
-const BODY_FONT = "DM Sans"
+const BODY_FONT = "Barlow"
 
 // --- Satori element type ---
 interface SatoriElement {

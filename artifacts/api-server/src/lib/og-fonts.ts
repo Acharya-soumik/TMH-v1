@@ -1,6 +1,11 @@
 /**
- * Lazy-load Google Fonts for Satori OG image generation.
- * Fonts are fetched once on first request and cached in memory.
+ * Lazy-load fonts (TTF) for Satori OG image generation.
+ *
+ * Uses Barlow family from Google Fonts GitHub repo (guaranteed static TTF).
+ * Satori does NOT support woff2 or variable fonts — only static TTF/OTF.
+ *
+ * Heading: Barlow Condensed Black (900)
+ * Body:    Barlow SemiBold (600) and Bold (700)
  */
 
 interface CachedFont {
@@ -12,36 +17,34 @@ interface CachedFont {
 
 let fontCache: CachedFont[] | null = null
 
+const GITHUB_FONTS = "https://raw.githubusercontent.com/google/fonts/main/ofl"
+
+const FONT_URLS = {
+  headingBlack: `${GITHUB_FONTS}/barlowcondensed/BarlowCondensed-Black.ttf`,
+  bodySemiBold: `${GITHUB_FONTS}/barlow/Barlow-SemiBold.ttf`,
+  bodyBold: `${GITHUB_FONTS}/barlow/Barlow-Bold.ttf`,
+} as const
+
 export async function loadFonts(): Promise<CachedFont[]> {
   if (fontCache) return fontCache
 
-  const fonts = await Promise.all([
-    fetchGoogleFont("Barlow Condensed", 900),
-    fetchGoogleFont("DM Sans", 600),
-    fetchGoogleFont("DM Sans", 700),
+  const [headingData, bodySemiBoldData, bodyBoldData] = await Promise.all([
+    fetchTtf(FONT_URLS.headingBlack),
+    fetchTtf(FONT_URLS.bodySemiBold),
+    fetchTtf(FONT_URLS.bodyBold),
   ])
 
-  fontCache = fonts
-  return fonts
+  fontCache = [
+    { name: "Barlow Condensed", data: headingData, weight: 900, style: "normal" },
+    { name: "Barlow", data: bodySemiBoldData, weight: 600, style: "normal" },
+    { name: "Barlow", data: bodyBoldData, weight: 700, style: "normal" },
+  ]
+
+  return fontCache
 }
 
-async function fetchGoogleFont(family: string, weight: number): Promise<CachedFont> {
-  const cssUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}&display=swap`
-  const cssRes = await fetch(cssUrl, {
-    headers: {
-      // This user-agent triggers woff2/ttf format URLs in the CSS response
-      "User-Agent":
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-    },
-  })
-  const css = await cssRes.text()
-
-  const urlMatch = css.match(/url\(([^)]+)\)/)
-  if (!urlMatch) throw new Error(`Could not find font URL for ${family} ${weight}`)
-
-  const fontUrl = urlMatch[1].replace(/['"]/g, "")
-  const fontRes = await fetch(fontUrl)
-  const data = await fontRes.arrayBuffer()
-
-  return { name: family, data, weight, style: "normal" as const }
+async function fetchTtf(url: string): Promise<ArrayBuffer> {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Font fetch failed: ${res.status} ${url}`)
+  return res.arrayBuffer()
 }
