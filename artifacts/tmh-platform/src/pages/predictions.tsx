@@ -43,8 +43,9 @@ import {
   PREDICTIONS_TICKER as FALLBACK_TICKER,
   type PredictionCard,
 } from "@/data/predictions-data";
-import { usePredictions, type ApiPrediction } from "@/hooks/use-cms-data";
+import { usePredictions, usePageConfig, type ApiPrediction } from "@/hooks/use-cms-data";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { TitlePunctuation } from "@/components/TitlePunctuation";
 
 function apiToPredictionCard(p: ApiPrediction): PredictionCard {
   return {
@@ -1455,6 +1456,7 @@ export default function Predictions() {
     title: "Predictions",
     description: "A prediction market for MENA's biggest questions. Track confidence, watch consensus shift, and see where the region is headed.",
   });
+  const { data: pageConfig } = usePageConfig<{ hero?: { title?: string; subtitle?: string }; punctuations?: string[] }>("predictions_page");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("ALL");
 
@@ -1649,9 +1651,15 @@ export default function Predictions() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.1 }}
           >
-            What Do You Think
-            <br />
-            Actually Happens?
+            {(pageConfig?.hero?.title || "What Do You Think\nActually Happens?")
+              .split("\n")
+              .map((line, i, arr) => (
+                <span key={i}>
+                  {line}
+                  {i < arr.length - 1 && <br />}
+                </span>
+              ))}
+            <TitlePunctuation punctuations={pageConfig?.punctuations} />
           </motion.h1>
           <p
             className="text-text2"
@@ -1663,9 +1671,7 @@ export default function Predictions() {
               letterSpacing: "0.18em",
             }}
           >
-            {PREDICTIONS.length} predictions across{" "}
-            {PREDICTION_CATEGORIES.length} categories. Not what should happen.
-            What will.
+            {pageConfig?.hero?.subtitle || `${PREDICTIONS.length} predictions across ${PREDICTION_CATEGORIES.length} categories. Not what should happen. What will.`}
           </p>
           <div className="mt-6 max-w-md relative border border-border rounded-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" />

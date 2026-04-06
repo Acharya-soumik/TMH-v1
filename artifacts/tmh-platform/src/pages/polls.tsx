@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Search, X } from "lucide-react";
 import { usePageConfig } from "@/hooks/use-cms-data";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { TitlePunctuation } from "@/components/TitlePunctuation";
 import { motion } from "motion/react";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
@@ -43,6 +44,7 @@ const FALLBACK_DEBATE_TICKER = [
 
 interface PollsConfig {
   hero?: { title?: string; subtitle?: string };
+  punctuations?: string[];
   tickerItems?: Array<{ topic: string; votes: string }>;
   tickerSource?: string;
 }
@@ -238,6 +240,7 @@ export default function Polls() {
                   {i < arr.length - 1 && <br />}
                 </span>
               ))}
+            <TitlePunctuation punctuations={config?.punctuations} />
           </motion.h1>
           <p
             className="text-text2/60 pl-2"

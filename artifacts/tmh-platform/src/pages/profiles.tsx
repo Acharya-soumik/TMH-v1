@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import { usePageConfig, useSiteSettings } from "@/hooks/use-cms-data";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { TitlePunctuation } from "@/components/TitlePunctuation";
 import { motion } from "motion/react";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
@@ -177,8 +178,10 @@ export default function Profiles() {
 
   const { data, isLoading } = useListProfiles({ search, filter: filter === "all" ? undefined : filter as any, limit: 200 });
   const { data: pageConfig } = usePageConfig<{
+    hero?: { title?: string; subtitle?: string };
+    punctuations?: string[];
     impactStatements?: Record<string, string>;
-  }>("profiles");
+  }>("voices_page");
   const { data: siteSettings } = useSiteSettings();
   const majlisEnabled = siteSettings?.featureToggles?.majlis?.enabled ?? false;
 
@@ -255,9 +258,15 @@ export default function Profiles() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.1 }}
           >
-            Meet the People
-            <br />
-            Moving This Region.
+            {(pageConfig?.hero?.title || "Meet the People\nMoving This Region.")
+              .split("\n")
+              .map((line, i, arr) => (
+                <span key={i}>
+                  {line}
+                  {i < arr.length - 1 && <br />}
+                </span>
+              ))}
+            <TitlePunctuation punctuations={pageConfig?.punctuations} />
           </motion.h1>
           <p
             style={{
@@ -268,7 +277,7 @@ export default function Profiles() {
               letterSpacing: "0.18em",
             }}
           >
-            Founders. Operators. Changemakers. Finally counted.
+            {pageConfig?.hero?.subtitle || "Founders. Operators. Changemakers. Finally counted."}
           </p>
           {majlisEnabled && (
             <motion.div
