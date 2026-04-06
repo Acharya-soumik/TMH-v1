@@ -225,12 +225,12 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
       description: "Bloomberg-style prediction market for MENA. Track confidence, watch consensus shift, and call the future.",
     },
     "/pulse": {
-      title: "MENA Pulse | The Tribunal",
-      description: "Exploding Topics for MENA. 36 data-driven trend cards across 8 categories — the region's vital signs in real time.",
+      title: "MENA Pulse — Real-Time Regional Data",
+      description: "Live economic, social, and geopolitical data from across the Middle East and North Africa. Tracked on The Tribunal.",
     },
     "/mena-pulse": {
-      title: "MENA Pulse | The Tribunal",
-      description: "Exploding Topics for MENA. 36 data-driven trend cards across 8 categories — the region's vital signs in real time.",
+      title: "MENA Pulse — Real-Time Regional Data",
+      description: "Live economic, social, and geopolitical data from across the Middle East and North Africa. Tracked on The Tribunal.",
     },
     "/about": {
       title: "About | The Tribunal",

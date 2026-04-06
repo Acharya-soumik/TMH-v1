@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useRoute, Link } from "wouter"
 import { Layout } from "@/components/layout/Layout"
 import { ShareModal } from "@/components/ShareModal"
+import type { PredictionShareContext } from "@/lib/share"
 import { ResultsTabsView, EmptyStateCard } from "@/components/poll/ResultsTabsView"
 import { ArrowLeft, AlertCircle, ArrowRight, Share2, TrendingUp, TrendingDown, Calendar, Users, Info } from "lucide-react"
 import { usePageTitle } from "@/hooks/use-page-title"
@@ -579,26 +580,26 @@ export default function PredictionDetail() {
         </div>
       </div>
 
-      {shareOpen && (
-        <ShareModal
-          onClose={() => setShareOpen(false)}
-          url={shareUrl}
-          title={shareTitle}
-          category={prediction.category}
-          totalVotes={prediction.totalCount}
-          options={
-            prediction.options?.length
-              ? prediction.options.map((text: string) => ({
-                  text,
-                  percentage: prediction.optionResults?.[text] ?? 0,
-                }))
-              : [
-                  { text: "Yes", percentage: prediction.yesPercentage },
-                  { text: "No", percentage: prediction.noPercentage },
-                ]
-          }
-        />
-      )}
+      {shareOpen && (() => {
+        const shareContext: PredictionShareContext = {
+          contentType: "prediction",
+          predictionId: prediction.id,
+          url: shareUrl,
+          title: shareTitle,
+          category: prediction.category,
+          totalVotes: prediction.totalCount,
+          votedChoice: typeof window !== "undefined" ? localStorage.getItem(`tmh_pred_${prediction.id}`) ?? undefined : undefined,
+          yesPercentage: prediction.yesPercentage,
+          noPercentage: prediction.noPercentage,
+          options: prediction.options?.length
+            ? prediction.options.map((text: string) => ({ text, percentage: prediction.optionResults?.[text] ?? 0 }))
+            : undefined,
+          momentum: prediction.momentum,
+          momentumDirection: prediction.momentumDirection as "up" | "down" | undefined,
+          resolvesAt: prediction.resolvesAt,
+        }
+        return <ShareModal context={shareContext} onClose={() => setShareOpen(false)} />
+      })()}
     </Layout>
   )
 }

@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { motion } from "motion/react";
 import { useToast } from "@/hooks/use-toast";
 import { ShareModal } from "@/components/ShareModal";
+import type { PredictionShareContext } from "@/lib/share";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
 import { PredictionGridSkeleton } from "@/components/skeletons/PredictionCardSkeleton";
@@ -23,7 +24,6 @@ const staggerItem = {
     transition: { duration: 0.5, ease: EASE_OUT_EXPO },
   },
 };
-import { ShareToMajlisModal } from "@/components/ShareToMajlisModal";
 import {
   ComposedChart,
   Area,
@@ -426,15 +426,23 @@ function PredShareBtn({ card }: { card: PredictionCard }) {
       : `/predictions?shared=${card.id}`;
 
   const totalVotes = parseInt(card.count.replace(/,/g, ""), 10) || 0;
-  const options = card.options?.length
-    ? card.options.map((text) => {
-        const pct = card.optionResults?.[text] ?? 0;
-        return { text, percentage: pct };
-      })
-    : [
-        { text: "Yes", percentage: card.yes },
-        { text: "No", percentage: card.no },
-      ];
+
+  const shareContext: PredictionShareContext = {
+    contentType: "prediction",
+    predictionId: card.id,
+    url,
+    title: card.question,
+    category: card.category,
+    totalVotes,
+    votedChoice: typeof window !== "undefined" ? localStorage.getItem(`tmh_pred_${card.id}`) ?? undefined : undefined,
+    yesPercentage: card.yes,
+    noPercentage: card.no,
+    options: card.options?.length
+      ? card.options.map((text) => ({ text, percentage: card.optionResults?.[text] ?? 0 }))
+      : undefined,
+    momentum: card.momentum,
+    momentumDirection: card.up ? "up" : "down",
+  };
 
   return (
     <>
@@ -454,14 +462,8 @@ function PredShareBtn({ card }: { card: PredictionCard }) {
       </button>
       {showModal && (
         <ShareModal
-          url={url}
-          title={card.question}
-          heading="Share to Unlock Full Results"
-          body="We keep The Tribunal free by making opinion data shareable. Share this prediction to see the full breakdown."
+          context={shareContext}
           onClose={() => setShowModal(false)}
-          category={card.category}
-          totalVotes={totalVotes}
-          options={options}
         />
       )}
     </>
@@ -473,8 +475,28 @@ function PredMajlisShareBtn({ card }: { card: PredictionCard }) {
   const hasMajlisToken = typeof window !== "undefined" && !!localStorage.getItem("majlis_token");
   if (!hasMajlisToken) return null;
 
-  const sentiment = card.yes >= 50 ? `${card.yes}% Yes` : `${card.no}% No`;
-  const shareString = `[share:prediction:${card.id}|${card.question}|${sentiment}|${card.category}]`;
+  const url =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/predictions?shared=${card.id}`
+      : `/predictions?shared=${card.id}`;
+  const totalVotes = parseInt(card.count.replace(/,/g, ""), 10) || 0;
+
+  const shareContext: PredictionShareContext = {
+    contentType: "prediction",
+    predictionId: card.id,
+    url,
+    title: card.question,
+    category: card.category,
+    totalVotes,
+    votedChoice: typeof window !== "undefined" ? localStorage.getItem(`tmh_pred_${card.id}`) ?? undefined : undefined,
+    yesPercentage: card.yes,
+    noPercentage: card.no,
+    options: card.options?.length
+      ? card.options.map((text) => ({ text, percentage: card.optionResults?.[text] ?? 0 }))
+      : undefined,
+    momentum: card.momentum,
+    momentumDirection: card.up ? "up" : "down",
+  };
 
   return (
     <>
@@ -493,8 +515,8 @@ function PredMajlisShareBtn({ card }: { card: PredictionCard }) {
         <MessageSquare size={14} />
       </button>
       {show && (
-        <ShareToMajlisModal
-          shareString={shareString}
+        <ShareModal
+          context={shareContext}
           onClose={() => setShow(false)}
         />
       )}

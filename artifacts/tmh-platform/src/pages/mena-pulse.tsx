@@ -5,6 +5,7 @@ import { LiveNumber } from "@/components/live-counter/FlipDigit";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import { ShareModal } from "@/components/ShareModal";
+import type { PulseShareContext } from "@/lib/share";
 import {
   usePulseTopics,
   usePageConfig,
@@ -1193,12 +1194,24 @@ function MiniSparkline({
   );
 }
 
-function PulseShareBtn({ title, stat, id }: { title: string; stat: string; id: string }) {
+function PulseShareBtn({ topic }: { topic: TopicCard }) {
   const [showModal, setShowModal] = useState(false);
   const url =
     typeof window !== "undefined"
-      ? `${window.location.origin}/pulse?shared=${id}`
-      : `/pulse?shared=${id}`;
+      ? `${window.location.origin}/pulse?shared=${topic.id}`
+      : `/pulse?shared=${topic.id}`;
+
+  const shareContext: PulseShareContext = {
+    contentType: "pulse",
+    topicId: topic.id,
+    url,
+    title: topic.title,
+    category: topic.tag,
+    stat: topic.stat,
+    delta: topic.delta ?? "",
+    deltaUp: topic.deltaUp ?? true,
+    source: topic.source,
+  };
 
   return (
     <>
@@ -1227,10 +1240,7 @@ function PulseShareBtn({ title, stat, id }: { title: string; stat: string; id: s
       </button>
       {showModal && (
         <ShareModal
-          url={url}
-          title={`${title}: ${stat}`}
-          heading="Share to Unlock Full Results"
-          body="We keep The Tribunal free by making opinion data shareable. Share this insight to see the full breakdown."
+          context={shareContext}
           onClose={() => setShowModal(false)}
         />
       )}
@@ -1433,7 +1443,7 @@ function TopicCardComponent({
           borderTop: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        <PulseShareBtn title={topic.title} stat={topic.stat} id={topic.id} />
+        <PulseShareBtn topic={topic} />
       </div>
 
       {expanded && (
