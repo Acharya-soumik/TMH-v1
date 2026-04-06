@@ -112,8 +112,6 @@ export function Chatbot() {
   const chatbotEnabled = siteSettings?.featureToggles?.chatbot?.enabled ?? true
   const majlisEnabled = siteSettings?.featureToggles?.majlis?.enabled ?? false
 
-  if (!chatbotEnabled) return null
-
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
@@ -241,6 +239,8 @@ export function Chatbot() {
       sendMessage()
     }
   }
+
+  if (!chatbotEnabled) return null
 
   return (
     <>
