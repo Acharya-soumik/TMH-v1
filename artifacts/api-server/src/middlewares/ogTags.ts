@@ -92,7 +92,9 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
   if (!isBot(ua)) return next()
 
   const host = req.headers.host ?? "themiddleeasthustle.com"
-  const protocol = req.secure ? "https" : "http"
+  // Railway (and most reverse proxies) terminate TLS — req.secure is always false.
+  // Use x-forwarded-proto header, or default to https in production.
+  const protocol = (req.headers["x-forwarded-proto"] as string) ?? (req.secure ? "https" : "http")
   const fullUrl = `${protocol}://${host}${req.originalUrl}`
 
   const debateMatch = req.path.match(/^\/debates\/(\d+)/)
@@ -113,7 +115,8 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
           ? `${topOption.percentage}% say "${topOption.text}". ${totalVotes.toLocaleString()} MENA voices weighed in.`
           : `${totalVotes.toLocaleString()} voices from across MENA. Where do you stand?`
         const description = `${leadText} Vote on The Tribunal — the region's most honest opinion platform.`
-        const image = poll.ogImage ?? `${SITE}/api/og-image/debate/${pollId}`
+        const siteBase = `${protocol}://${host}`
+        const image = poll.ogImage ?? `${siteBase}/api/og-image/debate/${pollId}`
         const html = buildHtml({ title, description, url: fullUrl, image, type: "article" })
         res.setHeader("Content-Type", "text/html")
         return res.send(html)
@@ -172,7 +175,8 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
         const yesP = pred.yesPercentage ?? 50
         const totalVotes = pred.totalCount ?? 0
         const description = `${yesP}% say yes. ${totalVotes.toLocaleString()} predictions locked in. Vote on The Tribunal.`
-        const html = buildHtml({ title, description, url: fullUrl, image: `${SITE}/api/og-image/prediction/${predId}`, type: "article" })
+        const predSiteBase = `${protocol}://${host}`
+        const html = buildHtml({ title, description, url: fullUrl, image: `${predSiteBase}/api/og-image/prediction/${predId}`, type: "article" })
         res.setHeader("Content-Type", "text/html")
         return res.send(html)
       })
