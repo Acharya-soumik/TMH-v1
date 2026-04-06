@@ -2,7 +2,11 @@
 //  Platform handler dispatch — single entry-point for executing
 //  a share action on any supported platform.
 //
-//  Replaces the inline handlers that lived inside ShareModal.tsx.
+//  Each handler controls its own mobile vs desktop strategy.
+//  navigator.share is ONLY used for:
+//    1. WhatsApp mobile (files + text with URL embedded)
+//    2. Native share (text + URL only, no files)
+//  All other platforms use intent URLs + card download.
 // ──────────────────────────────────────────────────────────────
 
 import type {
@@ -17,7 +21,7 @@ import {
   getXShareUrl,
 } from "./url-builders"
 import { buildShareText, getXShareText } from "./templates"
-import { generateCard, shareWithImage } from "./card-generator"
+import { generateCard } from "./card-generator"
 
 // ── Options ─────────────────────────────────────────────────
 
@@ -36,7 +40,6 @@ export interface ExecuteShareOptions {
 
 // ── Helpers ─────────────────────────────────────────────────
 
-/** Slugify a title for use in download file names. */
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -45,7 +48,6 @@ function slugify(text: string): string {
     .slice(0, 60)
 }
 
-/** Build the canonical file names for a given share context. */
 function fileNames(ctx: ShareContext): { og: string; story: string } {
   const slug = slugify(ctx.title)
   return {
@@ -54,13 +56,6 @@ function fileNames(ctx: ShareContext): { og: string; story: string } {
   }
 }
 
-/**
- * Determine whether image card generation is possible for this context.
- *
- * - Debates: totalVotes > 0, or a voted option exists, or options are present.
- * - Predictions: always true (there is always meaningful data to render).
- * - Pulse: only if a stat string exists.
- */
 function canGenerateCard(ctx: ShareContext): boolean {
   switch (ctx.contentType) {
     case "debate":
@@ -72,10 +67,6 @@ function canGenerateCard(ctx: ShareContext): boolean {
   }
 }
 
-/**
- * Trigger a browser file download from a `Blob`.
- * Cleans up the temporary object URL after the download starts.
- */
 function downloadBlob(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
@@ -87,15 +78,14 @@ function downloadBlob(blob: Blob, fileName: string): void {
   URL.revokeObjectURL(url)
 }
 
-/** Open a URL in a new browser tab. */
 function openTab(url: string): void {
   window.open(url, "_blank", "noopener,noreferrer")
 }
 
-/**
- * Resolve the OG card blob: use the pre-generated one from options if
- * available, otherwise generate on the fly (only when the context supports it).
- */
+function isMobile(): boolean {
+  return typeof navigator !== "undefined" && navigator.maxTouchPoints > 0
+}
+
 async function resolveOgCard(
   ctx: ShareContext,
   options: ExecuteShareOptions,
@@ -105,9 +95,6 @@ async function resolveOgCard(
   return generateCard(ctx, "og")
 }
 
-/**
- * Resolve the story card blob (Instagram-specific).
- */
 async function resolveStoryCard(
   ctx: ShareContext,
   options: ExecuteShareOptions,
@@ -119,34 +106,65 @@ async function resolveStoryCard(
 
 // ── Per-platform handlers ───────────────────────────────────
 
+/**
+ * WhatsApp sharing strategy:
+ *
+ * MOBILE: Use navigator.share with files + text (URL embedded in text).
+ *   - files: [card image]
+ *   - text: "message body\n\nhttps://tribunal.com/debates/42"
+ *   - NO separate `url` param (platforms drop text when both url and files present)
+ *   WhatsApp on iOS/Android handles file+text well — shows image AND message.
+ *
+ * DESKTOP: Download the card image + open wa.me intent with text.
+ *   wa.me only supports text — user attaches the downloaded image manually.
+ */
 async function handleWhatsApp(
   ctx: ShareContext,
   options: ExecuteShareOptions,
 ): Promise<ShareResult> {
+  // WhatsApp text already includes the URL (from templates.ts)
   const text = buildShareText(ctx, "whatsapp")
   const names = fileNames(ctx)
 
+  if (isMobile() && canGenerateCard(ctx)) {
+    // Mobile: try sharing image + text together via navigator.share
+    try {
+      const blob = await resolveOgCard(ctx, options)
+      if (blob) {
+        const file = new File([blob], names.og, { type: "image/png" })
+        const canShareFiles =
+          navigator.canShare?.({ files: [file] }) ?? false
+
+        if (canShareFiles) {
+          try {
+            // Key: embed URL in `text`, do NOT pass separate `url` param.
+            // This prevents platforms from dropping the text body.
+            await navigator.share({ text, files: [file] })
+            return { platform: "whatsapp", outcome: "shared" }
+          } catch (err: unknown) {
+            if (err instanceof DOMException && err.name === "AbortError") {
+              return { platform: "whatsapp", outcome: "cancelled" }
+            }
+            // Failed — fall through to wa.me
+          }
+        }
+      }
+    } catch {
+      // Card generation failed — fall through to wa.me
+    }
+  }
+
+  // Desktop (or mobile fallback): download card + open wa.me
   if (canGenerateCard(ctx)) {
     try {
       const blob = await resolveOgCard(ctx, options)
       if (blob) {
-        const result = await shareWithImage({
-          blob,
-          title: ctx.title,
-          text,
-          url: ctx.url,
-          fileName: names.og,
-        })
-        if (result === "downloaded") {
-          openTab(getWhatsAppShareUrl(text))
-          return { platform: "whatsapp", outcome: "downloaded" }
-        }
-        if (result === "shared") {
-          return { platform: "whatsapp", outcome: "shared" }
-        }
+        downloadBlob(blob, names.og)
+        openTab(getWhatsAppShareUrl(text))
+        return { platform: "whatsapp", outcome: "downloaded" }
       }
     } catch {
-      // Fall through to plain link share
+      // Card generation failed — open wa.me without image
     }
   }
 
@@ -154,6 +172,13 @@ async function handleWhatsApp(
   return { platform: "whatsapp", outcome: "opened" }
 }
 
+/**
+ * LinkedIn sharing strategy:
+ *
+ * LinkedIn's share URL only accepts a URL param — it fetches OG tags to
+ * build the preview. We also copy the share text to clipboard and
+ * download the card image for the user to paste/attach manually.
+ */
 async function handleLinkedIn(
   ctx: ShareContext,
   options: ExecuteShareOptions,
@@ -178,34 +203,26 @@ async function handleLinkedIn(
   return { platform: "linkedin", outcome: "opened" }
 }
 
+/**
+ * X/Twitter sharing strategy:
+ *
+ * Always open the tweet intent URL with text + url params.
+ * Download the card image for manual attachment.
+ * Never use navigator.share — it hijacks the flow on desktop Chrome.
+ */
 async function handleX(
   ctx: ShareContext,
   options: ExecuteShareOptions,
 ): Promise<ShareResult> {
-  const fullText = buildShareText(ctx, "x")
-  await copyToClipboard(fullText)
-
   const tweetText = getXShareText(ctx)
 
   if (canGenerateCard(ctx)) {
     try {
       const blob = await resolveOgCard(ctx, options)
       if (blob) {
-        const result = await shareWithImage({
-          blob,
-          title: ctx.title,
-          text: fullText,
-          url: ctx.url,
-          fileName: fileNames(ctx).og,
-        })
-        if (result === "downloaded") {
-          openTab(getXShareUrl(tweetText, ctx.url))
-          return { platform: "x", outcome: "downloaded" }
-        }
-        if (result === "shared") {
-          openTab(getXShareUrl(tweetText, ctx.url))
-          return { platform: "x", outcome: "shared" }
-        }
+        downloadBlob(blob, fileNames(ctx).og)
+        openTab(getXShareUrl(tweetText, ctx.url))
+        return { platform: "x", outcome: "downloaded" }
       }
     } catch {
       // Fall through to text-only share
@@ -216,6 +233,15 @@ async function handleX(
   return { platform: "x", outcome: "opened" }
 }
 
+/**
+ * Instagram sharing strategy:
+ *
+ * Instagram has no URL-based sharing API. We:
+ * 1. Download the story-format card (1080×1920)
+ * 2. Copy the URL to clipboard
+ * 3. Open Instagram
+ * User manually uploads the story image and pastes the link.
+ */
 async function handleInstagram(
   ctx: ShareContext,
   options: ExecuteShareOptions,
@@ -226,20 +252,9 @@ async function handleInstagram(
     try {
       const blob = await resolveStoryCard(ctx, options)
       if (blob) {
-        const result = await shareWithImage({
-          blob,
-          title: ctx.title,
-          text: ctx.url,
-          url: ctx.url,
-          fileName: fileNames(ctx).story,
-        })
-        if (result === "downloaded") {
-          openTab("https://www.instagram.com/")
-          return { platform: "instagram", outcome: "downloaded" }
-        }
-        if (result === "shared") {
-          return { platform: "instagram", outcome: "shared" }
-        }
+        downloadBlob(blob, fileNames(ctx).story)
+        openTab("https://www.instagram.com/")
+        return { platform: "instagram", outcome: "downloaded" }
       }
     } catch {
       // Fall through to link-only share
@@ -284,6 +299,13 @@ async function handleDownload(
   }
 }
 
+/**
+ * Native share (mobile "Share" button):
+ *
+ * Shares text + URL only — NO files. When files are included in
+ * navigator.share, most mobile browsers/apps drop the text and url
+ * fields. Users can grab the card image via the "Save Card" button.
+ */
 async function handleNative(
   ctx: ShareContext,
   _options: ExecuteShareOptions,
@@ -296,10 +318,6 @@ async function handleNative(
     }
   }
 
-  // Share text + URL only (no files). When files are included, most
-  // mobile browsers drop the text and url fields entirely — the user
-  // only sees the image with no link. The "Save Card" button in the
-  // modal lets users grab the image separately if they want it.
   const text = buildShareText(ctx, "generic")
 
   try {
@@ -375,22 +393,9 @@ async function handleMajlis(
 /**
  * Execute a share action for the given platform.
  *
- * This is the single dispatch point used by the ShareModal UI.
  * Each platform handler encapsulates its own card generation,
- * clipboard operations, URL opening, and API calls.
- *
- * @param ctx      - The share context describing the content to share.
- * @param platform - The target platform (e.g. "whatsapp", "x", "copy").
- * @param options  - Optional overrides: pre-generated card blobs, Majlis credentials, etc.
- * @returns A `ShareResult` describing the outcome of the share action.
- *
- * @example
- * ```ts
- * const result = await executeShare(debateCtx, "whatsapp")
- * if (result.outcome === "downloaded") {
- *   toast({ title: "Image saved!", description: "Attach it to your WhatsApp message." })
- * }
- * ```
+ * clipboard operations, URL opening, and API calls with
+ * mobile vs desktop awareness.
  */
 export async function executeShare(
   ctx: ShareContext,
@@ -424,7 +429,5 @@ export async function executeShare(
     }
   }
 }
-
-// ── Re-export helper for consumers that need card-eligibility checks ──
 
 export { canGenerateCard }
