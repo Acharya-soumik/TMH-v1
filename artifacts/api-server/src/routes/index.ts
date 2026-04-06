@@ -11,6 +11,7 @@ import cmsRouter from "./cms";
 import majlisRouter from "./majlis";
 import ideationRouter from "./ideation";
 import chatbotRouter from "./chatbot";
+import ogImageRouter from "./og-image";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(cmsRouter);
 router.use(majlisRouter);
 router.use(ideationRouter);
 router.use(chatbotRouter);
+router.use(ogImageRouter);
 
 export default router;

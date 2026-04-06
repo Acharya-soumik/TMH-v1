@@ -113,7 +113,7 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
           ? `${topOption.percentage}% say "${topOption.text}". ${totalVotes.toLocaleString()} MENA voices weighed in.`
           : `${totalVotes.toLocaleString()} voices from across MENA. Where do you stand?`
         const description = `${leadText} Vote on The Tribunal — the region's most honest opinion platform.`
-        const image = poll.ogImage ?? DEFAULT_IMAGE
+        const image = poll.ogImage ?? `${SITE}/api/og-image/debate/${pollId}`
         const html = buildHtml({ title, description, url: fullUrl, image, type: "article" })
         res.setHeader("Content-Type", "text/html")
         return res.send(html)
@@ -172,7 +172,7 @@ export function ogTagsMiddleware(req: Request, res: Response, next: NextFunction
         const yesP = pred.yesPercentage ?? 50
         const totalVotes = pred.totalCount ?? 0
         const description = `${yesP}% say yes. ${totalVotes.toLocaleString()} predictions locked in. Vote on The Tribunal.`
-        const html = buildHtml({ title, description, url: fullUrl, image: DEFAULT_IMAGE, type: "article" })
+        const html = buildHtml({ title, description, url: fullUrl, image: `${SITE}/api/og-image/prediction/${predId}`, type: "article" })
         res.setHeader("Content-Type", "text/html")
         return res.send(html)
       })
