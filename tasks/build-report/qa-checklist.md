@@ -35,10 +35,20 @@ Organized by feature area. Check each item and mark ✅ / ❌ / ⚠️ (needs fi
 - [ ] Refresh the page → your new vote should persist
 - [ ] Click the same option you already voted for → nothing happens (no-op)
 
-### Predictions
-- [ ] Navigate to `/predictions` → click YES or NO
-- [ ] Verify: instant update (already worked before, should still work)
-- [ ] Click the other option → vote changes
+### Predictions (listing page)
+- [ ] Navigate to `/predictions` → click YES or NO on any card
+- [ ] Verify: instant vote, no confirmation modal, no "Change vote" link needed
+- [ ] Click the other option → vote changes instantly (no modal)
+- [ ] No dimmed/locked-out options after voting
+
+### Predictions (detail page)
+- [ ] Navigate to `/predictions/:id` → cast a vote
+- [ ] Verify: instant vote, no confirmation overlay
+- [ ] Click a different option → instant change
+- [ ] Verify: 3-tab view (Results / By Country / Over Time) appears
+- [ ] "By Country" tab shows "Still Gathering Data" empty state
+- [ ] "Over Time" tab shows "Still Gathering Data" empty state
+- [ ] "Results" tab shows the confidence bars + vote buttons
 
 ---
 
@@ -123,14 +133,18 @@ Organized by feature area. Check each item and mark ✅ / ❌ / ⚠️ (needs fi
 
 ---
 
-## Phase 2.1 — Country View Toggle
+## Phase 2.1 — 3-Tab Results View (Debates)
 
-- [ ] Open any debate → vote → results appear
-- [ ] Below the results, verify tabs "By Country" / "Over Time" (Globe and TrendingUp icons)
-- [ ] Default tab is "By Country" — shows country breakdown (may show "Geographic breakdown available after launch" if no real geo data yet)
-- [ ] Click "Over Time" → trend chart appears
-- [ ] Click back to "By Country" → country breakdown reappears
-- [ ] Verify tabs work on both detail page (`/debates/:id`) and listing page cards
+- [ ] Open any debate → vote → results appear inside a 3-tab view
+- [ ] Verify 3 tabs: **Results** (BarChart3 icon) / **By Country** (Globe) / **Over Time** (TrendingUp)
+- [ ] Default tab is "Results" — shows vote bars, personal insight card, "Voted — Results Live"
+- [ ] Vote bars are clickable to change vote (hover shows color change)
+- [ ] Click "By Country" → shows country breakdown OR "Still Gathering Data" empty state
+- [ ] Click "Over Time" → shows trend chart OR "Still Gathering Data" empty state
+- [ ] Click back to "Results" → vote bars reappear
+- [ ] Only ONE view shows at a time (no stacked bars + breakdown)
+- [ ] Share button appears BELOW the tab view (not inside it)
+- [ ] Tabs work on listing page cards too (inside PollCard)
 
 ---
 
@@ -249,9 +263,37 @@ Organized by feature area. Check each item and mark ✅ / ❌ / ⚠️ (needs fi
 
 - [ ] (fill in as found)
 
+## Late Bug Fixes (after main QA checklist was written)
+
+### Categories count fix
+- [ ] Homepage "debates" count shows 100
+- [ ] Debates listing "All Topics (N)" count also shows 100
+- [ ] These two numbers match
+
+### Share Copy text fix
+- [ ] On any debate results → share modal → click "Copy" button
+- [ ] Paste clipboard content → should be full formatted text + URL (not just URL)
+- [ ] On the gate overlay → click "Copy" icon → same: full text + URL
+
+### Noor chatbot background fix
+- [ ] Open Noor → panel has a solid background (not transparent/see-through)
+- [ ] Messages area has a solid background
+- [ ] Noor message bubbles have bg-secondary (visible, not transparent)
+
+---
+
+## MANUAL testing only (agent-browser cannot verify)
+
+- [ ] Share a debate URL on WhatsApp → image + text appear in the share
+- [ ] Paste a debate URL into LinkedIn composer → preview card shows enriched description with vote counts
+- [ ] Download "Share Card" PNG → open it → verify it looks professional (branded header, results bars, category badge)
+- [ ] Download Instagram story PNG → verify 1080x1920 vertical format
+- [ ] Open Noor chatbot → type "show me a trending debate" → verify the link in response actually navigates correctly
+- [ ] Test on mobile device (or small viewport) → Noor panel fits, debate cards readable, share modal usable
+- [ ] CMS → Site Settings → Feature Toggles → test each toggle independently (save, reload website, verify)
+
 ## Known limitations (ship anyway)
 
 - ip-api.com free tier uses HTTP — may need upgrade to paid/alt provider if strict HTTPS enforcement is needed
 - LinkedIn OG image is static (not per-poll) — requires server-side image generation (deferred)
-- Title punctuation only wired to About page — follow-up wire-up needed for other pages
 - Chatbot "Noor" character overhaul: ✅ Phase 3 shipped. Streaming SSE responses are hard to mock in unit tests — fully tested via manual QA
