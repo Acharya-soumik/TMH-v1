@@ -1,8 +1,28 @@
 import { Router } from "express"
-import satori from "satori"
-import { Resvg } from "@resvg/resvg-js"
 import { loadFonts } from "../lib/og-fonts.js"
 import { debateCard, predictionCard, pulseCard } from "../lib/og-card.js"
+
+// Satori and resvg are ESM-only packages. The server builds to CJS via
+// esbuild, so static `import satori from "satori"` breaks at runtime
+// ("is not a function"). Dynamic import() works in CJS for ESM modules.
+let _satori: ((element: any, options: any) => Promise<string>) | null = null
+let _Resvg: (new (svg: string, options: any) => { render(): { asPng(): Uint8Array } }) | null = null
+
+async function getSatori() {
+  if (!_satori) {
+    const mod = await import("satori")
+    _satori = mod.default
+  }
+  return _satori!
+}
+
+async function getResvg() {
+  if (!_Resvg) {
+    const mod = await import("@resvg/resvg-js")
+    _Resvg = mod.Resvg
+  }
+  return _Resvg!
+}
 
 const router = Router()
 const INTERNAL_API_BASE =
@@ -11,7 +31,11 @@ const INTERNAL_API_BASE =
 router.get("/og-image/:type/:id", async (req, res) => {
   try {
     const { type, id } = req.params
-    const fonts = await loadFonts()
+    const [satori, Resvg, fonts] = await Promise.all([
+      getSatori(),
+      getResvg(),
+      loadFonts(),
+    ])
 
     let element: ReturnType<typeof debateCard>
 
@@ -76,7 +100,7 @@ router.get("/og-image/:type/:id", async (req, res) => {
     })
 
     const resvg = new Resvg(svg, {
-      fitTo: { mode: "width", value: 1200 },
+      fitTo: { mode: "width" as const, value: 1200 },
     })
     const png = resvg.render().asPng()
 
@@ -88,8 +112,9 @@ router.get("/og-image/:type/:id", async (req, res) => {
     )
     res.send(Buffer.from(png))
   } catch (err) {
-    console.error("[OG-IMAGE]", err)
-    res.status(500).send("Failed to generate image")
+    const message = err instanceof Error ? err.message : String(err)
+    console.error("[OG-IMAGE]", message)
+    res.status(500).json({ error: "Failed to generate image", detail: message })
   }
 })
 
