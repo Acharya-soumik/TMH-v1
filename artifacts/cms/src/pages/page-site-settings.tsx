@@ -24,6 +24,7 @@ interface FeatureToggles {
   shareGate: { enabled: boolean };
   emailCapture: { enabled: boolean };
   ipConsent: { enabled: boolean };
+  chatbot: { enabled: boolean };
 }
 
 interface SiteSettings {
@@ -81,6 +82,7 @@ export default function PageSiteSettings() {
           shareGate: { enabled: data?.featureToggles?.shareGate?.enabled ?? true },
           emailCapture: { enabled: data?.featureToggles?.emailCapture?.enabled ?? true },
           ipConsent: { enabled: data?.featureToggles?.ipConsent?.enabled ?? false },
+          chatbot: { enabled: data?.featureToggles?.chatbot?.enabled ?? true },
         },
       });
     }).catch(console.error).finally(() => setLoading(false));
@@ -173,6 +175,18 @@ export default function PageSiteSettings() {
                 <div className="flex-1">
                   <p className="font-bold text-sm">IP Consent Banner</p>
                   <p className="text-xs text-muted-foreground">Show banner asking for consent to detect country from IP. Used for country-based vote breakdowns.</p>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.featureToggles.chatbot.enabled}
+                  onChange={e => setConfig({ ...config, featureToggles: { ...config.featureToggles, chatbot: { enabled: e.target.checked } } })}
+                  className="mt-1 accent-primary"
+                />
+                <div className="flex-1">
+                  <p className="font-bold text-sm">Noor Chatbot</p>
+                  <p className="text-xs text-muted-foreground">AI-powered chat assistant. When off: the floating chat bubble and Noor are completely hidden from all pages.</p>
                 </div>
               </label>
             </div>
