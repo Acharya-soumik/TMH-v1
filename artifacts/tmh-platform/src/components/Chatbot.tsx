@@ -147,6 +147,16 @@ export function Chatbot() {
 
       const decoder = new TextDecoder()
       let accumulated = ""
+      let buffer = ""
+      let flushTimer: ReturnType<typeof setTimeout> | null = null
+
+      const flush = () => {
+        if (!buffer) return
+        accumulated += buffer
+        buffer = ""
+        const snapshot = accumulated
+        setMessages(prev => prev.map(m => m.id === botId ? { ...m, content: snapshot } : m))
+      }
 
       while (true) {
         const { done, value } = await reader.read()
@@ -162,14 +172,23 @@ export function Chatbot() {
             try {
               const parsed = JSON.parse(data)
               if (parsed.text) {
-                accumulated += parsed.text
-                const current = accumulated
-                setMessages(prev => prev.map(m => m.id === botId ? { ...m, content: current } : m))
+                buffer += parsed.text
+                // Batch: flush every 50ms so React renders ~5-10 words at a time
+                if (!flushTimer) {
+                  flushTimer = setTimeout(() => {
+                    flush()
+                    flushTimer = null
+                  }, 50)
+                }
               }
             } catch {}
           }
         }
       }
+
+      // Final flush for any remaining buffer
+      if (flushTimer) clearTimeout(flushTimer)
+      flush()
 
       if (!accumulated) {
         setMessages(prev => prev.map(m => m.id === botId ? { ...m, content: "hmm couldnt get a response — try again?" } : m))
