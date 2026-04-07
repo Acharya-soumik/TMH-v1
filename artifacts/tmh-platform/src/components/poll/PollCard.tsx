@@ -148,7 +148,12 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
 
   const handleWelcomeCTA = () => {
     markWelcomed()
-    document.getElementById("cross-sell-polls")?.scrollIntoView({ behavior: "smooth" })
+    const target = document.getElementById("cross-sell-polls")
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth" })
+    } else {
+      window.location.href = "/debates"
+    }
   }
 
   const isLive = !poll.endsAt || new Date(poll.endsAt) > new Date()
@@ -399,7 +404,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                     </p>
                     <button
                       onClick={handleWelcomeCTA}
-                      className="mt-3 text-[10px] font-black uppercase tracking-widest text-primary hover:text-foreground transition-colors border-b border-primary/40 hover:border-foreground pb-0.5"
+                      className="mt-3 text-[10px] font-black uppercase tracking-widest text-primary hover:text-foreground transition-colors border-b border-primary/40 hover:border-foreground pb-0.5 cursor-pointer"
                     >
                       Keep Voting →
                     </button>

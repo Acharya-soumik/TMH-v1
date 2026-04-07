@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { Search, X, Share2, CheckCircle2, MessageSquare } from "lucide-react";
+import { Search, X, Share2, CheckCircle2, MessageSquare, Info } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "motion/react";
 import { useToast } from "@/hooks/use-toast";
@@ -1082,24 +1082,20 @@ function PredictionGridCard({
               title="Prediction details"
               style={{
                 background: "none",
-                border: "1px solid var(--border)",
+                border: "none",
                 cursor: "pointer",
                 padding: "4px",
                 color: "var(--muted-foreground)",
                 transition: "color 0.15s",
-                fontSize: 13,
-                fontFamily: "'Barlow Condensed', sans-serif",
-                fontWeight: 700,
                 lineHeight: 1,
                 width: 22,
                 height: 22,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                borderRadius: "50%",
               }}
             >
-              i
+              <Info size={14} />
             </button>
             {showInfo && (
               <div

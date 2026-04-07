@@ -21,7 +21,7 @@ import {
   getLinkedInShareUrl,
   getXShareUrl,
 } from "./url-builders"
-import { buildShareText, getXShareText } from "./templates"
+import { buildShareText } from "./templates"
 import { generateCard } from "./card-generator"
 
 // ── Options ─────────────────────────────────────────────────
@@ -70,8 +70,7 @@ function openTab(url: string): void {
  * The shared page's OG tags provide the preview card automatically.
  */
 async function handleWhatsApp(ctx: ShareContext): Promise<ShareResult> {
-  const text = buildShareText(ctx, "whatsapp")
-  openTab(getWhatsAppShareUrl(text))
+  openTab(getWhatsAppShareUrl(ctx.url))
   return { platform: "whatsapp", outcome: "opened" }
 }
 
@@ -80,8 +79,7 @@ async function handleWhatsApp(ctx: ShareContext): Promise<ShareResult> {
  * LinkedIn fetches OG tags from the URL to build the preview card.
  */
 async function handleLinkedIn(ctx: ShareContext): Promise<ShareResult> {
-  const text = buildShareText(ctx, "linkedin")
-  await copyToClipboard(text)
+  await copyToClipboard(ctx.url)
   openTab(getLinkedInShareUrl(ctx.url))
   return { platform: "linkedin", outcome: "copied" }
 }
@@ -91,8 +89,7 @@ async function handleLinkedIn(ctx: ShareContext): Promise<ShareResult> {
  * X renders the OG card from the shared URL automatically.
  */
 async function handleX(ctx: ShareContext): Promise<ShareResult> {
-  const tweetText = getXShareText(ctx)
-  openTab(getXShareUrl(tweetText, ctx.url))
+  openTab(getXShareUrl("", ctx.url))
   return { platform: "x", outcome: "opened" }
 }
 
@@ -107,8 +104,7 @@ async function handleInstagram(ctx: ShareContext): Promise<ShareResult> {
 }
 
 async function handleCopy(ctx: ShareContext): Promise<ShareResult> {
-  const text = buildShareText(ctx, "generic")
-  const ok = await copyToClipboard(text)
+  const ok = await copyToClipboard(ctx.url)
   return {
     platform: "copy",
     outcome: ok ? "copied" : "failed",
@@ -169,12 +165,9 @@ async function handleNative(ctx: ShareContext): Promise<ShareResult> {
     }
   }
 
-  const text = buildShareText(ctx, "generic")
-
   try {
     await navigator.share({
       title: ctx.title,
-      text,
       url: ctx.url,
     })
     return { platform: "native", outcome: "shared" }
