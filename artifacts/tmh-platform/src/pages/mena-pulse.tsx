@@ -12,6 +12,7 @@ import {
   type ApiPulseTopic,
 } from "@/hooks/use-cms-data";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { TitlePunctuation } from "@/components/TitlePunctuation";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
 
@@ -1490,7 +1491,8 @@ interface PulseConfig {
     up: boolean;
   }>;
   categories?: Array<{ key: string; label: string; color: string }>;
-  hero?: { title?: string; subtitle?: string };
+  hero?: { tagline?: string; titleLine1?: string; titleLine2?: string; subtitle?: string };
+  punctuations?: string[];
 }
 
 function PulseTicker() {
@@ -1815,7 +1817,7 @@ export default function MenaPulse() {
               marginBottom: "0.5rem",
             }}
           >
-            {t(pulseConfig?.hero?.title || "Pulse")}
+            {t(pulseConfig?.hero?.tagline || "Pulse")}
           </p>
           <h1
             style={{
@@ -1831,21 +1833,8 @@ export default function MenaPulse() {
               marginBottom: "0.5rem",
             }}
           >
-            {isAr ? (
-              <>
-                {t(
-                  (pulseConfig?.hero?.subtitle ||
-                    "What's Actually Happening in MENA").replace(/[.?!]+$/, ""),
-                )}
-                <span style={{ color: "#DC143C" }}>.</span>
-              </>
-            ) : (
-              <>
-                {(pulseConfig?.hero?.subtitle ||
-                  "What's Actually\nHappening in MENA").replace(/[.?!]+$/, "")}
-                <span style={{ color: "#DC143C" }}>.</span>
-              </>
-            )}
+            {t(pulseConfig?.hero?.titleLine1 || "What's Actually")}<br />
+            {t(pulseConfig?.hero?.titleLine2 || "Happening in MENA")}<TitlePunctuation punctuations={pulseConfig?.punctuations} />
           </h1>
           <p
             style={{

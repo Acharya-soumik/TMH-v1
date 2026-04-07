@@ -10,6 +10,7 @@ import { Layout } from "@/components/layout/Layout";
 import { PollCard } from "@/components/poll/PollCard";
 import { ProfileCard } from "@/components/profile/ProfileCard";
 const GlobeConnections = lazy(() => import("@/components/globe/GlobeConnections").then(m => ({ default: m.GlobeConnections })));
+const AboutSection = lazy(() => import("@/components/home/AboutSection"));
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { ArrowRight, Share2, Lock, Mail, CheckCircle2 } from "lucide-react";
@@ -1885,6 +1886,11 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {/* ── ABOUT ── */}
+      <Suspense fallback={<div className="py-20" />}>
+        <AboutSection />
+      </Suspense>
 
       {/* ── FRONT PAGE: Lead Debate + Sidebar ── */}
       <section className="py-8 bg-background border-b border-border relative">
