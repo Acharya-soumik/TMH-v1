@@ -28,7 +28,7 @@ export default function AboutSection() {
               {t("MENA's first opinion intelligence platform.")}
             </p>
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.9rem", lineHeight: 1.75, color: "rgba(245,240,235,0.7)", marginBottom: "1.75rem" }}>
-              {t("Anonymous votes from 19 countries. Honest data from real people. No op-eds, no think tanks, no narrative - just what 541 million people actually think.")}
+              {t("Anonymous votes from across the globe on 19 MENA countries. Honest data from real people. No op-eds, no think tanks, no narrative — just what 541 million people actually think.")}
             </p>
             <blockquote style={{ borderLeft: "3px solid #DC143C", paddingLeft: "1.25rem", fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontSize: "1rem", lineHeight: 1.65, color: "#F5F0EB", marginBottom: "0.85rem" }}>
               {t("\"Bringing the voices of the Middle East into one room. Finally.\"")}

@@ -159,7 +159,7 @@ export default function About() {
           {t("The Tribunal is MENA's first opinion intelligence platform — part editorial, part data engine, part social experiment. A product by The Middle East Hustle.")}
         </p>
         <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
-          {t("We ask the questions nobody else asks. We collect anonymous votes from across 19 countries. We track predictions over time. We surface the trends reshaping the region. And we profile the people building it.")}
+          {t("We ask the questions nobody else asks. We collect anonymous votes from around the world on 19 MENA countries. We track predictions over time. We surface the trends reshaping the region. And we profile the people building it.")}
         </p>
         <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
           {t("Think of it as the WSJ of MENA opinion — editorial in presentation, ruthlessly neutral in methodology, and built for the 541 million people who live, work, and build in the Middle East and North Africa.")}
