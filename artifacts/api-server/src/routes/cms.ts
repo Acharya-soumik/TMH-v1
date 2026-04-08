@@ -1,10 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
-// @ts-expect-error — multer-s3 v3 ships without declaration files; typed via usage below
-import multerS3 from "multer-s3";
 import path from "path";
-import fs from "fs";
-import { r2Client, R2_BUCKET, R2_PUBLIC_URL, isR2Available } from "../utils/r2";
+import { supabaseAdmin, isSupabaseStorageAvailable, STORAGE_BUCKET, getPublicUrl } from "../utils/supabase-storage";
 import crypto from "crypto";
 import { db, pollsTable, pollOptionsTable, votesTable, newsletterSubscribersTable, hustlerApplicationsTable, profilesTable, predictionsTable, pulseTopicsTable, cmsConfigsTable, designTokensTable, majlisInvitesTable, cmsSessionsTable } from "@workspace/db";
 import { eq, desc, sql, count, like, or, inArray, and, asc, gt } from "drizzle-orm";
@@ -1058,31 +1055,8 @@ router.post("/cms/upload/:type", requireCmsAuth, async (req, res) => {
   }
 });
 
-const uploadsDir = path.join(process.cwd(), process.env.UPLOADS_DIR ?? "uploads");
-
-// Use R2 object storage in production when configured, fall back to local disk for development
-const storage = isR2Available
-  ? multerS3({
-      s3: r2Client!,
-      bucket: R2_BUCKET,
-      key: (_req: any, file: Express.Multer.File, cb: (err: Error | null, key: string) => void) => {
-        const ext = path.extname(file.originalname);
-        cb(null, `uploads/${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
-      },
-    })
-  : multer.diskStorage({
-      destination: (_req, _file, cb) => {
-        if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-        cb(null, uploadsDir);
-      },
-      filename: (_req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
-      },
-    });
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -1094,28 +1068,24 @@ const upload = multer({
   },
 });
 
-router.post("/cms/upload-image", requireCmsAuth, upload.single("image"), (req, res) => {
+router.post("/cms/upload-image", requireCmsAuth, upload.single("image"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No image provided" });
   }
-  // multer-s3 sets `location` (full R2 URL); local disk uses filename
-  const url = isR2Available
-    ? (req.file as any).location as string  // multer-s3 sets .location to the R2 public URL
-    : `/api/cms/uploads/${req.file.filename}`;
-  return res.json({ url, filename: req.file.filename ?? path.basename(url) });
+  if (!isSupabaseStorageAvailable || !supabaseAdmin) {
+    return res.status(500).json({ error: "Image storage not configured. Set SUPABASE_SERVICE_ROLE_KEY." });
+  }
+  const ext = path.extname(req.file.originalname);
+  const filePath = `profiles/${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+  const { error } = await supabaseAdmin.storage
+    .from(STORAGE_BUCKET)
+    .upload(filePath, req.file.buffer, { contentType: req.file.mimetype, upsert: false });
+  if (error) {
+    return res.status(500).json({ error: `Upload failed: ${error.message}` });
+  }
+  const url = getPublicUrl(filePath);
+  return res.json({ url, filename: path.basename(filePath) });
 });
-
-// Local file serving — only active when R2 is not configured (development)
-if (!isR2Available) {
-  router.get("/cms/uploads/:filename", (req, res) => {
-    const filename = path.basename(req.params.filename);
-    const filePath = path.join(uploadsDir, filename);
-    if (!filePath.startsWith(uploadsDir) || !fs.existsSync(filePath)) {
-      return res.status(404).json({ error: "File not found" });
-    }
-    return res.sendFile(filePath);
-  });
-}
 
 router.get("/cms/homepage", requireCmsAuth, async (_req, res) => {
   try {
