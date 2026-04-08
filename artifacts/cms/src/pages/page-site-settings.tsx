@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { Save, Plus, Trash2 } from "lucide-react";
+import { Save, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 
 interface NavLink {
   label: string;
@@ -205,6 +205,24 @@ export default function PageSiteSettings() {
             </div>
             {config.navigation.links.map((link, i) => (
               <div key={i} className="flex items-center gap-2 border border-border/50 rounded-sm p-2 bg-card">
+                <div className="flex flex-col gap-0.5">
+                  <button
+                    disabled={i === 0}
+                    onClick={() => { const links = [...config.navigation.links]; [links[i - 1], links[i]] = [links[i], links[i - 1]]; setConfig({ ...config, navigation: { ...config.navigation, links } }); }}
+                    className="text-muted-foreground hover:text-foreground disabled:opacity-25 disabled:cursor-not-allowed"
+                    title="Move up"
+                  >
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    disabled={i === config.navigation.links.length - 1}
+                    onClick={() => { const links = [...config.navigation.links]; [links[i], links[i + 1]] = [links[i + 1], links[i]]; setConfig({ ...config, navigation: { ...config.navigation, links } }); }}
+                    className="text-muted-foreground hover:text-foreground disabled:opacity-25 disabled:cursor-not-allowed"
+                    title="Move down"
+                  >
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                </div>
                 <input value={link.label} onChange={e => { const links = [...config.navigation.links]; links[i] = { ...link, label: e.target.value }; setConfig({ ...config, navigation: { ...config.navigation, links } }); }} placeholder="Label" className="flex-1 px-2 py-1.5 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
                 <input value={link.href} onChange={e => { const links = [...config.navigation.links]; links[i] = { ...link, href: e.target.value }; setConfig({ ...config, navigation: { ...config.navigation, links } }); }} placeholder="/path" className="w-32 px-2 py-1.5 bg-background border border-border rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
                 <label className="flex items-center gap-1 text-xs">
