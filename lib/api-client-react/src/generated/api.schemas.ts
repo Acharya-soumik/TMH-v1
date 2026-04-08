@@ -84,6 +84,7 @@ export interface Profile {
   headline: string;
   role: string;
   company?: string;
+  companyUrl?: string | null;
   sector: string;
   country: string;
   city: string;

@@ -11,6 +11,7 @@ function toProfileResponse(profile: any) {
     headline: profile.headline,
     role: profile.role,
     company: profile.company ?? null,
+    companyUrl: profile.companyUrl ?? null,
     sector: profile.sector,
     country: profile.country,
     city: profile.city,

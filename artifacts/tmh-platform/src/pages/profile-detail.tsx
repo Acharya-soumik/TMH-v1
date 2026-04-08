@@ -52,8 +52,8 @@ function getCompanyUrl(company: string): string {
   return ""
 }
 
-function CompanyLink({ company }: { company: string }) {
-  const url = getCompanyUrl(company)
+function CompanyLink({ company, companyUrl: apiUrl }: { company: string; companyUrl?: string | null }) {
+  const url = apiUrl || getCompanyUrl(company)
   if (!url) return <span>{company}</span>
   return (
     <a href={url} target="_blank" rel="noopener noreferrer"
@@ -154,7 +154,7 @@ export default function ProfileDetail() {
                 {profile.company && (
                   <div className="flex items-center gap-2">
                     <Building className="w-4 h-4 text-foreground" />
-                    <CompanyLink company={profile.company} />
+                    <CompanyLink company={profile.company} companyUrl={profile.companyUrl} />
                   </div>
                 )}
                 <div className="flex items-center gap-2">

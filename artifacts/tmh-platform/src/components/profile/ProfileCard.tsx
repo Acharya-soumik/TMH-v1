@@ -67,7 +67,7 @@ export function ProfileCard({ profile }: { profile: Profile }) {
   const getInitials = (name: string) =>
     name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
 
-  const companyUrl = getCompanyUrl(profile.company)
+  const companyUrl = profile.companyUrl || getCompanyUrl(profile.company)
   const profileUrl = `/voices/${profile.id}`
 
   return (
