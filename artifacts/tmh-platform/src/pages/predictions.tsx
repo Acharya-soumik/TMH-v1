@@ -9,6 +9,7 @@ import type { PredictionShareContext } from "@/lib/share";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
 import { PredictionGridSkeleton } from "@/components/skeletons/PredictionCardSkeleton";
+import { TickerSkeleton } from "@/components/skeletons/TickerSkeleton";
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
@@ -40,7 +41,6 @@ import {
 import {
   PREDICTIONS as FALLBACK_PREDICTIONS,
   PREDICTION_CATEGORIES as FALLBACK_CATEGORIES,
-  PREDICTIONS_TICKER as FALLBACK_TICKER,
   type PredictionCard,
 } from "@/data/predictions-data";
 import { usePredictions, usePageConfig, type ApiPrediction } from "@/hooks/use-cms-data";
@@ -80,8 +80,6 @@ const MONTHS = [
   "Nov",
   "Dec",
 ];
-
-const FALLBACK_TICKER_DATA = FALLBACK_TICKER;
 
 const CLOSED_RAW = [55, 58, 60, 62, 63, 65, 67, 67, 67, 80];
 const CLOSED_DATA = CLOSED_RAW.map((yes, i) => ({ week: i + 1, yes }));
@@ -685,11 +683,23 @@ function VoteButtons({
 
 // ─── MOMENTUM TICKER ─────────────────────────────────────────────────────────
 
+type MomentumTickerItem = {
+  label: string;
+  yes: number;
+  delta: number;
+  up: boolean;
+  href?: string;
+};
+
 function MomentumTicker({
   tickerData,
+  isLoading,
 }: {
-  tickerData: typeof FALLBACK_TICKER_DATA;
+  tickerData: MomentumTickerItem[];
+  isLoading: boolean;
 }) {
+  if (isLoading && !tickerData.length) return <TickerSkeleton />;
+  if (!tickerData.length) return null;
   const doubled = [...tickerData, ...tickerData];
   return (
     <div
@@ -702,14 +712,17 @@ function MomentumTicker({
     >
       <div className="tmh-ticker-scroll">
         {doubled.map((item, i) => (
-          <div
+          <Link
             key={i}
+            href={item.href ?? "/predictions"}
             style={{
               display: "flex",
               alignItems: "center",
               gap: "0.6rem",
               padding: "0.7rem 2rem",
               borderRight: "1px solid rgba(255,255,255,0.1)",
+              cursor: "pointer",
+              textDecoration: "none",
             }}
           >
             <span
@@ -745,7 +758,7 @@ function MomentumTicker({
               {item.up ? "▲" : "▼"} {item.up ? "+" : "-"}
               {item.delta}%
             </span>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
@@ -1531,19 +1544,18 @@ export default function Predictions() {
     return FALLBACK_CATEGORIES;
   }, [apiData]);
 
-  const tickerData = useMemo(() => {
-    if (apiData?.items?.length) {
-      return apiData.items.slice(0, 12).map((p) => ({
-        label:
-          p.question.length > 40
-            ? p.question.substring(0, 38) + "…"
-            : p.question,
-        yes: p.yesPercentage,
-        delta: p.momentum,
-        up: p.momentumDirection === "up",
-      }));
-    }
-    return FALLBACK_TICKER_DATA;
+  const tickerData = useMemo<MomentumTickerItem[]>(() => {
+    if (!apiData?.items?.length) return [];
+    return apiData.items.slice(0, 12).map((p) => ({
+      label:
+        p.question.length > 40
+          ? p.question.substring(0, 38) + "…"
+          : p.question,
+      yes: p.yesPercentage,
+      delta: p.momentum,
+      up: p.momentumDirection === "up",
+      href: `/predictions/${p.id}`,
+    }));
   }, [apiData]);
 
   const handleVoteOverride = useCallback((predId: number, choice: string | null, serverYes?: number, serverNo?: number) => {
@@ -1798,7 +1810,7 @@ export default function Predictions() {
       </div>
 
       {/* Momentum ticker */}
-      <MomentumTicker tickerData={tickerData} />
+      <MomentumTicker tickerData={tickerData} isLoading={isLoading} />
 
       {/* Category filter */}
       <div

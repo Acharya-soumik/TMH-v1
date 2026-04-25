@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useListPolls, useListCategories } from "@workspace/api-client-react";
 import type { Poll } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout/Layout";
@@ -13,6 +13,7 @@ import { motion } from "motion/react";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
 import { DebateGridSkeleton } from "@/components/skeletons/DebateCardSkeleton";
+import { TickerSkeleton } from "@/components/skeletons/TickerSkeleton";
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
@@ -29,18 +30,7 @@ const staggerItem = {
   },
 };
 
-const FALLBACK_DEBATE_TICKER = [
-  { topic: "Brain Drain", votes: "0" },
-  { topic: "AI & Jobs", votes: "0" },
-  { topic: "Gender Leadership", votes: "0" },
-  { topic: "Income Tax UAE", votes: "0" },
-  { topic: "Vision 2030", votes: "0" },
-  { topic: "Arab Identity", votes: "0" },
-  { topic: "Expat Rights", votes: "0" },
-  { topic: "Cannabis Reform", votes: "0" },
-  { topic: "Arranged Marriage", votes: "0" },
-  { topic: "Gulf Wealth Gap", votes: "0" },
-];
+type DebateTickerItem = { topic: string; votes: string; href?: string };
 
 interface PollsConfig {
   hero?: { titleLine1?: string; titleLine2?: string; subtitle?: string };
@@ -180,17 +170,16 @@ export default function Polls() {
 
   const hero = config?.hero;
 
-  const DEBATE_TICKER = useMemo(() => {
-    if (pollsData?.polls?.length) {
-      return pollsData.polls.slice(0, 10).map((p) => ({
-        topic:
-          p.question && p.question.length > 25
-            ? p.question.substring(0, 23) + "…"
-            : (p.question ?? "Debate"),
-        votes: (p.totalVotes ?? 0).toLocaleString(),
-      }));
-    }
-    return FALLBACK_DEBATE_TICKER;
+  const DEBATE_TICKER = useMemo<DebateTickerItem[]>(() => {
+    if (!pollsData?.polls?.length) return [];
+    return pollsData.polls.slice(0, 10).map((p) => ({
+      topic:
+        p.question && p.question.length > 25
+          ? p.question.substring(0, 23) + "…"
+          : (p.question ?? "Debate"),
+      votes: (p.totalVotes ?? 0).toLocaleString(),
+      href: `/debates/${p.id}`,
+    }));
   }, [pollsData]);
 
   const doubled = [...DEBATE_TICKER, ...DEBATE_TICKER];
@@ -249,6 +238,9 @@ export default function Polls() {
           </p>
         </motion.div>
 
+        {isLoading && DEBATE_TICKER.length === 0 ? (
+        <TickerSkeleton />
+        ) : DEBATE_TICKER.length > 0 ? (
         <div
           style={{
             background: "#0D0D0D",
@@ -259,14 +251,17 @@ export default function Polls() {
         >
           <div className="tmh-ticker-scroll">
             {doubled.map((item, i) => (
-              <div
+              <Link
                 key={i}
+                href={item.href ?? "/debates"}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: "0.6rem",
                   padding: "0.7rem 2rem",
                   borderRight: "1px solid rgba(255,255,255,0.1)",
+                  cursor: "pointer",
+                  textDecoration: "none",
                 }}
               >
                 <span
@@ -301,10 +296,11 @@ export default function Polls() {
                 >
                   VOTES
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
+        ) : null}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col lg:flex-row gap-12">

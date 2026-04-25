@@ -9,6 +9,7 @@ import {
 import { Layout } from "@/components/layout/Layout";
 import { PollCard } from "@/components/poll/PollCard";
 import { ProfileCard } from "@/components/profile/ProfileCard";
+import { TickerSkeleton } from "@/components/skeletons/TickerSkeleton";
 const GlobeConnections = lazy(() => import("@/components/globe/GlobeConnections").then(m => ({ default: m.GlobeConnections })));
 const AboutSection = lazy(() => import("@/components/home/AboutSection"));
 import { Link } from "wouter";
@@ -1391,8 +1392,8 @@ export default function Home() {
   const { data: featuredProfiles, isLoading: profilesLoading } =
     useListProfiles({ filter: "featured", limit: 8 });
   const { data: categories } = useListCategories();
-  const { data: apiPredictions } = usePredictions();
-  const { data: apiPulseTopics } = usePulseTopics();
+  const { data: apiPredictions, isLoading: predictionsLoading } = usePredictions();
+  const { data: apiPulseTopics, isLoading: pulseLoading } = usePulseTopics();
   const { data: liveCounts } = useLiveCounts();
   const { data: siteSettings } = useSiteSettings();
   const majlisEnabled = siteSettings?.featureToggles?.majlis?.enabled ?? false;
@@ -1446,118 +1447,35 @@ export default function Home() {
         : (p.question ?? "Debate"),
     badge: "DEBATE" as const,
     stat: `${(p.totalVotes ?? 0).toLocaleString()} votes`,
+    href: `/debates/${p.id}`,
   }));
   const predictionItems = useMemo(() => {
-    if (apiPredictions?.items?.length) {
-      return apiPredictions.items.slice(0, 8).map((p) => ({
-        topic:
-          p.question.length > 40
-            ? p.question.substring(0, 38) + "…"
-            : p.question,
-        badge: "PREDICTION" as const,
-        stat: `${p.yesPercentage}% yes`,
-      }));
-    }
-    return [
-      {
-        topic: "NEOM's Line will have residents by 2030?",
-        badge: "PREDICTION" as const,
-        stat: "36% yes",
-      },
-      {
-        topic: "Saudi non-oil GDP to exceed 50%?",
-        badge: "PREDICTION" as const,
-        stat: "62% yes",
-      },
-      {
-        topic: "UAE income tax within 3 years?",
-        badge: "PREDICTION" as const,
-        stat: "38% yes",
-      },
-      {
-        topic: "$10B MENA startup in 2026?",
-        badge: "PREDICTION" as const,
-        stat: "44% yes",
-      },
-      {
-        topic: "Arabic mandatory in Dubai schools?",
-        badge: "PREDICTION" as const,
-        stat: "58% yes",
-      },
-      {
-        topic: "Riyadh Metro fully operational?",
-        badge: "PREDICTION" as const,
-        stat: "64% yes",
-      },
-      {
-        topic: "Saudi 2034 World Cup confirmed?",
-        badge: "PREDICTION" as const,
-        stat: "91% yes",
-      },
-      {
-        topic: "Oil above $85 all of 2026?",
-        badge: "PREDICTION" as const,
-        stat: "52% yes",
-      },
-    ];
+    if (!apiPredictions?.items?.length) return [];
+    return apiPredictions.items.slice(0, 8).map((p) => ({
+      topic:
+        p.question.length > 40
+          ? p.question.substring(0, 38) + "…"
+          : p.question,
+      badge: "PREDICTION" as const,
+      stat: `${p.yesPercentage}% yes`,
+      href: `/predictions/${p.id}`,
+    }));
   }, [apiPredictions]);
   const pulseItems = useMemo(() => {
-    if (apiPulseTopics?.items?.length) {
-      return apiPulseTopics.items.slice(0, 8).map((t) => ({
-        topic: t.title.length > 35 ? t.title.substring(0, 33) + "…" : t.title,
-        badge: "PULSE" as const,
-        stat: `${t.deltaUp ? "↑" : "↓"} ${t.delta}`,
-      }));
-    }
-    return [
-      {
-        topic: "Youth unemployment across MENA",
-        badge: "PULSE" as const,
-        stat: "↑ 23%",
-      },
-      {
-        topic: "Fintech adoption in GCC",
-        badge: "PULSE" as const,
-        stat: "↑ 340%",
-      },
-      {
-        topic: "Renewable energy investment",
-        badge: "PULSE" as const,
-        stat: "$15.2B",
-      },
-      {
-        topic: "Golden visa applications surge",
-        badge: "PULSE" as const,
-        stat: "↑ 67%",
-      },
-      {
-        topic: "Arabic content digital deficit",
-        badge: "PULSE" as const,
-        stat: "4% of web",
-      },
-      {
-        topic: "MENA cinema box office boom",
-        badge: "PULSE" as const,
-        stat: "↑ 54%",
-      },
-      {
-        topic: "Diabetes crisis in the Gulf",
-        badge: "PULSE" as const,
-        stat: "↑ 17%",
-      },
-      {
-        topic: "GCC military spending",
-        badge: "PULSE" as const,
-        stat: "$105B",
-      },
-    ];
+    if (!apiPulseTopics?.items?.length) return [];
+    return apiPulseTopics.items.slice(0, 8).map((t) => ({
+      topic: t.title.length > 35 ? t.title.substring(0, 33) + "…" : t.title,
+      badge: "PULSE" as const,
+      stat: `${t.deltaUp ? "↑" : "↓"} ${t.delta}`,
+      href: `/pulse?shared=${encodeURIComponent(t.topicId)}`,
+    }));
   }, [apiPulseTopics]);
   const maxLen = Math.max(
     debateItems.length,
     predictionItems.length,
     pulseItems.length,
   );
-  const interleaved: { topic: string; badge: string; stat: string }[] = [];
+  const interleaved: { topic: string; badge: string; stat: string; href: string }[] = [];
   for (let i = 0; i < maxLen; i++) {
     if (debateItems[i]) interleaved.push(debateItems[i]);
     if (predictionItems[i]) interleaved.push(predictionItems[i]);
@@ -1811,6 +1729,9 @@ export default function Home() {
       </section>
 
       {/* ── MIXED TICKER ── */}
+      {(trendingLoading || predictionsLoading || pulseLoading) && interleaved.length === 0 ? (
+        <TickerSkeleton />
+      ) : interleaved.length > 0 ? (
       <div
         className="min-h-[48px]"
         style={{
@@ -1822,14 +1743,17 @@ export default function Home() {
       >
         <div className="tmh-ticker-scroll">
           {tickerDoubled.map((item, i) => (
-            <div
+            <Link
               key={i}
+              href={item.href}
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "0.6rem",
                 padding: "0.7rem 2rem",
                 borderRight: "1px solid rgba(255,255,255,0.1)",
+                cursor: "pointer",
+                textDecoration: "none",
               }}
             >
               <span
@@ -1882,10 +1806,11 @@ export default function Home() {
               >
                 {item.stat}
               </span>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
+      ) : null}
 
       {/* ── ABOUT ── */}
       <Suspense fallback={<div className="py-20" />}>

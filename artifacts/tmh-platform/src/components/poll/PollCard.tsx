@@ -258,7 +258,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
               <motion.div key="voting" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <div className="flex items-center gap-3 mb-4 border-l-4 border-primary pl-3">
                   <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
-                    {ptype === "hot_take" ? "What Do You Think?" : ptype === "scale" ? "Rate This" : "Cast Your Vote"}
+                    {ptype === "scale" ? "Rate This" : "Cast Your Vote"}
                   </span>
                 </div>
 
@@ -287,31 +287,6 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                   </div>
                 )}
 
-                {/* HOT TAKE: Agree/Disagree with colored emphasis */}
-                {ptype === "hot_take" && (
-                  <div className="space-y-3">
-                    {localOptions.map((option, i) => {
-                      const colors = ["border-emerald-500 text-emerald-500 hover:bg-emerald-500 hover:text-white", "border-red-500 text-red-500 hover:bg-red-500 hover:text-white", "border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white", "border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"]
-                      return (
-                        <button
-                          key={option.id}
-                          onClick={() => handleVote(option.id)}
-                          disabled={!isLive}
-                          className={cn(
-                            "group w-full text-left px-5 py-4 border-2 transition-all duration-150 font-bold text-sm uppercase tracking-wider",
-                            colors[i % colors.length],
-                            !isLive && "opacity-50 cursor-not-allowed"
-                          )}
-                        >
-                          <span className="block transition-transform duration-150 group-hover:translate-x-1">
-                            {option.text}
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-
                 {/* SCALE: Horizontal rating buttons */}
                 {ptype === "scale" && (
                   <div className="flex gap-2 flex-wrap">
@@ -333,7 +308,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                 )}
 
                 {/* MULTIPLE CHOICE + DEFAULT: Standard stacked option buttons */}
-                {!isBinaryPair && ptype !== "hot_take" && ptype !== "scale" && (
+                {!isBinaryPair && ptype !== "scale" && (
                   <div className="space-y-3">
                     {localOptions.map((option) => (
                       <button
