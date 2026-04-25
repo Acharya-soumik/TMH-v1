@@ -169,7 +169,7 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
         <div className={cn("p-6 sm:p-8 flex-1 flex flex-col", featured ? "md:p-12 md:w-1/2" : "")}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <span className="px-2 py-1 bg-foreground text-background text-[10px] font-bold uppercase tracking-[0.25em]">
+              <span className="px-2.5 py-1 bg-foreground text-background text-[13px] font-bold uppercase tracking-[0.18em]">
                 {poll.category}
               </span>
               {isLive && (

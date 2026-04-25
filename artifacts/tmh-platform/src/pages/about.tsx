@@ -1,9 +1,10 @@
 import { Link } from "wouter"
 import { Layout } from "@/components/layout/Layout"
 import { useI18n } from "@/lib/i18n"
-import { usePageConfig, useLiveCounts } from "@/hooks/use-cms-data"
+import { usePageConfig, useLiveCounts, useSiteSettings } from "@/hooks/use-cms-data"
 import { usePageTitle } from "@/hooks/use-page-title"
 import { TitlePunctuation } from "@/components/TitlePunctuation"
+import { PageIndex } from "@/components/layout/PageIndex"
 
 const FALLBACK_PILLARS = [
   {
@@ -117,7 +118,14 @@ export default function About() {
     stats?: Array<{ num: string; label: string }>;
   }>("about")
 
-  const pillars = pageConfig?.pillars?.length ? pageConfig.pillars : FALLBACK_PILLARS
+  const { data: siteSettings } = useSiteSettings()
+  const voicesEnabled = siteSettings?.featureToggles?.voices?.enabled ?? true
+  const majlisEnabled = siteSettings?.featureToggles?.majlis?.enabled ?? false
+  const pillars = (pageConfig?.pillars?.length ? pageConfig.pillars : FALLBACK_PILLARS)
+    .filter(p =>
+      (voicesEnabled || !p.link?.startsWith("/voices"))
+      && (majlisEnabled || !p.link?.startsWith("/majlis"))
+    )
   const beliefs = pageConfig?.beliefs?.length ? pageConfig.beliefs : FALLBACK_BELIEFS
   const hero = pageConfig?.hero
   const founder = pageConfig?.founderStatement
@@ -132,8 +140,19 @@ export default function About() {
     { num: "541M", label: "People in MENA" },
   ]
 
+  const pageSections = [
+    { id: "what-is-the-tribunal", label: t("What Is It") },
+    { id: "the-platform", label: t("The Platform") },
+    { id: "from-the-founder", label: t("From the Founder") },
+    { id: "what-we-stand-for", label: t("What We Stand For") },
+    { id: "the-region", label: t("The Region") },
+    { id: "our-ethos", label: t("Our Ethos") },
+  ]
+
   return (
     <Layout>
+      <PageIndex sections={pageSections} />
+
       {/* Hero */}
       <div className="bg-foreground text-background border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-10">
@@ -151,7 +170,7 @@ export default function About() {
       </div>
 
       {/* What TMH Is */}
-      <div className="max-w-3xl mx-auto px-4 py-20 border-b border-border">
+      <div id="what-is-the-tribunal" className="max-w-3xl mx-auto px-4 py-20 border-b border-border scroll-mt-24">
         <h2 className="font-serif font-black uppercase text-2xl text-foreground mb-8 border-l-4 border-primary pl-4">
           {t("What Is The Tribunal?")}
         </h2>
@@ -170,7 +189,7 @@ export default function About() {
       </div>
 
       {/* The Four Pillars */}
-      <div className="py-20 bg-secondary/20 border-b border-border">
+      <div id="the-platform" className="py-20 bg-secondary/20 border-b border-border scroll-mt-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-serif font-black uppercase text-3xl border-b-2 border-foreground pb-4 mb-12 text-foreground">
             {t("The Platform")}
@@ -212,7 +231,7 @@ export default function About() {
       </div>
 
       {/* Founder Statement */}
-      <div className="max-w-3xl mx-auto px-4 py-20 border-b border-border">
+      <div id="from-the-founder" className="max-w-3xl mx-auto px-4 py-20 border-b border-border scroll-mt-24">
         <h2 className="font-serif font-black uppercase text-2xl text-foreground mb-8 border-l-4 border-primary pl-4">
           {t("From the Founder")}
         </h2>
@@ -252,7 +271,7 @@ export default function About() {
       </div>
 
       {/* Beliefs */}
-      <div className="py-20 bg-secondary/20 border-t border-border border-b">
+      <div id="what-we-stand-for" className="py-20 bg-secondary/20 border-t border-border border-b scroll-mt-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-serif font-black uppercase text-3xl border-b-2 border-foreground pb-4 mb-12 text-foreground">
             {t("What We Stand For")}
@@ -274,7 +293,7 @@ export default function About() {
       </div>
 
       {/* MENA Countries */}
-      <div className="py-16 border-b border-border">
+      <div id="the-region" className="py-16 border-b border-border scroll-mt-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-serif font-black uppercase text-2xl text-foreground mb-2 border-l-4 border-primary pl-4">
             {t("The Region We Cover")}
@@ -295,7 +314,7 @@ export default function About() {
       </div>
 
       {/* Ethos */}
-      <div className="py-16 border-b border-border bg-secondary/10">
+      <div id="our-ethos" className="py-16 border-b border-border bg-secondary/10 scroll-mt-24">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-serif font-black uppercase text-2xl text-foreground mb-8 border-l-4 border-primary pl-4">
             {t("Our Ethos")}
@@ -342,12 +361,14 @@ export default function About() {
             >
               {t("Read The Pulse")}
             </Link>
-            <Link
-              href="/voices"
-              className="border border-primary text-primary px-8 py-3 font-bold uppercase tracking-widest text-xs hover:bg-primary hover:text-white transition-colors font-serif"
-            >
-              {t("Meet The Voices")}
-            </Link>
+            {voicesEnabled && (
+              <Link
+                href="/voices"
+                className="border border-primary text-primary px-8 py-3 font-bold uppercase tracking-widest text-xs hover:bg-primary hover:text-white transition-colors font-serif"
+              >
+                {t("Meet The Voices")}
+              </Link>
+            )}
           </div>
         </div>
       </div>

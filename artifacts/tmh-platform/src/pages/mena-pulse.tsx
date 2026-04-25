@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { Search, X, Share2, CheckCircle2 } from "lucide-react";
+import { Share2, CheckCircle2 } from "lucide-react";
+import { FilterSidebar } from "@/components/layout/FilterSidebar";
 import { LiveNumber } from "@/components/live-counter/FlipDigit";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
@@ -1225,7 +1226,7 @@ function PulseShareBtn({ topic }: { topic: TopicCard }) {
           borderRadius: 3,
           cursor: "pointer",
           padding: "4px 10px",
-          color: "rgba(255,255,255,0.5)",
+          color: "rgba(255,255,255,0.75)",
           transition: "all 0.15s",
           display: "flex",
           alignItems: "center",
@@ -1324,13 +1325,13 @@ function TopicCardComponent({
         <span
           style={{
             fontFamily: "'Barlow Condensed', sans-serif",
-            fontSize: 9,
+            fontSize: 13,
             fontWeight: 800,
             textTransform: "uppercase",
-            letterSpacing: "0.18em",
+            letterSpacing: "0.16em",
             color: topic.tagColor,
             background: `${topic.tagColor}15`,
-            padding: "2px 8px",
+            padding: "4px 10px",
           }}
         >
           {t(topic.tag)}
@@ -1421,7 +1422,7 @@ function TopicCardComponent({
             fontSize: 9,
             textTransform: "uppercase",
             letterSpacing: "0.1em",
-            color: "rgba(255,255,255,0.45)",
+            color: "rgba(255,255,255,0.75)",
           }}
         >
           {topic.live
@@ -1459,7 +1460,7 @@ function TopicCardComponent({
             style={{
               fontFamily: "'DM Sans', sans-serif",
               fontSize: 12,
-              color: "rgba(255,255,255,0.55)",
+              color: "rgba(255,255,255,0.75)",
               lineHeight: 1.7,
               marginBottom: 8,
             }}
@@ -1470,7 +1471,7 @@ function TopicCardComponent({
             style={{
               fontFamily: "'DM Sans', sans-serif",
               fontSize: 8,
-              color: "rgba(255,255,255,0.4)",
+              color: "rgba(255,255,255,0.75)",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
             }}
@@ -1528,7 +1529,7 @@ function PulseTicker() {
                 fontSize: "0.7rem",
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
-                color: "rgba(250,250,250,0.5)",
+                color: "rgba(250,250,250,0.75)",
               }}
             >
               {item.label}
@@ -1623,7 +1624,7 @@ function BigNumber() {
           fontWeight: 700,
           textTransform: "uppercase",
           letterSpacing: "0.12em",
-          color: "rgba(255,255,255,0.45)",
+          color: "rgba(255,255,255,0.75)",
           marginBottom: 6,
         }}
       >
@@ -1655,7 +1656,7 @@ function BigNumber() {
         style={{
           fontFamily: "'DM Sans', sans-serif",
           fontSize: 10,
-          color: "rgba(255,255,255,0.55)",
+          color: "rgba(255,255,255,0.75)",
           marginTop: 8,
           lineHeight: 1.5,
         }}
@@ -1664,55 +1665,6 @@ function BigNumber() {
           "Growing by ~8.2 million per year — roughly 1 new person every 4 seconds. 60% are under 30.",
         )}
       </p>
-    </div>
-  );
-}
-
-function CategoryFilter({
-  active,
-  onSelect,
-  categories,
-  topics,
-}: {
-  active: string;
-  onSelect: (key: string) => void;
-  categories: typeof FALLBACK_CATEGORIES;
-  topics: TopicCard[];
-}) {
-  const { t } = useI18n();
-  return (
-    <div
-      style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "16px 0" }}
-    >
-      {categories.map((cat) => {
-        const isActive = active === cat.key;
-        return (
-          <button
-            key={cat.key}
-            onClick={() => onSelect(cat.key)}
-            style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: 10,
-              fontWeight: 800,
-              textTransform: "uppercase",
-              letterSpacing: "0.14em",
-              padding: "6px 14px",
-              border: `1px solid ${isActive ? cat.color : "rgba(255,255,255,0.1)"}`,
-              background: isActive ? `${cat.color}18` : "transparent",
-              color: isActive ? cat.color : "rgba(255,255,255,0.4)",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-            }}
-          >
-            {t(cat.label)}
-            <span style={{ marginLeft: 6, fontSize: 9, opacity: 0.6 }}>
-              {cat.key === "ALL"
-                ? topics.length
-                : topics.filter((tp) => tp.tag === cat.key).length}
-            </span>
-          </button>
-        );
-      })}
     </div>
   );
 }
@@ -1848,32 +1800,6 @@ export default function MenaPulse() {
             {allTopics.length}{" "}
             {t("trends the region needs to confront. Updated quarterly.")}
           </p>
-          <div className="mt-6 max-w-md relative border border-border rounded-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" />
-            <input
-              type="text"
-              placeholder={t("Search trends...")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: "100%",
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                padding: "10px 36px 10px 36px",
-                fontSize: "0.8rem",
-                fontFamily: "DM Sans, sans-serif",
-                outline: "none",
-              }}
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
         </div>
 
         <PulseTicker />
@@ -1897,7 +1823,7 @@ export default function MenaPulse() {
               fontSize: "0.72rem",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
-              color: "rgba(250,250,250,0.5)",
+              color: "rgba(250,250,250,0.75)",
             }}
           >
             <span
@@ -1926,7 +1852,7 @@ export default function MenaPulse() {
               fontSize: "0.72rem",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
-              color: "rgba(250,250,250,0.5)",
+              color: "rgba(250,250,250,0.75)",
             }}
           >
             <span
@@ -1955,7 +1881,7 @@ export default function MenaPulse() {
               fontSize: "0.72rem",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
-              color: "rgba(250,250,250,0.5)",
+              color: "rgba(250,250,250,0.75)",
             }}
           >
             <span
@@ -1984,7 +1910,7 @@ export default function MenaPulse() {
               fontSize: "0.72rem",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
-              color: "rgba(250,250,250,0.5)",
+              color: "rgba(250,250,250,0.75)",
             }}
           >
             <span
@@ -2031,96 +1957,111 @@ export default function MenaPulse() {
           </div>
 
           <div
+            className="flex flex-col lg:flex-row gap-12"
             style={{ maxWidth: 1280, margin: "0 auto", padding: "0 16px 16px" }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 4,
+            <FilterSidebar
+              search={{
+                value: searchQuery,
+                onChange: setSearchQuery,
+                placeholder: t("Search trends..."),
               }}
-            >
-              <div style={{ width: 3, height: 16, background: "#DC143C" }} />
-              <span
+              categories={{
+                items: CATEGORIES.filter((c) => c.key !== "ALL").map((c) => ({
+                  key: c.key,
+                  label: t(c.label),
+                  count: allTopics.filter((tp) => tp.tag === c.key).length,
+                })),
+                activeKey: activeCategory,
+                onSelect: setActiveCategory,
+                allLabel: t("All Trends"),
+                allCount: allTopics.length,
+              }}
+            />
+
+            <div className="flex-1 min-w-0">
+              <div
                 style={{
-                  fontFamily: "'Barlow Condensed', sans-serif",
-                  fontSize: 12,
-                  fontWeight: 800,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.18em",
-                  color: "rgba(255,255,255,0.5)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 4,
                 }}
               >
-                {t("Exploding Trends")}
-              </span>
-              <span
+                <div style={{ width: 3, height: 16, background: "#DC143C" }} />
+                <span
+                  style={{
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontSize: 12,
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.18em",
+                    color: "rgba(255,255,255,0.75)",
+                  }}
+                >
+                  {t("Exploding Trends")}
+                </span>
+                <span
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 9,
+                    color: "rgba(255,255,255,0.75)",
+                    marginLeft: 8,
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  {t("Click any card for the full story")}
+                </span>
+              </div>
+
+              <div
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 9,
-                  color: "rgba(255,255,255,0.5)",
-                  marginLeft: 8,
+                  fontSize: 10,
+                  color: "rgba(255,255,255,0.75)",
+                  margin: "16px 0",
                   letterSpacing: "0.05em",
                 }}
               >
-                {t("Click any card for the full story")}
-              </span>
-            </div>
+                {t("Showing")} {filtered.length} {t("of")} {allTopics.length}{" "}
+                {t("trends")}
+                {activeCategory !== "ALL" && (
+                  <button
+                    onClick={() => setActiveCategory("ALL")}
+                    style={{
+                      marginLeft: 12,
+                      color: "#DC143C",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      fontSize: "inherit",
+                      letterSpacing: "inherit",
+                      textDecoration: "underline",
+                    }}
+                  >
+                    {t("Clear filter")}
+                  </button>
+                )}
+              </div>
 
-            <CategoryFilter
-              active={activeCategory}
-              onSelect={setActiveCategory}
-              categories={CATEGORIES}
-              topics={allTopics}
-            />
-
-            <div
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 10,
-                color: "rgba(255,255,255,0.5)",
-                marginBottom: 16,
-                letterSpacing: "0.05em",
-              }}
-            >
-              {t("Showing")} {filtered.length} {t("of")} {allTopics.length}{" "}
-              {t("trends")}
-              {activeCategory !== "ALL" && (
-                <button
-                  onClick={() => setActiveCategory("ALL")}
-                  style={{
-                    marginLeft: 12,
-                    color: "#DC143C",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    fontSize: "inherit",
-                    letterSpacing: "inherit",
-                    textDecoration: "underline",
-                  }}
-                >
-                  {t("Clear filter")}
-                </button>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                {visibleTopics.map((topic, i) => (
+                  <TopicCardComponent key={topic.id} topic={topic} index={i} highlighted={highlightedId === topic.id} />
+                ))}
+              </div>
+              {hasMore && (
+                <div ref={sentinelRef} className="flex justify-center py-8">
+                  <LoadingDots />
+                </div>
               )}
             </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-                gap: 12,
-              }}
-            >
-              {visibleTopics.map((topic, i) => (
-                <TopicCardComponent key={topic.id} topic={topic} index={i} highlighted={highlightedId === topic.id} />
-              ))}
-            </div>
-            {hasMore && (
-              <div ref={sentinelRef} className="flex justify-center py-8">
-                <LoadingDots />
-              </div>
-            )}
           </div>
 
           <div
@@ -2135,7 +2076,7 @@ export default function MenaPulse() {
               style={{
                 fontFamily: "'DM Sans', sans-serif",
                 fontSize: 9,
-                color: "rgba(255,255,255,0.4)",
+                color: "rgba(255,255,255,0.75)",
                 textTransform: "uppercase",
                 letterSpacing: "0.12em",
                 maxWidth: 640,

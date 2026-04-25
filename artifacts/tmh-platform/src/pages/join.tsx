@@ -4,6 +4,7 @@ import { PollCard } from "@/components/poll/PollCard"
 import { Layout } from "@/components/layout/Layout"
 import { Link } from "wouter"
 import { usePageTitle } from "@/hooks/use-page-title"
+import { useSiteSettings } from "@/hooks/use-cms-data"
 
 export default function Join() {
   usePageTitle({
@@ -11,6 +12,8 @@ export default function Join() {
     description: "Join The Tribunal -- the anonymous platform for MENA's most important debates, predictions, and voices.",
   });
   const { data: poll, isLoading } = useGetFeaturedPoll()
+  const { data: siteSettings } = useSiteSettings()
+  const voicesEnabled = siteSettings?.featureToggles?.voices?.enabled ?? true
   const [email, setEmail] = useState("")
   const [joined, setJoined] = useState(() => !!localStorage.getItem("tmh_cta_joined"))
 
@@ -51,7 +54,9 @@ export default function Join() {
         </Link>
         <div className="flex items-center gap-6">
           <Link href="/debates" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">Debates</Link>
-          <Link href="/voices" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">Voices</Link>
+          {voicesEnabled && (
+            <Link href="/voices" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">Voices</Link>
+          )}
           <Link href="/about" className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground font-serif">About</Link>
         </div>
       </div>

@@ -5,7 +5,6 @@ import type { Poll } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout/Layout";
 import { PollCard } from "@/components/poll/PollCard";
 import { cn } from "@/lib/utils";
-import { Search, X } from "lucide-react";
 import { usePageConfig } from "@/hooks/use-cms-data";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { TitlePunctuation } from "@/components/TitlePunctuation";
@@ -14,6 +13,7 @@ import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
 import { DebateGridSkeleton } from "@/components/skeletons/DebateCardSkeleton";
 import { TickerSkeleton } from "@/components/skeletons/TickerSkeleton";
+import { FilterSidebar } from "@/components/layout/FilterSidebar";
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
@@ -53,8 +53,6 @@ export default function Polls() {
   );
   const [category, setCategory] = useState<string | undefined>(initialCategory);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showAllCategories, setShowAllCategories] = useState(false);
-  const CATEGORY_LIMIT = 5;
   const PAGE_SIZE = 30;
 
   // Paginated polling: accumulate pages as user scrolls
@@ -271,7 +269,7 @@ export default function Polls() {
                     fontSize: "0.7rem",
                     textTransform: "uppercase",
                     letterSpacing: "0.08em",
-                    color: "rgba(250,250,250,0.5)",
+                    color: "rgba(250,250,250,0.75)",
                   }}
                 >
                   {item.topic}
@@ -304,138 +302,37 @@ export default function Polls() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col lg:flex-row gap-12">
-        <motion.div
-          className="lg:w-64 flex-shrink-0 space-y-12 lg:sticky lg:top-20 lg:self-start"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.15 }}
-        >
-          <div>
-            <h3 className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-4 border-b border-border pb-2">
-              Search
-            </h3>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Topic, keyword, country..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCategory(undefined);
-                }}
-                className="w-full bg-secondary border border-border pl-9 pr-8 py-2.5 text-xs font-sans text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-4 border-b border-border pb-2">
-              Sort By
-            </h3>
-            <div className="relative flex bg-secondary border border-border p-1">
-              {/* Sliding highlight pill */}
-              <motion.div
-                className="absolute top-1 bottom-1 bg-foreground"
-                initial={false}
-                animate={{
-                  left: `calc(${tabs.findIndex(t => t.id === filter) * (100 / tabs.length)}% + 4px)`,
-                  width: `calc(${100 / tabs.length}% - 8px)`,
-                }}
-                transition={{
-                  type: "tween",
-                  duration: 0.4,
-                  ease: [0.22, 1.0, 0.36, 1],
-                }}
-              />
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setFilter(tab.id)}
-                  className={cn(
-                    "relative z-10 flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-bold transition-colors duration-300 text-center",
-                    filter === tab.id
-                      ? "text-background"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-4 border-b border-border pb-2">
-              Categories
-            </h3>
-            <div className="flex flex-col gap-1">
-              <button
-                onClick={() => {
-                  setCategory(undefined);
-                  setSearchQuery("");
-                }}
-                className={cn(
-                  "text-left px-3 py-2 text-xs uppercase tracking-widest font-bold transition-colors flex justify-between",
-                  !category
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <span>All Topics</span>
-                <span className="opacity-60">
-                  ({categoriesData?.categories
-                    ? categoriesData.categories.reduce((sum, c) => sum + (c.pollCount ?? 0), 0)
-                    : serverTotal})
-                </span>
-              </button>
-              {(() => {
-                const allCats = categoriesData?.categories ?? [];
-                const hasMore = allCats.length > CATEGORY_LIMIT;
-                const visibleCats = showAllCategories ? allCats : allCats.slice(0, CATEGORY_LIMIT);
-                return (
-                  <>
-                    {visibleCats.map((cat) => (
-                      <button
-                        key={cat.slug}
-                        onClick={() => {
-                          setCategory(cat.slug);
-                          setSearchQuery("");
-                        }}
-                        className={cn(
-                          "text-left px-3 py-2 text-xs uppercase tracking-widest font-bold transition-colors flex justify-between items-center",
-                          category === cat.slug
-                            ? "bg-foreground text-background"
-                            : "text-muted-foreground hover:text-foreground",
-                        )}
-                      >
-                        <span>{cat.name}</span>
-                        <span className="opacity-60">({cat.pollCount ?? 0})</span>
-                      </button>
-                    ))}
-                    {hasMore && (
-                      <button
-                        onClick={() => setShowAllCategories(!showAllCategories)}
-                        className="text-left px-3 py-2 text-xs uppercase tracking-widest font-bold text-primary hover:text-foreground transition-colors"
-                      >
-                        {showAllCategories
-                          ? "View Less"
-                          : `View More (${allCats.length - CATEGORY_LIMIT})`}
-                      </button>
-                    )}
-                  </>
-                );
-              })()}
-            </div>
-          </div>
-        </motion.div>
+        <FilterSidebar
+          search={{
+            value: searchQuery,
+            onChange: (v) => {
+              setSearchQuery(v);
+              setCategory(undefined);
+            },
+            placeholder: "Topic, keyword, country...",
+          }}
+          sort={{
+            value: filter,
+            onChange: (v) => setFilter(v as typeof filter),
+            options: tabs,
+          }}
+          categories={{
+            items: (categoriesData?.categories ?? []).map((c) => ({
+              key: c.slug,
+              label: c.name,
+              count: c.pollCount ?? 0,
+            })),
+            activeKey: category ?? "ALL",
+            onSelect: (key) => {
+              setCategory(key === "ALL" ? undefined : key);
+              setSearchQuery("");
+            },
+            allLabel: "All Topics",
+            allCount: categoriesData?.categories
+              ? categoriesData.categories.reduce((sum, c) => sum + (c.pollCount ?? 0), 0)
+              : serverTotal,
+          }}
+        />
 
         <div className="flex-1">
           {isLoading || isSearching ? (

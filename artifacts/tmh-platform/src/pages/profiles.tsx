@@ -131,7 +131,7 @@ function VoicesTicker({
                 fontSize: "0.7rem",
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
-                color: "rgba(250,250,250,0.5)",
+                color: "rgba(250,250,250,0.75)",
               }}
             >
               {item.name}
@@ -318,7 +318,7 @@ export default function Profiles() {
               fontSize: "0.72rem",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
-              color: "rgba(250,250,250,0.5)",
+              color: "rgba(250,250,250,0.75)",
             }}
           >
             <span
@@ -347,7 +347,7 @@ export default function Profiles() {
               fontSize: "0.72rem",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
-              color: "rgba(250,250,250,0.5)",
+              color: "rgba(250,250,250,0.75)",
             }}
           >
             <span
@@ -376,7 +376,7 @@ export default function Profiles() {
               fontSize: "0.72rem",
               textTransform: "uppercase",
               letterSpacing: "0.15em",
-              color: "rgba(250,250,250,0.5)",
+              color: "rgba(250,250,250,0.75)",
             }}
           >
             <span

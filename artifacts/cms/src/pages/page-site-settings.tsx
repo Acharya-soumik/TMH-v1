@@ -21,6 +21,7 @@ interface SocialLink {
 
 interface FeatureToggles {
   majlis: { enabled: boolean };
+  voices: { enabled: boolean };
   shareGate: { enabled: boolean };
   emailCapture: { enabled: boolean };
   ipConsent: { enabled: boolean };
@@ -79,6 +80,7 @@ export default function PageSiteSettings() {
         shareGate: { enabled: false, heading: "", body: "", shareButtonText: "", skipText: "", emailPlaceholder: "", ...data?.shareGate },
         featureToggles: {
           majlis: { enabled: data?.featureToggles?.majlis?.enabled ?? false },
+          voices: { enabled: data?.featureToggles?.voices?.enabled ?? true },
           shareGate: { enabled: data?.featureToggles?.shareGate?.enabled ?? true },
           emailCapture: { enabled: data?.featureToggles?.emailCapture?.enabled ?? true },
           ipConsent: { enabled: data?.featureToggles?.ipConsent?.enabled ?? false },
@@ -136,6 +138,19 @@ export default function PageSiteSettings() {
                 <div className="flex-1">
                   <p className="font-bold text-sm">Majlis</p>
                   <p className="text-xs text-muted-foreground">Private community chat. When off: hidden from nav, footer, homepage, share buttons, and /majlis routes redirect to home.</p>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 p-3 border border-border rounded-sm hover:border-primary/50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.featureToggles.voices.enabled}
+                  onChange={e => setConfig({ ...config, featureToggles: { ...config.featureToggles, voices: { enabled: e.target.checked } } })}
+                  className="mt-1 accent-primary"
+                />
+                <div className="flex-1">
+                  <p className="font-bold text-sm">Voices</p>
+                  <p className="text-xs text-muted-foreground">Public profiles of founders, operators, and change-makers. When off: hidden from nav, footer, homepage section + stat grid, and /voices routes redirect to home.</p>
                 </div>
               </label>
 

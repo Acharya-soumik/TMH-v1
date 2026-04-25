@@ -111,6 +111,7 @@ export function Chatbot() {
   const { data: siteSettings } = useSiteSettings()
   const chatbotEnabled = siteSettings?.featureToggles?.chatbot?.enabled ?? true
   const majlisEnabled = siteSettings?.featureToggles?.majlis?.enabled ?? false
+  const voicesEnabled = siteSettings?.featureToggles?.voices?.enabled ?? true
 
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
@@ -122,13 +123,15 @@ export function Chatbot() {
 
   useEffect(() => {
     if (messages.length > 0) return
-    const greeting = majlisEnabled
-      ? "hey! im noor — ask me about debates, predictions, trends, voices, or majlis. ill point you to the good stuff"
-      : "hey! im noor — ask me about debates, predictions, trends, or voices. ill point you to the good stuff"
+    const topics = ["debates", "predictions", "trends"]
+    if (voicesEnabled) topics.push("voices")
+    if (majlisEnabled) topics.push("majlis")
+    const last = topics.pop()
+    const greeting = `hey! im noor — ask me about ${topics.join(", ")}, or ${last}. ill point you to the good stuff`
     setMessages([
       { id: "welcome", role: "assistant", content: greeting, time: getTimeStr() },
     ])
-  }, [majlisEnabled, messages.length])
+  }, [majlisEnabled, voicesEnabled, messages.length])
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -301,7 +304,7 @@ export function Chatbot() {
                 </div>
                 <div>
                   <h3 className="text-white text-sm font-bold leading-tight">Noor</h3>
-                  <p className="text-[10px] text-white/50 flex items-center gap-1.5">
+                  <p className="text-[10px] text-white/75 flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     online
                   </p>
@@ -376,7 +379,7 @@ export function Chatbot() {
                       <div
                         className={cn(
                           "text-[9px] mt-1 select-none",
-                          isUser ? "text-white/40 text-right" : "text-white/25 text-right"
+                          isUser ? "text-white/75 text-right" : "text-white/75 text-right"
                         )}
                       >
                         {msg.time}
@@ -398,7 +401,7 @@ export function Chatbot() {
                 onKeyDown={handleKeyDown}
                 placeholder="type a message..."
                 disabled={isLoading}
-                className="flex-1 px-4 py-2.5 text-[13px] text-white font-sans rounded-full focus:outline-none transition-colors placeholder:text-white/30 disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 text-[13px] text-white font-sans rounded-full focus:outline-none transition-colors placeholder:text-white/75 disabled:opacity-50"
                 style={{ background: "#222" }}
               />
               <button
@@ -408,7 +411,7 @@ export function Chatbot() {
                   "flex items-center justify-center w-10 h-10 rounded-full transition-all duration-150 cursor-pointer flex-shrink-0",
                   input.trim() && !isLoading
                     ? "text-white"
-                    : "text-white/20 cursor-not-allowed"
+                    : "text-white/75 cursor-not-allowed"
                 )}
                 style={{
                   background: input.trim() && !isLoading ? "#DC143C" : "#222",

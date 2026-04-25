@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { Search, X, Share2, CheckCircle2, MessageSquare, Info } from "lucide-react";
+import { Share2, CheckCircle2, MessageSquare, Info } from "lucide-react";
+import { FilterSidebar } from "@/components/layout/FilterSidebar";
 import { Link } from "wouter";
 import { motion } from "motion/react";
 import { useToast } from "@/hooks/use-toast";
@@ -122,7 +123,7 @@ function FeaturedTooltip({ active, payload, label, chartData }: any) {
     >
       <p
         style={{
-          color: "rgba(255,255,255,0.5)",
+          color: "rgba(255,255,255,0.75)",
           fontSize: 11,
           marginBottom: 2,
         }}
@@ -732,7 +733,7 @@ function MomentumTicker({
                 fontSize: "0.7rem",
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
-                color: "rgba(250,250,250,0.5)",
+                color: "rgba(250,250,250,0.75)",
               }}
             >
               {item.label}
@@ -894,14 +895,14 @@ function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <span
               style={{
-                padding: "2px 8px",
+                padding: "4px 10px",
                 background: "var(--foreground)",
                 color: "var(--background)",
                 fontFamily: "'Barlow Condensed', sans-serif",
                 fontWeight: 700,
-                fontSize: 9,
+                fontSize: 13,
                 textTransform: "uppercase",
-                letterSpacing: "0.2em",
+                letterSpacing: "0.18em",
               }}
             >
               {card.category}
@@ -1054,14 +1055,14 @@ function PredictionGridCard({
       >
         <span
           style={{
-            padding: "2px 7px",
+            padding: "4px 10px",
             background: "var(--foreground)",
             color: "var(--background)",
             fontFamily: "'Barlow Condensed', sans-serif",
             fontWeight: 700,
-            fontSize: 9,
+            fontSize: 13,
             textTransform: "uppercase",
-            letterSpacing: "0.2em",
+            letterSpacing: "0.18em",
           }}
         >
           {card.category}
@@ -1261,7 +1262,7 @@ function ClosedPredictionCard() {
             style={{
               fontFamily: "'Barlow Condensed', sans-serif",
               fontWeight: 700,
-              fontSize: "0.65rem",
+              fontSize: "0.9rem",
               textTransform: "uppercase",
               letterSpacing: "0.18em",
               color: "var(--muted-foreground)",
@@ -1688,37 +1689,6 @@ export default function Predictions() {
           >
             {pageConfig?.hero?.subtitle || `${PREDICTIONS.length} predictions across ${PREDICTION_CATEGORIES.length} categories. Not what should happen. What will.`}
           </p>
-          <div className="mt-6 max-w-md relative border border-border rounded-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search predictions..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setActiveCategory("ALL");
-              }}
-              className="text-text2"
-              style={{
-                width: "100%",
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                padding: "10px 36px 10px 36px",
-                fontSize: "0.8rem",
-                fontFamily: "DM Sans, sans-serif",
-                outline: "none",
-              }}
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-                style={{ color: "rgba(250,250,250,0.5)" }}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
         </motion.div>
       </div>
 
@@ -1742,7 +1712,7 @@ export default function Predictions() {
             fontSize: "0.72rem",
             textTransform: "uppercase",
             letterSpacing: "0.15em",
-            color: "rgba(250,250,250,0.5)",
+            color: "rgba(250,250,250,0.75)",
           }}
         >
           <span
@@ -1767,7 +1737,7 @@ export default function Predictions() {
             fontSize: "0.72rem",
             textTransform: "uppercase",
             letterSpacing: "0.15em",
-            color: "rgba(250,250,250,0.5)",
+            color: "rgba(250,250,250,0.75)",
           }}
         >
           <span
@@ -1792,7 +1762,7 @@ export default function Predictions() {
             fontSize: "0.72rem",
             textTransform: "uppercase",
             letterSpacing: "0.15em",
-            color: "rgba(250,250,250,0.5)",
+            color: "rgba(250,250,250,0.75)",
           }}
         >
           <span
@@ -1812,92 +1782,35 @@ export default function Predictions() {
       {/* Momentum ticker */}
       <MomentumTicker tickerData={tickerData} isLoading={isLoading} />
 
-      {/* Category filter */}
-      <div
-        style={{
-          background: "var(--background)",
-          borderBottom: "1px solid var(--border)",
-          padding: "1rem 0",
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              flexWrap: "wrap",
-              alignItems: "center",
-            }}
-          >
-            <button
-              onClick={() => {
-                setActiveCategory("ALL");
-                setSearchQuery("");
-              }}
-              style={{
-                padding: "5px 14px",
-                fontFamily: "'Barlow Condensed', sans-serif",
-                fontWeight: 700,
-                fontSize: "0.7rem",
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                background:
-                  activeCategory === "ALL" ? "#DC143C" : "transparent",
-                color:
-                  activeCategory === "ALL" ? "#fff" : "var(--muted-foreground)",
-                border:
-                  activeCategory === "ALL"
-                    ? "1px solid #DC143C"
-                    : "1px solid var(--border)",
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              All ({PREDICTIONS.length})
-            </button>
-            {PREDICTION_CATEGORIES.map((cat) => {
-              const count = PREDICTIONS.filter(
-                (p) => p.category === cat,
-              ).length;
-              return (
-                <button
-                  key={cat}
-                  onClick={() => {
-                    setActiveCategory(cat);
-                    setSearchQuery("");
-                  }}
-                  style={{
-                    padding: "5px 14px",
-                    fontFamily: "'Barlow Condensed', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "0.7rem",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    background:
-                      activeCategory === cat ? "#DC143C" : "transparent",
-                    color:
-                      activeCategory === cat
-                        ? "#fff"
-                        : "var(--muted-foreground)",
-                    border:
-                      activeCategory === cat
-                        ? "1px solid #DC143C"
-                        : "1px solid var(--border)",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  {cat} ({count})
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
       {/* Content */}
       <div className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-12">
+          <FilterSidebar
+            search={{
+              value: searchQuery,
+              onChange: (v) => {
+                setSearchQuery(v);
+                setActiveCategory("ALL");
+              },
+              placeholder: "Search predictions...",
+            }}
+            categories={{
+              items: PREDICTION_CATEGORIES.map((cat) => ({
+                key: cat,
+                label: cat,
+                count: PREDICTIONS.filter((p) => p.category === cat).length,
+              })),
+              activeKey: activeCategory,
+              onSelect: (key) => {
+                setActiveCategory(key);
+                setSearchQuery("");
+              },
+              allLabel: "All",
+              allCount: PREDICTIONS.length,
+            }}
+          />
+
+          <div className="flex-1 min-w-0">
           {/* Loading skeletons */}
           {isLoading && PREDICTIONS.length === 0 && (
             <PredictionGridSkeleton />
@@ -1916,7 +1829,7 @@ export default function Predictions() {
                   style={{
                     fontFamily: "'Barlow Condensed', sans-serif",
                     fontWeight: 700,
-                    fontSize: "0.65rem",
+                    fontSize: "0.9rem",
                     textTransform: "uppercase",
                     letterSpacing: "0.22em",
                     color: "var(--muted-foreground)",
@@ -1939,7 +1852,7 @@ export default function Predictions() {
               style={{
                 fontFamily: "'Barlow Condensed', sans-serif",
                 fontWeight: 700,
-                fontSize: "0.65rem",
+                fontSize: "0.9rem",
                 textTransform: "uppercase",
                 letterSpacing: "0.22em",
                 color: "var(--muted-foreground)",
@@ -2044,7 +1957,7 @@ export default function Predictions() {
                   style={{
                     fontFamily: "'Barlow Condensed', sans-serif",
                     fontWeight: 700,
-                    fontSize: "0.65rem",
+                    fontSize: "0.9rem",
                     textTransform: "uppercase",
                     letterSpacing: "0.22em",
                     color: "var(--muted-foreground)",
@@ -2066,6 +1979,7 @@ export default function Predictions() {
               <ClosedPredictionCard />
             </motion.div>
           )}
+          </div>
         </div>
       </div>
     </Layout>

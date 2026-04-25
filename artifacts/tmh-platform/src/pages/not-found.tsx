@@ -2,6 +2,7 @@ import { Link } from "wouter"
 import { Layout } from "@/components/layout/Layout"
 import { useI18n } from "@/lib/i18n"
 import { usePageTitle } from "@/hooks/use-page-title"
+import { useSiteSettings } from "@/hooks/use-cms-data"
 
 export default function NotFound() {
   usePageTitle({
@@ -9,6 +10,8 @@ export default function NotFound() {
     description: "This page doesn't exist. Head back to The Tribunal to explore debates, predictions, and voices from across MENA.",
   });
   const { t, isAr } = useI18n()
+  const { data: siteSettings } = useSiteSettings()
+  const voicesEnabled = siteSettings?.featureToggles?.voices?.enabled ?? true
 
   return (
     <Layout>
@@ -69,9 +72,11 @@ export default function NotFound() {
             <Link href="/predictions" className="text-[10px] uppercase tracking-widest font-bold font-serif text-muted-foreground hover:text-foreground transition-colors">
               {t("Predictions")} {isAr ? "←" : "→"}
             </Link>
-            <Link href="/voices" className="text-[10px] uppercase tracking-widest font-bold font-serif text-muted-foreground hover:text-foreground transition-colors">
-              {t("Voices")} {isAr ? "←" : "→"}
-            </Link>
+            {voicesEnabled && (
+              <Link href="/voices" className="text-[10px] uppercase tracking-widest font-bold font-serif text-muted-foreground hover:text-foreground transition-colors">
+                {t("Voices")} {isAr ? "←" : "→"}
+              </Link>
+            )}
             <Link href="/faq" className="text-[10px] uppercase tracking-widest font-bold font-serif text-muted-foreground hover:text-foreground transition-colors">
               {t("FAQ")} {isAr ? "←" : "→"}
             </Link>

@@ -39,6 +39,7 @@ const queryClient = new QueryClient({
 function Router() {
   const { data: siteSettings } = useSiteSettings()
   const majlisEnabled = siteSettings?.featureToggles?.majlis?.enabled ?? false
+  const voicesEnabled = siteSettings?.featureToggles?.voices?.enabled ?? true
 
   return (
     <Switch>
@@ -46,8 +47,17 @@ function Router() {
       <Route path="/debates" component={Polls} />
       <Route path="/debates/archive" component={PollArchive} />
       <Route path="/debates/:id" component={PollDetail} />
-      <Route path="/voices" component={Profiles} />
-      <Route path="/voices/:id" component={ProfileDetail} />
+      {voicesEnabled ? (
+        <>
+          <Route path="/voices" component={Profiles} />
+          <Route path="/voices/:id" component={ProfileDetail} />
+        </>
+      ) : (
+        <>
+          <Route path="/voices"><Redirect to="/" /></Route>
+          <Route path="/voices/:id"><Redirect to="/" /></Route>
+        </>
+      )}
       <Route path="/predictions" component={Predictions} />
       <Route path="/predictions/:id" component={PredictionDetail} />
       <Route path="/about" component={About} />
@@ -72,8 +82,8 @@ function Router() {
       {/* URL redirects */}
       <Route path="/polls"><Redirect to="/debates" /></Route>
       <Route path="/polls/:id">{(params: { id: string }) => <Redirect to={`/debates/${params.id}`} />}</Route>
-      <Route path="/profiles"><Redirect to="/voices" /></Route>
-      <Route path="/profiles/:id">{(params: { id: string }) => <Redirect to={`/voices/${params.id}`} />}</Route>
+      <Route path="/profiles">{voicesEnabled ? <Redirect to="/voices" /> : <Redirect to="/" />}</Route>
+      <Route path="/profiles/:id">{(params: { id: string }) => <Redirect to={voicesEnabled ? `/voices/${params.id}` : "/"} />}</Route>
 
       <Route component={NotFound} />
     </Switch>

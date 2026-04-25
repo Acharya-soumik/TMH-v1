@@ -895,7 +895,7 @@ function FeaturedPredictionCard({
       <div className="flex-1 p-5 border-t lg:border-t-0 lg:border-l border-border flex flex-col justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 flex-wrap mb-2">
-            <span className="px-2 py-0.5 bg-foreground text-background text-[8px] font-bold uppercase tracking-[0.2em] font-serif">
+            <span className="px-2.5 py-1 bg-foreground text-background text-[11px] font-bold uppercase tracking-[0.18em] font-serif">
               {featured.category}
             </span>
             <span
@@ -1266,7 +1266,7 @@ function SidebarPredictionItem({
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-[9px] uppercase tracking-widest text-[#3B82F6] font-serif font-bold">
+            <p className="text-[11px] uppercase tracking-widest text-[#3B82F6] font-serif font-bold">
               {pred.category}
             </p>
             <p className="font-serif font-black uppercase text-[12px] leading-tight text-foreground mt-1 group-hover:text-primary transition-colors">
@@ -1397,6 +1397,7 @@ export default function Home() {
   const { data: liveCounts } = useLiveCounts();
   const { data: siteSettings } = useSiteSettings();
   const majlisEnabled = siteSettings?.featureToggles?.majlis?.enabled ?? false;
+  const voicesEnabled = siteSettings?.featureToggles?.voices?.enabled ?? true;
   const [ctaEmail, setCtaEmail] = useState("");
   const [ctaJoined, setCtaJoined] = useState(
     () => !!localStorage.getItem("tmh_cta_joined"),
@@ -1655,7 +1656,7 @@ export default function Home() {
                 ),
                 accent: "#10B981",
               },
-              {
+              ...(voicesEnabled ? [{
                 href: "/voices",
                 label: t("Voices"),
                 desc: "The people shaping the region",
@@ -1665,7 +1666,7 @@ export default function Home() {
                     "103",
                 ),
                 accent: "#A855F7",
-              },
+              }] : []),
             ].map((item, i) => (
               <motion.div
                 key={item.href}
@@ -1789,7 +1790,7 @@ export default function Home() {
                   fontSize: "0.7rem",
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
-                  color: "rgba(250,250,250,0.5)",
+                  color: "rgba(250,250,250,0.75)",
                   whiteSpace: "nowrap",
                 }}
               >
@@ -1825,7 +1826,7 @@ export default function Home() {
             {/* LEFT: Today's Lead Debate */}
             <div className="lg:pr-8 lg:border-r lg:border-border pb-8 lg:pb-0">
               <FadeIn delay={0.1}>
-              <div className="text-[10px] uppercase tracking-[0.25em] font-bold text-primary mb-5 flex items-center gap-2 font-serif">
+              <div className="text-sm uppercase tracking-[0.22em] font-bold text-primary mb-5 flex items-center gap-2 font-serif">
                 <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
                 {t("TODAY'S LEAD DEBATE")}
               </div>
@@ -1869,7 +1870,7 @@ export default function Home() {
                         whileHover={{ x: 4 }}
                         transition={{ duration: 0.2, ease: EASE_OUT_EXPO }}
                       >
-                        <p className="text-[9px] uppercase tracking-widest text-primary font-serif font-bold">
+                        <p className="text-[11px] uppercase tracking-widest text-primary font-serif font-bold">
                           {poll.category}
                         </p>
                         <p className="font-serif font-black uppercase text-[13px] leading-tight text-foreground mt-1 group-hover:text-primary transition-colors">
@@ -1903,7 +1904,7 @@ export default function Home() {
             {/* LEFT: Today's Featured Prediction */}
             <div className="lg:pr-8 lg:border-r lg:border-border pb-8 lg:pb-0">
               <FadeIn delay={0.1}>
-              <div className="text-[10px] uppercase tracking-[0.25em] font-bold text-[#3B82F6] mb-5 flex items-center gap-2 font-serif">
+              <div className="text-sm uppercase tracking-[0.22em] font-bold text-[#3B82F6] mb-5 flex items-center gap-2 font-serif">
                 <span className="w-2 h-2 rounded-full bg-[#3B82F6] animate-pulse" />
                 {t("FEATURED PREDICTION")}
               </div>
@@ -2025,7 +2026,7 @@ export default function Home() {
             {/* LEFT: Today's Featured Pulse */}
             <div className="lg:pr-8 lg:border-r lg:border-border pb-8 lg:pb-0">
               <FadeIn delay={0.1}>
-              <div className="text-[10px] uppercase tracking-[0.25em] font-bold text-[#10B981] mb-5 flex items-center gap-2 font-serif">
+              <div className="text-sm uppercase tracking-[0.22em] font-bold text-[#10B981] mb-5 flex items-center gap-2 font-serif">
                 <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
                 {t("TODAY'S PULSE")}
               </div>
@@ -2289,7 +2290,7 @@ export default function Home() {
                     <div className="flex-1 p-5 border-t lg:border-t-0 lg:border-l border-border flex flex-col justify-center gap-3">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span
-                          className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.2em] font-serif"
+                          className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] font-serif"
                           style={{
                             background: `${topic.tagColor}20`,
                             border: `1px solid ${topic.tagColor}40`,
@@ -2500,6 +2501,7 @@ export default function Home() {
       </section>
 
       {/* ── THE VOICES ── */}
+      {voicesEnabled && (
       <section className="bg-foreground text-background py-20 border-b border-border">
         <FadeUp>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -2575,6 +2577,7 @@ export default function Home() {
         </div>
         </FadeUp>
       </section>
+      )}
 
       {/* ── EXPLORE TOPICS ── */}
       {categories?.categories && categories.categories.length > 0 && (
@@ -2596,7 +2599,7 @@ export default function Home() {
                   <span className="font-serif font-bold uppercase tracking-wider text-base mb-3 leading-tight">
                     {cat.name}
                   </span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-background/50">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-background/75">
                     {cat.pollCount} Debates
                   </span>
                 </Link>
