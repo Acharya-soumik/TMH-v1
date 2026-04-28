@@ -10,28 +10,36 @@ const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
 export interface HeroPoster {
   src: string;
+  topic: string;
   question: string;
   href: string;
 }
 
-function placeholderSrc(idx: number): string {
-  const hue = (idx * 36 + 350) % 360;
-  const num = String(idx + 1).padStart(2, "0");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"><defs><pattern id="d${idx}" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="7" cy="7" r="1.6" fill="rgba(0,0,0,0.18)"/></pattern></defs><rect width="300" height="400" fill="hsl(${hue},22%,28%)"/><rect width="300" height="400" fill="url(#d${idx})"/><text x="150" y="230" font-family="serif" font-weight="900" font-size="180" text-anchor="middle" fill="rgba(255,255,255,0.88)">${num}</text><text x="150" y="290" font-family="serif" font-size="13" text-anchor="middle" fill="rgba(255,255,255,0.55)" letter-spacing="6">PLACEHOLDER</text></svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-}
-
 export const DEFAULT_POSTERS: HeroPoster[] = [
-  { src: placeholderSrc(0), question: "Should Lebanese bankers face criminal trials for the 2019 deposit theft?", href: "/debates" },
-  { src: placeholderSrc(1), question: "Should Arab states sever all ties with Israel until a permanent ceasefire?", href: "/debates" },
-  { src: placeholderSrc(2), question: "Is the Saudi-Iran reconciliation real, or political theater?", href: "/debates" },
-  { src: placeholderSrc(3), question: "Has MBS's Vision 2030 actually changed Saudi Arabia, or rebranded it?", href: "/debates" },
-  { src: placeholderSrc(4), question: "Is Sisi's Egypt economically worse off than Mubarak's?", href: "/debates" },
-  { src: placeholderSrc(5), question: "Is the world deliberately ignoring Sudan's collapse?", href: "/debates" },
-  { src: placeholderSrc(6), question: "Did the Arab Spring end with Tunisia, or never really happen?", href: "/debates" },
-  { src: placeholderSrc(7), question: "Would a second Trump term help or hurt the Middle East?", href: "/debates" },
-  { src: placeholderSrc(8), question: "Did Gulf elites buy their names off the Epstein client list?", href: "/debates" },
-  { src: placeholderSrc(9), question: "Will AI save the Gulf economies, or accelerate their collapse?", href: "/debates" },
+  {
+    src: "/images/hero-images/1.avif",
+    topic: "US × Iran",
+    question: "Will the US and Iran be at open war by the end of 2026?",
+    href: "/debates",
+  },
+  {
+    src: "/images/hero-images/2.avif",
+    topic: "Strait of Hormuz",
+    question: "Will the Strait of Hormuz be closed at any point in 2026?",
+    href: "/debates",
+  },
+  {
+    src: "/images/hero-images/3.avif",
+    topic: "Gaza",
+    question: "Should the international community force a permanent ceasefire in Gaza?",
+    href: "/debates",
+  },
+  {
+    src: "/images/hero-images/4.avif",
+    topic: "Regional Exodus",
+    question: "Should MENA's 24 million displaced be treated as one crisis, not many?",
+    href: "/debates",
+  },
 ];
 
 export interface HeroGalleryProps {
@@ -82,7 +90,7 @@ export function HeroGallery({ posters = DEFAULT_POSTERS }: HeroGalleryProps) {
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      aria-label={`Featured debate: ${current.question}`}
+      aria-label={`${current.topic}: ${current.question}`}
     >
       {reduceMotion ? (
         <img
@@ -132,10 +140,19 @@ export function HeroGallery({ posters = DEFAULT_POSTERS }: HeroGalleryProps) {
 
       {/* Top label */}
       <div className="absolute top-3 left-3 right-3 flex items-center justify-between text-[10px] uppercase tracking-[0.22em] font-bold font-serif text-white/80">
-        <span className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          Today's Debate
-        </span>
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={`topic-${currentIdx}`}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.35, ease: EASE_OUT_EXPO, delay: 0.1 }}
+            className="flex items-center gap-1.5"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            {current.topic}
+          </motion.span>
+        </AnimatePresence>
         <span className="tabular-nums text-white/60">
           {String(currentIdx + 1).padStart(2, "0")}/{String(posters.length).padStart(2, "0")}
         </span>
@@ -156,7 +173,7 @@ export function HeroGallery({ posters = DEFAULT_POSTERS }: HeroGalleryProps) {
           </motion.p>
         </AnimatePresence>
         <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] font-bold font-serif text-primary group-hover:text-white transition-colors">
-          Cast Your Vote →
+          Where do you stand? →
         </span>
       </div>
 

@@ -900,7 +900,7 @@ function FeaturedPrediction({ card, onVote }: { card: PredictionCard; onVote?: (
                 color: "var(--background)",
                 fontFamily: "'Barlow Condensed', sans-serif",
                 fontWeight: 700,
-                fontSize: 13,
+                fontSize: 16,
                 textTransform: "uppercase",
                 letterSpacing: "0.18em",
               }}
@@ -1060,7 +1060,7 @@ function PredictionGridCard({
             color: "var(--background)",
             fontFamily: "'Barlow Condensed', sans-serif",
             fontWeight: 700,
-            fontSize: 13,
+            fontSize: 16,
             textTransform: "uppercase",
             letterSpacing: "0.18em",
           }}
@@ -1262,7 +1262,7 @@ function ClosedPredictionCard() {
             style={{
               fontFamily: "'Barlow Condensed', sans-serif",
               fontWeight: 700,
-              fontSize: "0.9rem",
+              fontSize: "1.15rem",
               textTransform: "uppercase",
               letterSpacing: "0.18em",
               color: "var(--muted-foreground)",
@@ -1829,7 +1829,7 @@ export default function Predictions() {
                   style={{
                     fontFamily: "'Barlow Condensed', sans-serif",
                     fontWeight: 700,
-                    fontSize: "0.9rem",
+                    fontSize: "1.15rem",
                     textTransform: "uppercase",
                     letterSpacing: "0.22em",
                     color: "var(--muted-foreground)",
@@ -1852,7 +1852,7 @@ export default function Predictions() {
               style={{
                 fontFamily: "'Barlow Condensed', sans-serif",
                 fontWeight: 700,
-                fontSize: "0.9rem",
+                fontSize: "1.15rem",
                 textTransform: "uppercase",
                 letterSpacing: "0.22em",
                 color: "var(--muted-foreground)",
@@ -1957,7 +1957,7 @@ export default function Predictions() {
                   style={{
                     fontFamily: "'Barlow Condensed', sans-serif",
                     fontWeight: 700,
-                    fontSize: "0.9rem",
+                    fontSize: "1.15rem",
                     textTransform: "uppercase",
                     letterSpacing: "0.22em",
                     color: "var(--muted-foreground)",

@@ -262,28 +262,25 @@ export function PollCard({ poll, featured = false }: PollCardProps) {
                   </span>
                 </div>
 
-                {/* BINARY: Two prominent YES/NO buttons side by side */}
+                {/* BINARY: Two prominent buttons side by side, neutral styling */}
                 {isBinaryPair && (
                   <div className="flex gap-3">
-                    {localOptions.map((option, i) => {
-                      const isYes = i === 0
-                      return (
-                        <button
-                          key={option.id}
-                          onClick={() => handleVote(option.id)}
-                          disabled={!isLive}
-                          className={cn(
-                            "flex-1 py-5 text-center font-bold text-sm uppercase tracking-widest border-2 transition-all duration-150",
-                            isYes
-                              ? "border-emerald-500 text-emerald-500 hover:bg-emerald-500 hover:text-white"
-                              : "border-red-500 text-red-500 hover:bg-red-500 hover:text-white",
-                            !isLive && "opacity-50 cursor-not-allowed"
-                          )}
-                        >
-                          {option.text}
-                        </button>
-                      )
-                    })}
+                    {localOptions.map((option) => (
+                      <button
+                        key={option.id}
+                        onClick={() => handleVote(option.id)}
+                        disabled={!isLive}
+                        className={cn(
+                          "flex-1 py-5 text-center font-bold text-sm uppercase tracking-widest border transition-colors duration-150",
+                          "bg-background text-foreground border-border",
+                          "hover:bg-foreground hover:text-background hover:border-foreground",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                          !isLive && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
+                        {option.text}
+                      </button>
+                    ))}
                   </div>
                 )}
 

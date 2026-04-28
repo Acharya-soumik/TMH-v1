@@ -72,30 +72,30 @@ export function PageIndex({ sections, scrollOffset = 80, title = "On This Page" 
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, ease: EASE_OUT_EXPO, delay: 0.4 }}
-      className="hidden lg:block fixed right-6 top-1/2 -translate-y-1/2 z-30 w-56"
+      className="hidden lg:block fixed right-6 top-1/2 -translate-y-1/2 z-30 w-72"
     >
       <div className="bg-background/95 backdrop-blur-sm border border-border shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
-        <div className="border-b border-border px-4 pt-3 pb-2.5 flex items-center justify-between">
-          <p className="font-serif font-black uppercase text-[10px] tracking-[0.2em] text-foreground">
+        <div className="border-b border-border px-5 pt-4 pb-3 flex items-center justify-between">
+          <p className="font-serif font-black uppercase text-xs tracking-[0.2em] text-foreground">
             {title}<span className="text-primary">.</span>
           </p>
-          <span className="font-display text-[10px] font-bold text-muted-foreground tabular-nums">
+          <span className="font-display text-xs font-bold text-muted-foreground tabular-nums">
             {String(Math.max(activeIndex + 1, 1)).padStart(2, "0")}
             <span className="opacity-50">/{String(sections.length).padStart(2, "0")}</span>
           </span>
         </div>
 
-        <ul className="relative py-2">
+        <ul className="relative py-2.5">
           {/* Sliding red accent bar on the active item */}
           <motion.div
             className="absolute left-0 w-[3px] bg-primary"
             initial={false}
             animate={{
-              top: `calc(${Math.max(activeIndex, 0)} * 36px + 8px)`,
+              top: `calc(${Math.max(activeIndex, 0)} * 44px + 10px)`,
               opacity: activeIndex >= 0 ? 1 : 0,
             }}
             transition={{ type: "tween", duration: 0.35, ease: [0.22, 1.0, 0.36, 1] }}
-            style={{ height: 36 }}
+            style={{ height: 44 }}
           />
 
           {sections.map((section, i) => {
@@ -105,8 +105,8 @@ export function PageIndex({ sections, scrollOffset = 80, title = "On This Page" 
                 <button
                   onClick={() => handleClick(section.id)}
                   className={cn(
-                    "group w-full flex items-center gap-2.5 pl-4 pr-3 text-left transition-colors",
-                    "h-9",
+                    "group w-full flex items-center gap-3 pl-5 pr-4 text-left transition-colors",
+                    "h-11",
                     isActive
                       ? "text-foreground bg-secondary/60"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/30",
@@ -114,13 +114,13 @@ export function PageIndex({ sections, scrollOffset = 80, title = "On This Page" 
                 >
                   <span
                     className={cn(
-                      "font-display text-[9px] font-bold tabular-nums tracking-wider transition-colors",
+                      "font-display text-[11px] font-bold tabular-nums tracking-wider transition-colors",
                       isActive ? "text-primary" : "text-muted-foreground/60 group-hover:text-foreground",
                     )}
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="font-serif uppercase text-[10px] tracking-[0.14em] font-bold truncate">
+                  <span className="font-serif uppercase text-[12px] tracking-[0.14em] font-bold truncate">
                     {section.label}
                   </span>
                 </button>
@@ -129,9 +129,9 @@ export function PageIndex({ sections, scrollOffset = 80, title = "On This Page" 
           })}
         </ul>
 
-        <div className="border-t border-border px-4 py-2 flex items-center gap-1.5">
+        <div className="border-t border-border px-5 py-2.5 flex items-center gap-2">
           <span className="w-1.5 h-1.5 bg-primary animate-pulse" />
-          <span className="text-[8px] uppercase tracking-[0.22em] font-serif font-bold text-muted-foreground">
+          <span className="text-[10px] uppercase tracking-[0.22em] font-serif font-bold text-muted-foreground">
             Scroll to navigate
           </span>
         </div>

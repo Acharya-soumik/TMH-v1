@@ -895,7 +895,7 @@ function FeaturedPredictionCard({
       <div className="flex-1 p-5 border-t lg:border-t-0 lg:border-l border-border flex flex-col justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 flex-wrap mb-2">
-            <span className="px-2.5 py-1 bg-foreground text-background text-[11px] font-bold uppercase tracking-[0.18em] font-serif">
+            <span className="px-3 py-1 bg-foreground text-background text-[13px] font-bold uppercase tracking-[0.16em] font-serif">
               {featured.category}
             </span>
             <span
@@ -1897,7 +1897,7 @@ export default function Home() {
             {/* LEFT: Today's Featured Prediction */}
             <div className="lg:pr-8 lg:border-r lg:border-border pb-8 lg:pb-0">
               <FadeIn delay={0.1}>
-              <div className="text-sm uppercase tracking-[0.22em] font-bold text-[#3B82F6] mb-5 flex items-center gap-2 font-serif">
+              <div className="text-base uppercase tracking-[0.2em] font-bold text-[#3B82F6] mb-5 flex items-center gap-2 font-serif">
                 <span className="w-2 h-2 rounded-full bg-[#3B82F6] animate-pulse" />
                 {t("FEATURED PREDICTION")}
               </div>
