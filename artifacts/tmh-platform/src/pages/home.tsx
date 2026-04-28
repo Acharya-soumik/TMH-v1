@@ -10,7 +10,7 @@ import { Layout } from "@/components/layout/Layout";
 import { PollCard } from "@/components/poll/PollCard";
 import { ProfileCard } from "@/components/profile/ProfileCard";
 import { TickerSkeleton } from "@/components/skeletons/TickerSkeleton";
-const GlobeConnections = lazy(() => import("@/components/globe/GlobeConnections").then(m => ({ default: m.GlobeConnections })));
+import { HeroGallery } from "@/components/home/HeroGallery";
 const AboutSection = lazy(() => import("@/components/home/AboutSection"));
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
@@ -1546,71 +1546,64 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: EASE_OUT_EXPO }}
           >
-            <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-6 lg:gap-10">
-              {/* Left: title + counter */}
+            <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-8 lg:gap-12">
+              {/* Left: hero copy */}
               <div className="flex flex-col items-center lg:items-start justify-center flex-1 text-center lg:text-left">
-                <h1
-                  className="font-display font-black text-5xl md:text-6xl lg:text-7xl uppercase tracking-tight text-foreground leading-none"
-                  style={{ lineHeight: 0.95 }}
-                >
-                  The Tribunal<span className="text-primary">.</span>
-                </h1>
                 <motion.p
-                  className="text-sm font-serif tracking-[0.25em] uppercase text-muted-foreground mt-1 pt-1"
+                  className="text-[10px] font-serif font-bold tracking-[0.28em] uppercase text-primary mb-3"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.9 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
                 >
-                  {t("by The Middle East Hustle")}
+                  {t("The questions you can't ask out loud.")}
                 </motion.p>
-                <br />
+                <motion.h1
+                  className="font-display font-black uppercase tracking-tight text-foreground leading-none"
+                  style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", lineHeight: 0.92 }}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.1 }}
+                >
+                  {t("The Middle East,")}{" "}
+                  <span className="italic font-display text-primary">{t("unfiltered.")}</span>
+                </motion.h1>
                 <motion.p
-                  className="uppercase tracking-[0.22em] text-muted-foreground font-serif mt-3 flex flex-col items-center lg:items-start gap-1"
+                  className="text-base sm:text-[17px] text-foreground/80 font-sans mt-5 max-w-xl leading-relaxed"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.55, ease: EASE_OUT_EXPO, delay: 0.9 }}
+                  transition={{ duration: 0.55, ease: EASE_OUT_EXPO, delay: 0.4 }}
                 >
-                  <span className="text-[10px] font-semibold">{t("The voice of")}</span>
-                  <LiveNumber
-                    value={menaPop}
-                    className="font-display font-black tracking-tight"
-                    style={{
-                      fontSize: "clamp(1.5rem, 3vw, 2.2rem)",
-                      color: "#DC143C",
-                      letterSpacing: "-0.02em",
-                    }}
-                  />
+                  {t("Anonymous votes, predictions, and trends on the topics nobody else will touch. Politics, religion, identity, money, power. From inside the region and watched by the world. 541 million people. One place where the truth is on record.")}
                 </motion.p>
-                <motion.p
-                  className="text-[10px] font-serif font-semibold tracking-[0.18em] uppercase text-muted-foreground mt-1 hidden lg:block"
+                <motion.div
+                  className="mt-7 flex items-center gap-4 flex-wrap justify-center lg:justify-start"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 1.1 }}
+                  transition={{ duration: 0.5, delay: 0.7 }}
                 >
-                  {t("MENA Population, with a new born every 4 seconds.")}
-                </motion.p>
-                {(homepageConfig?.masthead?.countries?.length ?? 0) > 0 && (
-                  <motion.p
-                    className="text-[10px] font-serif tracking-[0.2em] uppercase text-muted-foreground mt-2 hidden lg:block"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 1.3 }}
+                  <Link
+                    href="/debates"
+                    className="inline-flex items-center gap-2 bg-primary text-white font-bold uppercase tracking-widest text-xs px-7 py-3 hover:bg-primary/90 transition-colors font-serif"
                   >
-                    {homepageConfig!.masthead!.countries!.length} {t("countries")}
-                  </motion.p>
-                )}
+                    {t("See Today's Debate")} <ArrowRight className="w-3 h-3" />
+                  </Link>
+                  <Link
+                    href="/about"
+                    className="inline-flex items-center gap-2 text-foreground/70 hover:text-foreground font-bold uppercase tracking-widest text-xs px-2 py-3 transition-colors font-serif underline underline-offset-4 decoration-primary/40"
+                  >
+                    {t("What is this?")}
+                  </Link>
+                </motion.div>
               </div>
 
-              {/* Right: Globe */}
+              {/* Right: HeroGallery */}
               <motion.div
-                className="flex-shrink-0 w-full max-w-[260px] sm:max-w-[300px] lg:max-w-[360px]"
+                className="flex-shrink-0 w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[360px] mx-auto lg:mx-0"
                 initial={{ opacity: 0, scale: 0.94 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.9, ease: EASE_OUT_EXPO, delay: 0.2 }}
               >
-                <Suspense fallback={<div className="aspect-square" />}>
-                  <GlobeConnections />
-                </Suspense>
+                <HeroGallery />
               </motion.div>
             </div>
           </motion.div>
