@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRoute, Link } from "wouter"
 import { Layout } from "@/components/layout/Layout"
 import { ShareModal } from "@/components/ShareModal"
@@ -9,6 +9,7 @@ import { usePageTitle } from "@/hooks/use-page-title"
 import { Skeleton } from "@/components/ui/skeleton"
 import { LoadingDots } from "@/components/ui/loading-dots"
 import { usePrediction, usePredictions, type ApiPrediction } from "@/hooks/use-cms-data"
+import { track } from "@/lib/analytics"
 import {
   ComposedChart,
   Area,
@@ -374,6 +375,16 @@ export default function PredictionDetail() {
     title: prediction.question,
     description: `${prediction.yesPercentage}% say yes. ${prediction.totalCount.toLocaleString()} votes. Resolves ${prediction.resolvesAt ?? "TBD"}.`,
   } : { title: "Prediction" })
+
+  useEffect(() => {
+    if (prediction?.id) {
+      track("prediction_viewed", {
+        predictionId: prediction.id,
+        category: prediction.category,
+        isLoggedIn: false,
+      })
+    }
+  }, [prediction?.id, prediction?.category])
 
   if (isLoading) {
     return (

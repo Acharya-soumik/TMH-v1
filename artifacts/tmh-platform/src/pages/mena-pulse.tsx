@@ -13,6 +13,7 @@ import {
   type ApiPulseTopic,
 } from "@/hooks/use-cms-data";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { track } from "@/lib/analytics";
 import { TitlePunctuation } from "@/components/TitlePunctuation";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { LoadingDots } from "@/components/ui/loading-dots";
@@ -1277,7 +1278,13 @@ function TopicCardComponent({
   return (
     <div
       id={`pulse-${topic.id}`}
-      onClick={() => setExpanded(!expanded)}
+      onClick={() => {
+        // Fire on first expand (not on collapse) so we measure attention.
+        if (!expanded) {
+          track("pulse_topic_viewed", { topicId: topic.id, category: topic.tag })
+        }
+        setExpanded(!expanded)
+      }}
       style={{
         background: glowing ? `${topic.tagColor}12` : "rgba(0,0,0,0.5)",
         border: `1px solid ${glowing ? topic.tagColor : "rgba(255,255,255,0.06)"}`,

@@ -117,9 +117,75 @@ async function toPollResponse(poll: any, options: any[], includeDummyBreakdown =
 
 router.get("/polls", async (req, res) => {
   try {
-    const { filter, category, limit = "20", offset = "0", search } = req.query as Record<string, string>;
+    const { filter, category, limit = "20", offset = "0", search, tag, ids } = req.query as Record<string, string>;
     const lim = Math.min(parseInt(limit) || 20, 50);
     const off = parseInt(offset) || 0;
+
+    const approvedFilter = eq(pollsTable.editorialStatus, "approved");
+
+    // Branch: explicit ID list (manual-pick sections). Returns polls in requested order.
+    if (ids && ids.trim()) {
+      const requestedIds = ids
+        .split(",")
+        .map((s) => parseInt(s.trim(), 10))
+        .filter((n) => Number.isFinite(n) && n > 0)
+        .slice(0, 50);
+      if (requestedIds.length === 0) {
+        return res.json({ polls: [], total: 0 });
+      }
+      const polls = await db
+        .select()
+        .from(pollsTable)
+        .where(and(approvedFilter, inArray(pollsTable.id, requestedIds)));
+      const pollIds = polls.map((p: any) => p.id);
+      const allOptions = pollIds.length > 0
+        ? await db.select().from(pollOptionsTable).where(inArray(pollOptionsTable.pollId, pollIds))
+        : [];
+      const optionsByPoll = new Map<number, typeof allOptions>();
+      for (const opt of allOptions) {
+        if (!optionsByPoll.has(opt.pollId)) optionsByPoll.set(opt.pollId, []);
+        optionsByPoll.get(opt.pollId)!.push(opt);
+      }
+      const byId = new Map<number, any>();
+      for (const p of polls) byId.set(p.id, p);
+      const ordered = requestedIds
+        .map((id) => byId.get(id))
+        .filter((p) => p);
+      const result = await Promise.all(
+        ordered.map((poll: any) => toPollResponse(poll, optionsByPoll.get(poll.id) ?? [])),
+      );
+      return res.json({ polls: result, total: result.length });
+    }
+
+    // Branch: tag filter (tag-driven sections). Always newest-first.
+    if (tag && tag.trim()) {
+      const tagLower = tag.trim().toLowerCase();
+      const tagWhere = and(
+        approvedFilter,
+        sql`EXISTS (SELECT 1 FROM jsonb_array_elements_text(tags) t WHERE LOWER(t) = ${tagLower})`,
+      );
+      const polls = await db
+        .select()
+        .from(pollsTable)
+        .where(tagWhere)
+        .orderBy(desc(pollsTable.createdAt))
+        .limit(lim)
+        .offset(off);
+      const pollIds = polls.map((p: any) => p.id);
+      const allOptions = pollIds.length > 0
+        ? await db.select().from(pollOptionsTable).where(inArray(pollOptionsTable.pollId, pollIds))
+        : [];
+      const optionsByPoll = new Map<number, typeof allOptions>();
+      for (const opt of allOptions) {
+        if (!optionsByPoll.has(opt.pollId)) optionsByPoll.set(opt.pollId, []);
+        optionsByPoll.get(opt.pollId)!.push(opt);
+      }
+      const result = await Promise.all(
+        polls.map((poll: any) => toPollResponse(poll, optionsByPoll.get(poll.id) ?? [])),
+      );
+      const [countRow] = await db.select({ count: sql<number>`count(*)` }).from(pollsTable).where(tagWhere);
+      return res.json({ polls: result, total: Number(countRow.count) });
+    }
 
     // Resolve slug → canonical category name to handle duplicate slug variants in DB
     let categoryName: string | null = null;
@@ -130,8 +196,6 @@ router.get("/polls", async (req, res) => {
         .limit(1);
       categoryName = catRow[0]?.category ?? null;
     }
-
-    const approvedFilter = eq(pollsTable.editorialStatus, "approved");
 
     let baseWhere: any = approvedFilter;
     if (categoryName) {

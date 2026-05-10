@@ -5,6 +5,8 @@ import { useTheme } from "@/hooks/use-theme"
 import { cn } from "@/lib/utils"
 import { useI18n, LangToggle } from "@/lib/i18n"
 import { useSiteSettings } from "@/hooks/use-cms-data"
+import { UserMenu } from "@/components/auth/UserMenu"
+import { EmailUnverifiedBanner } from "@/components/auth/EmailUnverifiedBanner"
 
 export function Navbar() {
   const [location] = useLocation()
@@ -99,6 +101,7 @@ export function Navbar() {
         isHidden ? "-translate-y-full" : "translate-y-0"
       )}
     >
+      <EmailUnverifiedBanner />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-3">
           <div className="flex items-center gap-3">
@@ -140,6 +143,8 @@ export function Navbar() {
               {ctaButton.label}
             </Link>
             )}
+
+            <UserMenu />
 
             <button
               onClick={toggleTheme}

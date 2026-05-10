@@ -1,7 +1,7 @@
 import type React from "react";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
-import { LayoutDashboard, MessageSquare, TrendingUp, Users, LogOut, Home, Mail, FileText, BarChart3, Activity, Info, HelpCircle, ScrollText, Phone, Shield, Palette, Sparkles, Lightbulb, Settings, Vote, UserPlus } from "lucide-react";
+import { LayoutDashboard, MessageSquare, TrendingUp, Users, LogOut, Home, Mail, FileText, BarChart3, Activity, Info, HelpCircle, ScrollText, Phone, Shield, Palette, Sparkles, Lightbulb, Settings, Vote, UserPlus, ImageIcon } from "lucide-react";
 
 const NAV_SECTIONS = [
   {
@@ -35,6 +35,13 @@ const NAV_SECTIONS = [
       { path: "/pages/voices", label: "Voices Page", icon: Users },
       { path: "/pages/polls", label: "Polls Page", icon: Vote },
       { path: "/pages/apply", label: "Apply Page", icon: UserPlus },
+    ],
+  },
+  {
+    label: "DISTRIBUTION",
+    items: [
+      { path: "/press-kit", label: "Press Kit", icon: ImageIcon },
+      { path: "/newsletter", label: "Weekly Digest", icon: Mail },
     ],
   },
   {

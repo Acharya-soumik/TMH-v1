@@ -1,3 +1,44 @@
+# Account — Show user activity stats
+
+User reported: after login, account page shows nothing about their interactions. Add a stats summary above the avatar selector.
+
+## Plan
+
+- [x] `auth.ts` — new `GET /api/auth/me/stats` endpoint. Joins via `userVoterTokensTable`, counts rows in `votes` and `prediction_votes` matching those tokens.
+- [x] `use-auth.ts` — `useMyStats(enabled)` hook with 30s staleTime.
+- [x] `account.tsx` — "Your activity" block above avatar selector: Debate votes count, Predictions count, plus Email + Newsletter status badges.
+- [x] Typecheck `@workspace/api-server` + `@workspace/tmh-platform` — both clean.
+- [x] Smoke test — `/api/auth/me/stats` returns 401 unauth as expected.
+
+# Auth — Fix login/signup flow + email
+
+Three bugs reported: (1) "too many login attempts" trips after 1 signup→logout→login cycle, (2) verification email never sends, (3) no welcome email on signup.
+
+## Plan
+
+- [x] `app.ts` — narrow rate limiter scope from blanket `/api/auth/*` to only `login`, `signup`, `forgot-password`, `reset-password`. /me, /avatars, /logout etc. were sharing the 10/15min bucket and exhausting it on normal page loads.
+- [x] `auth.ts` — fix `from` address (`hello@tribunal.com` → `noreply@themiddleeasthustle.com`) so Resend doesn't reject on unverified domain.
+- [x] `auth.ts` — fix `APP_URL` default (`https://tribunal.com` → `https://themiddleeasthustle.com`).
+- [x] `auth.ts` — add `sendWelcomeEmail()`, call best-effort after signup (in addition to verification link).
+- [x] `auth.ts` — extract `sendResendEmail()` helper that logs Resend non-OK responses so failures are visible (previously swallowed).
+- [x] `.env` — populated empty `RESEND_API_KEY` with the user-provided key.
+- [x] Typecheck `@workspace/api-server` — clean.
+- [x] Smoke test — server boots; `/auth/me` returns 401 (no rate limit); `/auth/login` 401 on bad creds (still bucketed under the limiter).
+
+## Review
+
+Root cause of "too many login attempts": the limiter was mounted at `/api/auth` so every `useMe()` call (one per page load + on every `qc.invalidateQueries` after login/logout) was consuming the same 10/15min bucket as actual login attempts. A single signup → logout → login cycle with React Query refetches blew the budget. Fix: only rate-limit the credential-validating endpoints. /me, /avatars, /logout, /link-voter-token are now unlimited (still session-protected).
+
+Root cause of email failure: two compounding issues — `RESEND_API_KEY` was empty in `.env`, and even if it had been set the `from` address (`hello@tribunal.com`) is on a domain Resend doesn't have verified for this account. The other working email senders (apply.ts, cms.ts) use `noreply@themiddleeasthustle.com` which is the correct verified domain. Auth was the outlier.
+
+Welcome email is sent best-effort alongside the existing verification email (both fire-and-forget so signup never blocks on Resend).
+
+## Verification needed by user
+
+- Sign up with a real email and confirm both the welcome email and verification link arrive.
+- Sign out, then sign back in repeatedly — should no longer hit the rate limit on normal use.
+- If emails still don't arrive, check the api-server logs for `[auth] verification email failed (4xx):` — Resend will tell us exactly what's wrong (most likely: domain not verified or API key revoked).
+
 # Filter Sidebar — Constant UI
 
 Extract the Debates page sidebar pattern into a shared `FilterSidebar` component, then mount on Predictions and Pulse so all three pages have identical filter UI.
@@ -47,4 +88,124 @@ The `/apply` route ("Join The Voices" CTA) was intentionally **not** gated — a
 ## Notes
 
 - Default `voicesEnabled` to `true` (preserves existing behavior on first deploy when `featureToggles.voices` is undefined)
+
+# Hero Globe Panel — Live-Activity Overlay
+
+Enhance the hero globe to match the live-activity dashboard aesthetic from the user's reference screenshot (rotating big city headline, two activity cards, live-user counter, "Global Hub" tag) **without** rebuilding the underlying cobe globe.
+
+## Approach
+
+- Keep `GlobeConnections.tsx` untouched (dark-mode globe already has the dotted/red look).
+- New component `components/home/HeroGlobePanel.tsx` wraps `<GlobeConnections oscillate zoom={1.1} />` and adds overlays.
+- Replace the bare `<GlobeConnections>` usage at `home.tsx:1621` with `<HeroGlobePanel />`.
+
+## Plan
+
+**Scope confirmed by user**: globe panel only (right column). Don't touch left column copy/CTAs or add bottom wire ticker.
+
+Reference HTML: `tasks/e2e-testing/hero-globe.html` — used for: arc-spawning logic, ripples, leading-dot trail, activity card design, "Right Now" headline, "Live Activity Stream" status.
+
+- [x] New `components/globe/HeroGlobe.tsx` — React port of the reference's globe + overlays + activity cards + arcs/ripples (no changes to existing `GlobeConnections.tsx`)
+- [x] City list: 27 cities (10 MENA hubs + 17 global) with flag + country
+- [x] 13 TMH-authentic activity templates ("voted on...", "predicted...", "joined the debate...", "submitted a Pulse story on...")
+- [x] Cobe globe centered on MENA (PHI_CENTER=3.5), oscillates ±0.35 rad over ~17s, dark theme
+- [x] Overlay canvas: dynamic arcs spawning every 1.6s (origin → MENA hub) with white-headed crimson trail, landing flash + expanding ripple ring at destination, MENA city labels
+- [x] "RIGHT NOW [city]." headline top-left (rotates with each new activity)
+- [x] "Live Activity Stream" status + pulsing red dot bottom-right
+- [x] Bentham corner brackets (TL/TR/BL/BR)
+- [x] Spawning activity cards (max 4 simultaneously) in 4 zones with crimson corner accents, flag + city/country, "Just now", and "Someone in X [verb] [highlighted-target]" message; auto-fade after 4.2s
+- [x] `prefers-reduced-motion` respected
+- [x] Typecheck clean (`pnpm typecheck` passed)
+- [x] Wired into `home.tsx` (replaced `<GlobeConnections oscillate zoom={1.1} />` at line 1621 with `<HeroGlobe />`; removed unused `GlobeConnections` import)
+- [x] Vite dev server serves the new module successfully (HTTP 200, HMR-compiled)
+
+## Review
+
+The TMH home hero now matches the reference screenshot's globe panel: a MENA-centered live-activity dashboard. Existing left-column copy/CTAs ("The Middle East, unfiltered.", subhead, "See Today's Debate" / "What is this?" CTAs) are unchanged.
+
+**What changed visually:**
+- The right-column globe is now framed with bentham corner brackets and a dark gradient backdrop
+- A "RIGHT NOW [city]." display-font headline appears top-left, syncing with each spawned activity
+- A "Live Activity Stream" status with pulsing red dot sits bottom-right
+- Up to 4 floating activity cards appear at any time in the panel corners ("Someone in São Paulo just voted on...") and fade after 4.2s
+- White-headed crimson arcs spawn every 1.6s from a random global city → MENA hub, ending in a landing flash and ripple ring on the destination MENA marker
+- MENA cities show a red dot with crimson halo and uppercase label; non-MENA cities show small white dots
+- The globe is oversized (122% of panel, shifted -11% right) and oscillates ±0.35 rad around the MENA meridian, so the region stays roughly centered
+
+**Why this approach:**
+- Did not touch `GlobeConnections.tsx` (zero risk to anything else even though it's now unused outside this page)
+- Single new file in the same `components/globe/` folder so future cleanup is trivial
+- Animation state lives in refs, not React state, so the canvas loop runs at full 60fps; only the "Right Now" city name and the cards array trigger React re-renders
+- All custom keyframes scoped via `.hg-` prefix in inline `<style>` to avoid leaking into global CSS
+
+**Limitations / follow-ups:**
+- I couldn't open the page in a browser to eyeball it (Claude-in-Chrome extension not connected); typecheck and Vite compilation pass, but the user should verify positioning of cards on the actual panel size, and may want to tune `width: 122%` / `right: -11%` if the globe's MENA region drifts too far off-frame at their viewport
+- Card zone positions assume the panel is at least ~480px wide; on the smallest mobile breakpoint (`max-w-[380px]`) cards may visually overlap the globe — if needed, hide cards under `sm:` or reduce to 2 zones
+
+### Follow-up: light-mode theming (2026-05-09)
+
+The first pass hardcoded the reference HTML's dark palette (black gradient, white text, dark cards), which clashed with TMH's default light hero (cream surface, dark text). Now theme-aware:
+
+- [x] Added `isDarkRef` (ref, drives cobe render loop) + `isDark` state (drives React/CSS overlays), synced via `MutationObserver` on `<html>` `class`
+- [x] Cobe globe params switch between dark and light variants (mirrors `GlobeConnections.tsx`'s pattern: `mapBrightness 2.2/8`, `baseColor [.35,.35,.4]/[1,1,1]`, `glowColor [.06,.04,.07]/[.96,.94,.91]`) — no globe recreation on theme flip, params updated each frame in `onRender`
+- [x] Overlay canvas (arcs, leading dot, ripples, city dots/labels) branches on `isDarkRef.current` for: arc head color (white→cream), leading core (white→`#FFE9D8`), flash gradient stops, non-MENA dot fill (cream→dark), MENA label fill (cream→dark)
+- [x] Inline `<style>` rewritten with `--hg-*` CSS variables under `[data-theme="light"]` and `[data-theme="dark"]` selectors. Light vars: cream gradient bg, dark eyebrow/strong/status text, white-cream card bg with dark text, dark bentham brackets, grain blends `multiply` instead of `overlay`
+- [x] Crimson period (`.hg-tl-period`), live-status dot (`.hg-br-dot`), and verb spans (`.hg-verb`) stay `#DC143C` in both themes — they're brand accents, not theme-dependent
+- [x] Typecheck clean, dev server confirms updated module includes both `[data-theme="dark"]` and `[data-theme="light"]` style blocks
+
+### Follow-up: layout fix (2026-05-09)
+
+Light-mode pass exposed two layout bugs that made the panel look broken:
+
+**Bug 1 — Panel wasn't square at lg+.** The home hero's row uses `lg:items-stretch`, which sets an explicit height on each flex child to match the tallest one. Explicit `height` on an element overrides `aspect-ratio: 1/1`, so my `aspect-square` was being defeated at lg+ — the globe ended up centered vertically inside a tall cream rectangle with empty space above and below.
+  - [x] Added `lg:self-center` to the `motion.div` wrapper around `<HeroGlobe />` in `home.tsx:1616`. This overrides `align-items: stretch` for just this child, so it sizes to its own (square) intrinsic dimensions instead of stretching to match the left column's tall height.
+
+**Bug 2 — Activity cards collided with the city headline.** The previous random-zone placement let multiple cards land in zones 0/1 (top-left/top-right) at the same time, piling them up on top of the "RIGHT NOW [city]." headline.
+  - [x] Replaced the 4-zone random scheme with a 2-slot deterministic system:
+    - Slot `tr` (top-right) and slot `bl` (bottom-left) only — TL stays for the headline, BR stays for the live-status indicator
+    - Each spawn alternates slots via a closure-scoped `nextSlot` toggle, guaranteeing one card per slot at most
+    - When a new card targets a slot that still has an old card, the old card's TTL/fade timers are cancelled and it begins fading immediately, giving a clean handoff
+  - [x] Tightened spawn cadence: `ARC_SPAWN_MS 1600 → 1800`, `CARD_TTL_MS 4200 → 3200`, `CARD_FADE_MS 600 → 500` — keeps the panel feeling alive without queue buildup
+  - [x] Reduced card width: `clamp(180px, 48%, 240px) → clamp(168px, 44%, 220px)` so two cards never extend past the globe edges
+  - [x] Removed obsolete `cardPosition(zone, yJitter)` helper, `MAX_CARDS` constant, and `yJitter`/`zone` fields on `ActivityCard`
+
+Typecheck clean after both fixes.
 - The Majlis toggle defaults `false`; Voices defaults `true` — different policies are intentional
+
+# HeroGlobe — Mobile layout + perf pass
+
+Mobile shows broken layout (cards overlap "Right Now" headline; long city names like "Johannesburg" overflow) and the cobe + overlay loop lags. Fix both in `components/globe/HeroGlobe.tsx`.
+
+## Plan
+
+- [x] `mapSamples` 18000 → 12000 on `(max-width: 640px)`
+- [x] DPR capped at 1.25 on mobile (was 2)
+- [x] `.hg-globe-wrap` on mobile: `width: 100%; right: 0` (drops 122% overscale → ~32% fewer pixels for cobe)
+- [x] Activity spawner cadence on mobile: `1800ms → 2400ms`; arc cap `26 → 14`; pre-seed arcs `6 → 3` (less overlay work per frame)
+- [x] TL "Right Now" headline on mobile: `clamp(20px, 7vw, 30px)` + `white-space: normal` + `right: 16px` so "Johannesburg" wraps inside the panel
+- [x] Card width on mobile: `clamp(140px, 56%, 180px)`
+- [x] Card positions on mobile: `tr → top: 38% / right: 4%`; `bl → bottom: 6% / left: 4%` (clears the now-taller TL headline + BR live badge)
+- [x] Bentham brackets shrunk to 16px on mobile
+- [x] Replaced inline `slotStyle` with CSS classes (`hg-card-tr` / `hg-card-bl`) so the breakpoint can override positions
+- [x] Desktop visuals untouched (all changes scoped to `@media (max-width: 640px)` or `isMobile` branches)
+- [x] `pnpm typecheck` clean
+- [x] `pnpm build` clean
+
+## Review
+
+All edits live in `src/components/globe/HeroGlobe.tsx`:
+- Two `useEffect`s now branch on `window.matchMedia("(max-width: 640px)").matches`: cobe init (dpr / mapSamples / seed arc count) and the activity spawner (cap + cadence).
+- Inline `slotStyle` helper removed; card positioning lives entirely in CSS now so the media query can move cards independently.
+- Added a single `@media (max-width: 640px)` block at the bottom of the component's `<style>` covering globe wrap, TL/BR overlays, brackets, and card geometry.
+- No changes to `GlobeConnections.tsx`, `home.tsx`, or any data structures.
+
+### Follow-up: on-globe pill labels broke during rotate on mobile
+
+After the layout pass, the in-canvas city pills (CAIRO/DUBAI/RIYADH/…) overlapped each other on the small mobile panel because all 10 MENA hubs cluster into a much smaller area than on desktop (so same-size pills collided).
+
+- [x] Split the dot+label loop into two passes; collect MENA label candidates with their projected `p.x/y/z`
+- [x] Depth-sort candidates (front-most first) and render in that order
+- [x] On mobile: cap to 4 pills max + skip any whose bbox overlaps an already-placed pill (`isMobile` from the parent closure)
+- [x] On mobile: shrink pill geometry — font `8px → 7px`, padX `4 → 3`, pillH `11 → 9`
+- [x] Desktop unchanged (no cap, no collision skip; previously all visible pills drew in CITIES order, now they draw in depth order — same visual outcome since they don't overlap on the larger panel)
+- [x] `pnpm typecheck` clean

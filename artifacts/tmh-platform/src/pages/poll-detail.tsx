@@ -1,4 +1,5 @@
 import { useRoute, Link } from "wouter"
+import { useEffect } from "react"
 import { useGetPoll, useListPolls, useGetPollTrends } from "@workspace/api-client-react"
 import { Layout } from "@/components/layout/Layout"
 import { PollCard } from "@/components/poll/PollCard"
@@ -8,6 +9,7 @@ import { useVoter } from "@/hooks/use-voter"
 import { usePageTitle } from "@/hooks/use-page-title"
 import { Skeleton } from "@/components/ui/skeleton"
 import { LoadingDots } from "@/components/ui/loading-dots"
+import { track } from "@/lib/analytics"
 
 function PollDetailSkeleton() {
   return (
@@ -46,6 +48,17 @@ export default function PollDetail() {
 
   const { data: poll, isLoading, error } = useGetPoll(id)
   usePageTitle(poll?.question)
+
+  useEffect(() => {
+    if (poll?.id) {
+      track("poll_viewed", {
+        pollId: poll.id,
+        category: poll.categorySlug,
+        source: "detail",
+        isLoggedIn: false,
+      })
+    }
+  }, [poll?.id, poll?.categorySlug])
 
   const { data: relatedData } = useListPolls(
     { category: poll?.categorySlug, limit: 8 },

@@ -12,6 +12,8 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import type { ShareContext, SharePlatform, ShareResult } from "@/lib/share"
 import { executeShare, canGenerateCard, buildShareText } from "@/lib/share"
+import { track } from "@/lib/analytics"
+import { useMe } from "@/hooks/use-auth"
 
 // ── Channel type for Majlis ────────────────────────────────────
 
@@ -63,6 +65,7 @@ export function ShareModal({
   const [majlisSent, setMajlisSent] = useState<string | null>(null)
 
   const { toast } = useToast()
+  const { data: me } = useMe()
 
   const hasEmail =
     typeof window !== "undefined" &&
@@ -184,6 +187,14 @@ export function ShareModal({
   // ── Platform handler ───────────────────────────────────────
 
   const handlePlatform = async (platform: SharePlatform) => {
+    track("share_clicked", {
+      contentType: context.contentType,
+      contentId: (context as { contentId?: number | string }).contentId,
+      channel: platform,
+      isLoggedIn: !!me,
+      userId: me?.id,
+    })
+
     // Only "download" (Save Card) needs a loading state — it generates
     // a client-side card image. All other platforms are instant.
     if (platform === "download") {
@@ -273,6 +284,7 @@ export function ShareModal({
         newsletterOptIn,
       }),
     }).catch(() => {})
+    track("newsletter_subscribed", { source: "share_modal", optedIn: newsletterOptIn })
     if (onUnlock) onUnlock()
     setTimeout(onClose, 800)
   }

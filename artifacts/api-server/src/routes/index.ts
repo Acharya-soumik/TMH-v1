@@ -12,6 +12,9 @@ import majlisRouter from "./majlis";
 import ideationRouter from "./ideation";
 import chatbotRouter from "./chatbot";
 import ogImageRouter from "./og-image";
+import authRouter from "./auth";
+import pressKitRouter from "./press-kit";
+import digestRouter from "./digest";
 
 const router: IRouter = Router();
 
@@ -28,5 +31,8 @@ router.use(majlisRouter);
 router.use(ideationRouter);
 router.use(chatbotRouter);
 router.use(ogImageRouter);
+router.use(authRouter);
+router.use(pressKitRouter);
+router.use(digestRouter);
 
 export default router;

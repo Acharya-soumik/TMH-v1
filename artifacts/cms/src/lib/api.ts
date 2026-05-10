@@ -201,6 +201,23 @@ export const api = {
   createMajlisInvite: (data: { profileId: number; email: string }) =>
     request("/majlis/invites", { method: "POST", body: JSON.stringify(data) }),
 
+  // Newsletter digest
+  previewDigest: () => request("/digest/preview-this-week", { method: "POST" }),
+  pushDigest: () => request("/digest/push-to-beehiiv", { method: "POST" }),
+  listDigests: () => request("/digest"),
+
+  // Press kit
+  generatePressKit: (data: {
+    contentType: "poll" | "prediction" | "voice" | "pulse"
+    contentId: number
+    templates?: string[]
+    sizes?: string[]
+  }) => request("/press-kit/generate", { method: "POST", body: JSON.stringify(data) }),
+  getPressKitAssets: (contentType: string, contentId: number) =>
+    request(`/press-kit/${contentType}/${contentId}`),
+  regeneratePressKitCaption: (assetId: number) =>
+    request(`/press-kit/${assetId}/regenerate-caption`, { method: "POST" }),
+
   getRejectionLog: () => request("/ideation/rejection-log"),
   deleteRejectionLogEntry: (id: number) => request(`/ideation/rejection-log/${id}`, { method: "DELETE" }),
   exportRejectionLog: async () => {

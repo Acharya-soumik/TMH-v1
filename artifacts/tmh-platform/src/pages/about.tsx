@@ -10,70 +10,70 @@ const FALLBACK_PILLARS = [
   {
     num: "01",
     title: "Debates",
-    body: "The questions no one asks out loud — about identity, money, religion, gender, power, and the future. Every debate is anonymous. Every vote is permanent. What the region thinks stays on record.",
+    body: "What people believe. Anonymous votes on the questions usually left to private conversations: identity, money, religion, gender, power, work, media, and the future. Every vote is private. The result is public.",
     link: "/debates",
     cta: "Enter the Debates",
   },
   {
     num: "02",
     title: "Predictions",
-    body: "Not what should happen — what will. A Bloomberg-style prediction market for MENA's biggest questions. Track confidence over time, watch consensus shift, and bet on where the region is headed.",
+    body: "What people think will happen. Predictions track where the region believes things are heading. Not what should happen. What people expect will happen. The value is not the answer today. It is how confidence changes over time.",
     link: "/predictions",
     cta: "Make a Prediction",
   },
   {
     num: "03",
     title: "The Pulse",
-    body: "Exploding Topics for MENA. 36 data-driven trend cards across 8 categories — from press freedom collapse to the $4.1T sovereign wealth machine. Filterable by Power, Money, Society, Tech, Survival, Migration, Culture, and Health. Real-time population counter. Live tickers. The region's vital signs.",
+    body: "What is actually happening. The Pulse tracks public data signals across the region: politics, money, society, technology, migration, survival, culture, and health. Every card points back to a source. No source, no signal.",
     link: "/pulse",
     cta: "Read The Pulse",
   },
   {
     num: "04",
     title: "The Voices",
-    body: "94 founders, operators, and changemakers from 10 countries — curated, not applied-for. Each Voice has a story, a lesson, and a quote. This is the region's leadership index, built one profile at a time.",
+    body: "The people behind the region's decisions. Voices are selected profiles of founders, operators, investors, artists, builders, and thinkers across MENA. Not just their stories. Their beliefs, choices, and positions.",
     link: "/voices",
-    cta: "Meet The Voices",
+    cta: "Meet the Voices",
   },
   {
     num: "05",
     title: "The Majlis",
-    body: "A private, members-only forum for the region's verified founders, operators, and changemakers. Real-time conversations across curated channels — no algorithms, no noise. Where the people shaping MENA actually talk to each other.",
+    body: "A private room for serious conversation. The Majlis is a members-only space for verified Voices and selected participants. No open comments. No algorithmic noise. No public performance.",
     link: "/majlis/login",
-    cta: "Enter The Majlis",
+    cta: "Enter the Majlis",
   },
 ]
 
 const FALLBACK_BELIEFS = [
   {
     num: "01",
-    title: "A Social Experiment",
-    body: "Every question is a controlled provocation. The point is not agreement. The point is honesty.",
+    title: "We ask what people actually believe",
+    body: "Not what they say publicly. Not what they are expected to say.",
   },
   {
     num: "02",
-    title: "No Editorial Agenda",
-    body: "We write the questions. We never write the answers. What the region thinks is the region's business.",
+    title: "We ask. We do not answer",
+    body: "The Tribunal does not publish positions. It records them.",
   },
   {
     num: "03",
-    title: "Private Opinions, Public Data",
-    body: "Your vote is anonymous. The aggregate is not. That gap is where the truth lives.",
+    title: "Private votes. Public data",
+    body: "Your vote is anonymous. The aggregate is not.",
   },
   {
     num: "04",
-    title: "The Questions No One Asks",
-    body: "Not because they're dangerous. Because nobody built the room yet. We built the room.",
+    title: "Hard questions belong in public",
+    body: "Avoiding them does not make them disappear. It only makes the data weaker.",
   },
   {
     num: "05",
-    title: "Youngest Region on Earth",
-    body: "60% of MENA is under 30. 541 million people. That's not a demographic stat — it's 541 million opinions waiting to be heard.",
+    title: "The region deserves a record",
+    body: "Private opinion should not disappear into WhatsApp groups, dinner tables, and closed rooms.",
   },
   {
     num: "06",
-    title: "Real People Only",
-    body: "No bots. No astroturfing. No sponsored opinions. Just the region, speaking for itself.",
+    title: "If it is not human, it does not count",
+    body: "No bots. No sponsored sentiment. No manufactured consensus.",
   },
 ]
 
@@ -111,7 +111,7 @@ interface AboutConfig {
 export default function About() {
   usePageTitle({
     title: "About",
-    description: "The Tribunal is the anonymous voice of MENA -- 541 million people, one platform for debates, predictions, and real opinions.",
+    description: "The Tribunal is an anonymous opinion platform for the Middle East and North Africa. Anonymous votes. Human opinions. Public data.",
   });
   const { t, isAr } = useI18n()
   const { data: pageConfig } = usePageConfig<AboutConfig & {
@@ -160,11 +160,14 @@ export default function About() {
             {t(hero?.tagline || "Est. 2026 · Founded by Kareem Kaddoura")}
           </p>
           <h1 style={{ fontFamily: isAr ? "'IBM Plex Sans Arabic', sans-serif" : "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", textTransform: "uppercase", color: "var(--background)", letterSpacing: "-0.01em", lineHeight: 1.05, marginBottom: "0.5rem" }}>
-            {t(hero?.titleLine1 || "The Region's First")}<br />
+            {t(hero?.titleLine1 || "The Region's")}<br />
             {t(hero?.titleLine2 || "Collective Mirror")}<TitlePunctuation punctuations={pageConfig?.punctuations} />
           </h1>
           <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.18em" }}>
-            {t(hero?.subtitle || "541 million people. Zero platforms asking what they think. Until now.")}
+            {t(hero?.subtitle || "Anonymous votes. Human opinions. Public data.")}
+          </p>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", letterSpacing: "0.04em", opacity: 0.6, marginTop: "0.85rem" }}>
+            {t("Your vote is anonymous. The data is real.")}
           </p>
         </div>
       </div>
@@ -175,16 +178,22 @@ export default function About() {
           {t("What Is The Tribunal?")}
         </h2>
         <p className="text-xl font-sans leading-relaxed text-foreground mb-8">
-          {t("The Tribunal is MENA's first opinion intelligence platform — part editorial, part data engine, part social experiment. A product by The Middle East Hustle.")}
+          {t("The Tribunal is an anonymous opinion platform for the Middle East and North Africa.")}
         </p>
         <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
-          {t("We ask the questions nobody else asks. We collect anonymous votes from around the world on 19 MENA countries. We track predictions over time. We surface the trends reshaping the region. And we profile the people building it.")}
+          {t("We ask the questions people avoid in public. We collect votes, predictions, and data signals across the region. Then we show the results without turning them into a narrative.")}
         </p>
         <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
-          {t("Think of it as the WSJ of MENA opinion — editorial in presentation, ruthlessly neutral in methodology, and built for the 541 million people who live, work, and build in the Middle East and North Africa.")}
+          {t("This is not media. It is not a think tank. It is not a comment section.")}
         </p>
-        <p className="text-base text-muted-foreground font-sans leading-relaxed">
-          {t("Everything on The Tribunal — every debate, every prediction, every trend, every Voice — adds to a living dataset of what the region actually thinks. Not what governments report. Not what Western media assumes. What real people vote for when nobody's watching.")}
+        <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
+          {t("It is a record of what people actually think when their names are not attached.")}
+        </p>
+        <p className="text-base text-muted-foreground font-sans leading-relaxed mb-8">
+          {t("Every debate, prediction, trend, and Voice adds to a growing picture of the region from the inside.")}
+        </p>
+        <p className="text-sm font-serif italic text-foreground/70 leading-relaxed border-l-2 border-primary/60 pl-4">
+          {t("Anonymous does not mean artificial. If it is not human, it is not counted.")}
         </p>
       </div>
 
@@ -243,27 +252,33 @@ export default function About() {
           ))
         ) : (
           <>
-            <p className="text-xl font-sans leading-relaxed text-foreground mb-8">
-              {t("This started as a question I kept asking at dinner tables, in taxis, in boardrooms, and in WhatsApp groups at midnight: what does the Middle East actually think?")}
+            <p className="text-xl font-sans leading-relaxed text-foreground mb-6">
+              {t("This started with a simple question I kept asking in private rooms:")}
+            </p>
+            <p className="text-xl font-sans leading-relaxed text-foreground italic mb-8">
+              {t("What does the Middle East actually think?")}
             </p>
             <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
-              {t("Not what we're told it thinks. Not what leaders say it thinks. Not what Western media assumes it thinks. What the 541 million people who live here, work here, raise children here, and build things here — actually think.")}
+              {t("Not what we say publicly. Not what leaders say. Not what foreign media assumes. Not what people perform online.")}
+            </p>
+            <p className="text-base text-foreground font-sans leading-relaxed font-bold mb-6">
+              {t("What people actually think.")}
             </p>
             <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
-              {t("There was no single place to find out. So I built one.")}
+              {t("There was no single place to see that. So I built one.")}
+            </p>
+            <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
+              {t("The Tribunal is not here to answer for the region. It is here to record the region's answers.")}
+            </p>
+            <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
+              {t("Every vote is anonymous. Every result is public. Over time, that creates something we have never had before: a living record of private opinion at regional scale.")}
             </p>
           </>
         )}
 
         <blockquote className="font-display text-2xl md:text-3xl border-l-4 border-primary pl-6 py-4 my-12 text-foreground leading-snug">
-          {t(founder?.quote || "\"The Tribunal is a social experiment disguised as a platform. Every debate is a room I'm placing the region inside. Every vote is a voice that would otherwise never be counted. Every prediction is a bet on where we're headed.\"")}
+          {t(founder?.quote || "\"People do not lack opinions. They lack a place to say them honestly.\"")}
         </blockquote>
-
-        {!founder?.text && (
-          <p className="text-base text-muted-foreground font-sans leading-relaxed mb-6">
-            {t("I don't have the answers. Nobody does. But for the first time, we're collecting them — honestly, anonymously, at scale. Every vote, every prediction, every profile adds to a picture of the region that has never existed before.")}
-          </p>
-        )}
 
         <p className="text-base font-sans leading-relaxed text-foreground font-bold">
           {t(founder?.author ? `— ${founder.author}` : "— Kareem Kaddoura, Founder")}
@@ -299,7 +314,7 @@ export default function About() {
             {t("The Region We Cover")}
           </h2>
           <p className="text-sm text-foreground/75 font-sans mb-8 pl-5">
-            {t(`${countries.length} countries. 541 million people. One platform.`)}
+            {t(`${countries.length} countries. One regional lens.`)}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
             {countries.map(c => (
@@ -321,19 +336,25 @@ export default function About() {
           </h2>
           <div className="space-y-6 text-base text-foreground/80 font-sans leading-relaxed">
             <p>
-              {t("The Tribunal exists because the Middle East and North Africa is the most opinionated, least surveyed region on earth. There are 541 million people here — builders, dreamers, troublemakers — and no one has ever given them a single platform to say what they really think.")}
+              {t("The Middle East and North Africa is one of the most opinionated and least transparently measured regions in the world.")}
             </p>
             <p>
-              {t("We are not a news outlet. We are not a think tank. We do not do sponsored polls or PR research. Every question on this platform is designed to surface the truth — not a narrative.")}
+              {t("People talk. Constantly. At home. At work. In taxis. In group chats. Behind closed doors.")}
             </p>
             <p>
-              {t("We believe that anonymous, honest data from real people is more valuable than any op-ed, any government report, any think-tank white paper. We believe the region knows itself better than anyone watching from the outside.")}
+              {t("But those opinions rarely become data.")}
             </p>
             <p>
-              {t("The questions are provocative because the region deserves provocative questions. The data is honest because anything less is a waste of everyone's time.")}
+              {t("The Tribunal exists to close that gap.")}
+            </p>
+            <p>
+              {t("We are not here to tell the region what to think. We are here to make private opinion visible in aggregate.")}
+            </p>
+            <p>
+              {t("The questions are direct because soft questions produce soft answers. The data matters because the region deserves to see itself clearly.")}
             </p>
             <p className="text-foreground font-bold">
-              {t("This is MENA's living dataset — and it grows with every vote.")}
+              {t("This is MENA's living record of opinion. It grows with every vote.")}
             </p>
           </div>
         </div>
@@ -343,10 +364,10 @@ export default function About() {
       <div className="py-20 border-t border-border">
         <div className="max-w-2xl mx-auto px-4 text-center">
           <p className="font-display text-3xl text-foreground mb-2 leading-snug italic">
-            {t("\"Bringing the voices of the Middle East into one room. Finally.\"")}
+            {t("\"People do not lack opinions. They lack a place to say them honestly.\"")}
           </p>
           <p className="text-sm text-muted-foreground font-sans mb-12">
-            {t("— Kareem Kaddoura, Founder · The Tribunal, by The Middle East Hustle · 2026")}
+            {t("— Kareem Kaddoura, Founder · The Tribunal · 2026")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

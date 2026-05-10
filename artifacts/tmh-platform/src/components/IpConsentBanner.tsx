@@ -4,6 +4,7 @@ import { X } from "lucide-react"
 import { useSiteSettings } from "@/hooks/use-cms-data"
 
 const CONSENT_KEY = "tmh_ip_consent"
+export const IP_CONSENT_CHANGED_EVENT = "tmh:ip-consent-changed"
 
 export function getIpConsent(): "accepted" | "rejected" | null {
   if (typeof window === "undefined") return null
@@ -32,12 +33,14 @@ export function IpConsentBanner() {
     localStorage.setItem(CONSENT_KEY, "accepted")
     setConsent("accepted")
     setVisible(false)
+    window.dispatchEvent(new CustomEvent(IP_CONSENT_CHANGED_EVENT, { detail: "accepted" }))
   }
 
   const reject = () => {
     localStorage.setItem(CONSENT_KEY, "rejected")
     setConsent("rejected")
     setVisible(false)
+    window.dispatchEvent(new CustomEvent(IP_CONSENT_CHANGED_EVENT, { detail: "rejected" }))
   }
 
   if (!ipConsentEnabled) return null

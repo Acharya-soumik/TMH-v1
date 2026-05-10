@@ -1548,11 +1548,46 @@ router.get("/public/homepage", async (_req, res) => {
   }
 });
 
+const DEBATES_MAX_SECTIONS = 12;
+const DEBATES_MAX_CARD_LIMIT = 20;
+
+function normalizeDebatesSections(value: any): any {
+  if (!value || typeof value !== "object") return value;
+  const sections = Array.isArray(value.sections) ? value.sections : null;
+  if (!sections) return value;
+  const cleaned = sections
+    .filter((s: any) => s && typeof s === "object")
+    .map((s: any) => {
+      const mode = s.mode === "tag" ? "tag" : s.mode === "category" ? "category" : "manual";
+      return {
+        id: typeof s.id === "string" ? s.id : String(s.id ?? ""),
+        enabled: s.enabled !== false,
+        order: typeof s.order === "number" ? s.order : 0,
+        title: typeof s.title === "string" ? s.title : "",
+        subtitle: typeof s.subtitle === "string" ? s.subtitle : "",
+        mode,
+        manualPostIds: Array.isArray(s.manualPostIds)
+          ? s.manualPostIds.filter((n: any) => Number.isFinite(n) && n > 0)
+          : [],
+        tag: typeof s.tag === "string" ? s.tag : "",
+        categorySlug: typeof s.categorySlug === "string" ? s.categorySlug : "",
+        cardLimit: Math.max(1, Math.min(Number(s.cardLimit) || 8, DEBATES_MAX_CARD_LIMIT)),
+        showSeeAll: s.showSeeAll === true,
+      };
+    })
+    .sort((a: any, b: any) => a.order - b.order)
+    .slice(0, DEBATES_MAX_SECTIONS);
+  return { ...value, sections: cleaned };
+}
+
 router.get("/public/page-config/:page", async (req, res) => {
   try {
     const [row] = await db.select().from(cmsConfigsTable).where(eq(cmsConfigsTable.key, `page_${req.params.page}`));
     if (!row) return res.status(404).json({ error: "Page not found" });
-    return res.json(row.value);
+    const value = req.params.page === "polls" || req.params.page === "debates"
+      ? normalizeDebatesSections(row.value)
+      : row.value;
+    return res.json(value);
   } catch (err) {
     console.error("Public page config error:", err);
     return res.status(500).json({ error: "Failed to fetch page config" });

@@ -10,7 +10,7 @@ import { Layout } from "@/components/layout/Layout";
 import { PollCard } from "@/components/poll/PollCard";
 import { ProfileCard } from "@/components/profile/ProfileCard";
 import { TickerSkeleton } from "@/components/skeletons/TickerSkeleton";
-import { HeroGallery } from "@/components/home/HeroGallery";
+import { HeroGlobe } from "@/components/globe/HeroGlobe";
 const AboutSection = lazy(() => import("@/components/home/AboutSection"));
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,9 @@ import {
   useTransform,
   useReducedMotion,
 } from "motion/react";
+import { track } from "@/lib/analytics";
+
+const API_BASE_HOME = import.meta.env?.VITE_API_BASE_URL ?? "";
 
 // ── Animation utilities ──────────────────────────────────────────────────────
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
@@ -180,6 +183,139 @@ function CountUp({
   return (
     <span ref={ref} className={className} style={style}>
       {display}
+    </span>
+  );
+}
+
+// Dummy live ticker — keeps the number changing every few seconds to convey
+// active product usage. `mode="increment"` only goes up (e.g. cumulative votes);
+// `mode="drift"` random-walks ± with optional upward bias (e.g. people online).
+function LiveTicker({
+  start,
+  mode = "increment",
+  minDelta = 1,
+  maxDelta = 4,
+  intervalMs = 2000,
+  jitterMs = 1200,
+  upBias = 0.5,
+  min,
+  max,
+  lastDigitAccent = false,
+  animation = "slide",
+  className,
+  style,
+}: {
+  start: number;
+  mode?: "increment" | "drift";
+  minDelta?: number;
+  maxDelta?: number;
+  intervalMs?: number;
+  jitterMs?: number;
+  upBias?: number; // drift mode only — probability of an up step (0..1)
+  min?: number;
+  max?: number;
+  lastDigitAccent?: boolean;
+  animation?: "slide" | "fade"; // slide = last-char slide; fade = whole-number cross-fade
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const prefersReduced = useReducedMotion();
+  const [n, setN] = useState(start);
+
+  useEffect(() => {
+    if (prefersReduced) return;
+    let timeoutId: number;
+    const schedule = () => {
+      const delay = intervalMs + Math.random() * jitterMs;
+      timeoutId = window.setTimeout(() => {
+        setN((prev) => {
+          const delta =
+            minDelta + Math.floor(Math.random() * (maxDelta - minDelta + 1));
+          let next: number;
+          if (mode === "increment") {
+            next = prev + delta;
+          } else {
+            const up = Math.random() < upBias;
+            next = prev + (up ? delta : -delta);
+          }
+          if (typeof min === "number" && next < min) next = min + delta;
+          if (typeof max === "number" && next > max) next = max - delta;
+          return next;
+        });
+        schedule();
+      }, delay);
+    };
+    schedule();
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [mode, minDelta, maxDelta, intervalMs, jitterMs, upBias, min, max, prefersReduced]);
+
+  const display = n.toLocaleString();
+  const prefix = display.length > 0 ? display.slice(0, -1) : "";
+  const lastChar = display.length > 0 ? display.slice(-1) : "";
+  const lastClass = lastDigitAccent ? "text-primary" : undefined;
+
+  // Reduced-motion: no animation, just instant updates.
+  if (prefersReduced) {
+    return (
+      <span className={className} style={style}>
+        {prefix}
+        <span className={lastClass}>{lastChar}</span>
+      </span>
+    );
+  }
+
+  // Fade mode: cross-fade the entire number on each tick.
+  if (animation === "fade") {
+    return (
+      <span
+        className={className}
+        style={{ ...style, display: "inline-block", position: "relative" }}
+      >
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={display}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+            style={{ display: "inline-block" }}
+          >
+            {prefix}
+            <span className={lastClass}>{lastChar}</span>
+          </motion.span>
+        </AnimatePresence>
+      </span>
+    );
+  }
+
+  // Slide mode (default): only the last char slides up on change.
+  return (
+    <span className={className} style={style}>
+      {prefix}
+      <span
+        style={{
+          display: "inline-block",
+          position: "relative",
+          overflow: "hidden",
+          verticalAlign: "baseline",
+        }}
+      >
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={lastChar}
+            initial={{ y: "0.55em", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "-0.55em", opacity: 0 }}
+            transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
+            className={lastClass}
+            style={{ display: "inline-block" }}
+          >
+            {lastChar}
+          </motion.span>
+        </AnimatePresence>
+      </span>
     </span>
   );
 }
@@ -669,11 +805,14 @@ function FeaturedPredictionCard({
     if (!email.trim()) return;
     setEmailDone(true);
     localStorage.setItem("tmh_email_submitted", "true");
-    fetch("/api/email-subscribe", {
+    // Use the canonical newsletter endpoint (the legacy /api/email-subscribe
+    // path didn't exist on the server, so submissions were silently lost).
+    fetch(`${API_BASE_HOME}/api/newsletter/subscribe`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.trim(), source: "prediction_gate", newsletterOptIn }),
     }).catch(() => {});
+    track("newsletter_subscribed", { source: "prediction_gate", optedIn: newsletterOptIn });
     setTimeout(unlock, 800);
   };
 
@@ -1435,9 +1574,18 @@ export default function Home() {
 
   const handleCtaSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!ctaEmail.trim()) return;
-    localStorage.setItem("tmh_cta_joined", ctaEmail);
+    const cleaned = ctaEmail.trim().toLowerCase();
+    if (!cleaned) return;
+    localStorage.setItem("tmh_cta_joined", cleaned);
     setCtaJoined(true);
+    // The previous version only saved to localStorage and never actually
+    // subscribed the user — fixing the silent drop here.
+    fetch(`${API_BASE_HOME}/api/newsletter/subscribe`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: cleaned, source: "home_cta", newsletterOptIn: true }),
+    }).catch(() => {});
+    track("newsletter_subscribed", { source: "home_cta", optedIn: true });
   };
 
   const tickerPolls = trendingPolls?.polls ?? [];
@@ -1549,178 +1697,172 @@ export default function Home() {
             <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-8 lg:gap-12">
               {/* Left: hero copy */}
               <div className="flex flex-col items-center lg:items-start justify-center flex-1 text-center lg:text-left">
-                <motion.p
-                  className="text-[10px] font-serif font-bold tracking-[0.28em] uppercase text-primary mb-3"
+                {/* Eyebrow */}
+                <motion.div
+                  className="flex items-center gap-2.5 mb-5"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
+                  transition={{ duration: 0.5, delay: 0.15 }}
                 >
-                  {t("The questions you can't ask out loud.")}
-                </motion.p>
+                  <span className="relative flex w-2 h-2">
+                    <span className="absolute inline-flex w-full h-full rounded-full bg-[#10B981] opacity-60 animate-ping" />
+                    <span className="relative inline-flex w-2 h-2 rounded-full bg-[#10B981]" />
+                  </span>
+                  <span className="font-serif font-bold text-[10px] tracking-[0.32em] uppercase text-[#10B981]">
+                    {t("Live Globally · 541M Voices")}
+                  </span>
+                </motion.div>
+
+                {/* Headline */}
                 <motion.h1
                   className="font-display font-black uppercase tracking-tight text-foreground leading-none"
-                  style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", lineHeight: 0.92 }}
+                  style={{ fontSize: "clamp(1.35rem, 2.8vw, 2.2rem)", lineHeight: 1.1 }}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.1 }}
+                  transition={{ duration: 0.75, ease: EASE_OUT_EXPO, delay: 0.1 }}
                 >
-                  {t("The Middle East,")}{" "}
-                  <span className="italic font-display text-primary">{t("unfiltered.")}</span>
+                  {t("MENA's first opinion ")}
+                  <span
+                    className="relative inline-block"
+                    style={{
+                      backgroundImage:
+                        "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'><path d='M2 8 Q 40 1 80 6 T 198 6' fill='none' stroke='%23DC143C' stroke-width='3' stroke-linecap='round'/></svg>\")",
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "left 100%",
+                      backgroundSize: "100% 0.32em",
+                      paddingBottom: "0.16em",
+                    }}
+                  >
+                    {t("intelligence")}
+                  </span>
+                  {t(" platform")}
+                  <span className="text-primary">.</span>
                 </motion.h1>
+
+                {/* Body */}
                 <motion.p
                   className="text-base sm:text-[17px] text-foreground/80 font-sans mt-5 max-w-xl leading-relaxed"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.55, ease: EASE_OUT_EXPO, delay: 0.4 }}
                 >
-                  {t("Anonymous votes, predictions, and trends on the topics nobody else will touch. Politics, religion, identity, money, power. From inside the region and watched by the world. 541 million people. One place where the truth is on record.")}
+                  {t("Anonymous votes from across the globe on")}{" "}
+                  <strong className="text-foreground font-bold">{t("19 MENA countries")}</strong>
+                  {t(". No op-eds, no think tanks, no narrative. Just what")}{" "}
+                  <strong
+                    className="text-foreground font-bold"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(180deg, transparent 0%, transparent 64%, rgba(220,20,60,0.28) 64%, rgba(220,20,60,0.28) 94%, transparent 94%)",
+                      padding: "0 0.18em",
+                      borderRadius: "1px",
+                    }}
+                  >
+                    {t("541 million people")}
+                  </strong>{" "}
+                  {t("actually think.")}
                 </motion.p>
+
+                {/* CTAs */}
                 <motion.div
                   className="mt-7 flex items-center gap-4 flex-wrap justify-center lg:justify-start"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.7 }}
+                  transition={{ duration: 0.5, delay: 0.6 }}
                 >
                   <Link
                     href="/debates"
                     className="inline-flex items-center gap-2 bg-primary text-white font-bold uppercase tracking-widest text-xs px-7 py-3 hover:bg-primary/90 transition-colors font-serif"
                   >
-                    {t("See Today's Debate")} <ArrowRight className="w-3 h-3" />
+                    {t("Join the Debate")} <ArrowRight className="w-3 h-3" />
                   </Link>
                   <Link
-                    href="/about"
+                    href="/pulse"
                     className="inline-flex items-center gap-2 text-foreground/70 hover:text-foreground font-bold uppercase tracking-widest text-xs px-2 py-3 transition-colors font-serif underline underline-offset-4 decoration-primary/40"
                   >
-                    {t("What is this?")}
+                    {t("See Live Data")}
                   </Link>
+                </motion.div>
+
+                {/* Stats row */}
+                <motion.div
+                  className="mt-9 pt-7 border-t border-border/60 grid grid-cols-3 gap-5 w-full max-w-[480px]"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: EASE_OUT_EXPO, delay: 0.8 }}
+                >
+                  <div>
+                    <div className="font-display font-black text-[26px] sm:text-[28px] text-foreground tabular-nums leading-none">
+                      <LiveTicker
+                        start={847947}
+                        mode="increment"
+                        minDelta={1}
+                        maxDelta={3}
+                        intervalMs={1800}
+                        jitterMs={1400}
+                        lastDigitAccent
+                      />
+                    </div>
+                    <div className="text-[8.5px] font-serif font-bold uppercase tracking-[0.22em] text-foreground/55 mt-2">
+                      {t("Votes Today")}
+                    </div>
+                    <div className="text-[8px] font-serif font-bold uppercase tracking-[0.18em] text-primary mt-1 flex items-center gap-1.5">
+                      <span className="relative flex w-1.5 h-1.5">
+                        <span className="absolute inline-flex w-full h-full rounded-full bg-primary opacity-60 animate-ping" />
+                        <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-primary" />
+                      </span>
+                      {t("Live")}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-display font-black text-[26px] sm:text-[28px] text-foreground tabular-nums leading-none">
+                      94
+                    </div>
+                    <div className="text-[8.5px] font-serif font-bold uppercase tracking-[0.22em] text-foreground/55 mt-2">
+                      {t("Nations Active")}
+                    </div>
+                    <div className="text-[8px] font-serif font-bold uppercase tracking-[0.18em] text-foreground/45 mt-1">
+                      ↑ {t("3 Last hr")}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-display font-black text-[26px] sm:text-[28px] text-foreground tabular-nums leading-none">
+                      <LiveTicker
+                        start={13060}
+                        mode="drift"
+                        minDelta={5}
+                        maxDelta={28}
+                        intervalMs={5000}
+                        jitterMs={0}
+                        upBias={0.6}
+                        min={12780}
+                        max={13420}
+                        animation="fade"
+                      />
+                    </div>
+                    <div className="text-[8.5px] font-serif font-bold uppercase tracking-[0.22em] text-foreground/55 mt-2">
+                      {t("People Online")}
+                    </div>
+                    <div className="text-[8px] font-serif font-bold uppercase tracking-[0.18em] text-foreground/45 mt-1">
+                      ↗ {t("Rising")}
+                    </div>
+                  </div>
                 </motion.div>
               </div>
 
-              {/* Right: HeroGallery */}
+              {/* Right: MENA-focused globe */}
               <motion.div
-                className="flex-shrink-0 w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[360px] mx-auto lg:mx-0"
+                className="flex-shrink-0 w-full max-w-[380px] sm:max-w-[460px] lg:max-w-[540px] mx-auto lg:mx-0 lg:self-center"
                 initial={{ opacity: 0, scale: 0.94 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.9, ease: EASE_OUT_EXPO, delay: 0.2 }}
               >
-                <HeroGallery />
+                <HeroGlobe />
               </motion.div>
             </div>
           </motion.div>
         </div>
       </motion.div>
-
-      {/* ── SECTION HOOKS ── */}
-      <section className="bg-background border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <StaggerGrid className="grid grid-cols-2 md:grid-cols-4 gap-0">
-            {[
-              {
-                href: "/debates",
-                label: t("Debates"),
-                desc: "Vote on the questions shaping MENA",
-                count: String(
-                  homepageConfig?.sectionStats?.debates ??
-                    liveCounts?.debates ??
-                    "422",
-                ),
-                accent: "#DC143C",
-              },
-              {
-                href: "/predictions",
-                label: t("Predictions"),
-                desc: "Bet on what actually happens next",
-                count: String(
-                  homepageConfig?.sectionStats?.predictions ??
-                    liveCounts?.predictions ??
-                    apiPredictions?.total ??
-                    "230",
-                ),
-                accent: "#3B82F6",
-              },
-              {
-                href: "/pulse",
-                label: t("The Pulse"),
-                desc: "Real trends backed by real data",
-                count: String(
-                  homepageConfig?.sectionStats?.pulse ??
-                    liveCounts?.pulseTopics ??
-                    "78",
-                ),
-                accent: "#10B981",
-              },
-              ...(voicesEnabled ? [{
-                href: "/voices",
-                label: t("Voices"),
-                desc: "The people shaping the region",
-                count: String(
-                  homepageConfig?.sectionStats?.voices ??
-                    liveCounts?.voices ??
-                    "103",
-                ),
-                accent: "#A855F7",
-              }] : []),
-            ].map((item, i) => (
-              <motion.div
-                key={item.href}
-                variants={staggerItem}
-                className={`${i % 2 !== 0 ? "border-l border-border" : ""} ${i >= 2 ? "border-t border-border md:border-t-0" : ""} ${i > 0 ? "md:border-l md:border-border" : ""}`}
-              >
-                <Link
-                  href={item.href}
-                  className="group flex flex-col items-center justify-center gap-1 py-3 px-2 md:px-4 hover:bg-secondary/30 transition-colors min-w-0"
-                >
-                  <div className="flex items-center gap-1.5 md:gap-3 min-w-0">
-                    <span
-                      style={{
-                        width: 3,
-                        height: 20,
-                        background: item.accent,
-                        flexShrink: 0,
-                      }}
-                    />
-                    <span
-                      className="truncate"
-                      style={{
-                        fontFamily: "'Barlow Condensed', sans-serif",
-                        fontWeight: 800,
-                        fontSize: "0.75rem",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.12em",
-                        color: "var(--foreground)",
-                      }}
-                    >
-                      {item.label}
-                    </span>
-                    <CountUp
-                      value={item.count}
-                      style={{
-                        fontFamily: "'Barlow Condensed', sans-serif",
-                        fontWeight: 900,
-                        fontSize: "0.85rem",
-                        color: item.accent,
-                        flexShrink: 0,
-                      }}
-                    />
-                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity -ml-1 shrink-0" />
-                  </div>
-                  <span
-                    className="truncate max-w-full"
-                    style={{
-                      fontFamily: "DM Sans, sans-serif",
-                      fontSize: "0.6rem",
-                      color: "var(--muted-foreground)",
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    {item.desc}
-                  </span>
-                </Link>
-              </motion.div>
-            ))}
-          </StaggerGrid>
-        </div>
-      </section>
 
       {/* ── MIXED TICKER ── */}
       {(trendingLoading || predictionsLoading || pulseLoading) && interleaved.length === 0 ? (
@@ -1805,11 +1947,6 @@ export default function Home() {
         </div>
       </div>
       ) : null}
-
-      {/* ── ABOUT ── */}
-      <Suspense fallback={<div className="py-20" />}>
-        <AboutSection />
-      </Suspense>
 
       {/* ── FRONT PAGE: Lead Debate + Sidebar ── */}
       <section className="py-8 bg-background border-b border-border relative">
@@ -2571,6 +2708,11 @@ export default function Home() {
         </FadeUp>
       </section>
       )}
+
+      {/* ── ABOUT ── */}
+      <Suspense fallback={null}>
+        <AboutSection />
+      </Suspense>
 
       {/* ── EXPLORE TOPICS ── */}
       {categories?.categories && categories.categories.length > 0 && (

@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { init as initCmsAnalytics } from "@/lib/analytics";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Layout from "@/components/layout";
 import LoginPage from "@/pages/login";
@@ -28,6 +30,8 @@ import PageSiteSettings from "@/pages/page-site-settings";
 import DesignTokensPage from "@/pages/design-tokens";
 import IdeationPage from "@/pages/ideation";
 import MajlisPage from "@/pages/majlis";
+import PressKitPage from "@/pages/press-kit";
+import NewsletterDigestPage from "@/pages/newsletter-digest";
 import { Toaster } from "sonner";
 
 function ProtectedRoutes() {
@@ -71,6 +75,8 @@ function ProtectedRoutes() {
         <Route path="/subscribers" component={SubscribersPage} />
         <Route path="/applications" component={ApplicationsPage} />
         <Route path="/majlis" component={MajlisPage} />
+        <Route path="/press-kit" component={PressKitPage} />
+        <Route path="/newsletter" component={NewsletterDigestPage} />
         <Route path="/">
           <Redirect to="/dashboard" />
         </Route>
@@ -83,6 +89,10 @@ function ProtectedRoutes() {
 }
 
 function App() {
+  useEffect(() => {
+    initCmsAnalytics();
+  }, []);
+
   return (
     <ErrorBoundary>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>

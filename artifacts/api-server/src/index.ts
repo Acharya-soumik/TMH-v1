@@ -1,6 +1,7 @@
 import app from "./app";
 import { seedCmsData } from "@workspace/db/seed-cms";
 import { pool } from "@workspace/db";
+import { initCron } from "./lib/cron";
 
 // Warn if critical security env vars are missing in production
 if (process.env.NODE_ENV === "production") {
@@ -30,6 +31,11 @@ const server = app.listen(port, "0.0.0.0", async () => {
     await seedCmsData();
   } catch (err) {
     console.error("CMS seed error (non-fatal):", err);
+  }
+  try {
+    initCron();
+  } catch (err) {
+    console.error("Cron init error (non-fatal):", err);
   }
 });
 
