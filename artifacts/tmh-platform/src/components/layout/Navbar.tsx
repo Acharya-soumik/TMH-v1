@@ -72,18 +72,38 @@ export function Navbar() {
     ...(majlisEnabled ? [{ label: t("The Majlis"), href: "/majlis", icon: "lock" }] : []),
   ]
 
+  // Match on normalized href + label so CMS entries with different casing,
+  // missing leading slashes, or absolute URLs still get filtered when the
+  // feature is toggled off.
+  const matchesFeature = (link: { href?: string; label?: string }, slug: string) => {
+    const href  = (link.href  ?? "").toLowerCase().trim().replace(/^https?:\/\/[^/]+/, "")
+    const label = (link.label ?? "").toLowerCase().trim()
+    return href.startsWith(`/${slug}`) || label === slug
+  }
   const cmsLinks = settings?.navigation?.links?.filter(link => link.enabled !== false
-    && (majlisEnabled || !link.href?.startsWith("/majlis"))
-    && (voicesEnabled || !link.href?.startsWith("/voices")))
+    && (majlisEnabled || !matchesFeature(link, "majlis"))
+    && (voicesEnabled || !matchesFeature(link, "voices")))
   const navLinks = (cmsLinks?.length ? cmsLinks : defaultLinks).map(link => ({
     ...link,
     icon: link.icon === "lock" ? Lock : undefined,
   }))
 
   const rawCtaButton = settings?.navigation?.ctaButton
-  const ctaButton = rawCtaButton?.enabled !== false
+  // Hide the CTA when it points at a disabled feature (e.g. the default
+  // "Join The Voices" → /apply when Voices is off). The hero already carries
+  // the primary debates CTA, so we don't fall back to a generic label here.
+  const ctaCandidate = rawCtaButton?.enabled !== false
     ? (rawCtaButton || { label: t("Join The Voices"), href: "/apply" })
     : null
+  const ctaButton = (() => {
+    if (!ctaCandidate) return null
+    const href = (ctaCandidate.href ?? "").toLowerCase().trim().replace(/^https?:\/\/[^/]+/, "")
+    const targetsVoices = href.startsWith("/voices") || href.startsWith("/apply")
+    const targetsMajlis = href.startsWith("/majlis")
+    if (targetsVoices && !voicesEnabled) return null
+    if (targetsMajlis && !majlisEnabled) return null
+    return ctaCandidate
+  })()
 
   const seoSettings = settings?.seo
   const brandName = seoSettings?.siteTitle?.split(" by ")?.[0] || "The Tribunal"
