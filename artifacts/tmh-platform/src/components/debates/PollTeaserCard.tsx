@@ -27,6 +27,9 @@ export function PollTeaserCard({ poll }: Props) {
   const [localOptions, setLocalOptions] = useState<PollOption[]>(poll.options ?? []);
   const [localTotal, setLocalTotal] = useState(poll.totalVotes ?? 0);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  // Drives the "Vote Recorded" confirmation banner shown briefly before the
+  // panel auto-collapses. Cleared when the panel reopens or unmounts.
+  const [justVoted, setJustVoted] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -34,6 +37,12 @@ export function PollTeaserCard({ poll }: Props) {
     setLocalOptions(poll.options ?? []);
     setLocalTotal(poll.totalVotes ?? 0);
   }, [poll.options, poll.totalVotes]);
+
+  // Clear the confirmation banner whenever the panel collapses, so reopening
+  // doesn't flash a stale "Vote Recorded" message.
+  useEffect(() => {
+    if (!expanded) setJustVoted(false);
+  }, [expanded]);
 
   // Anchor the portaled panel under the card. Resize/RO update its position.
   // Small scrolls just re-anchor (user may need to scroll to bring the panel
@@ -156,8 +165,10 @@ export function PollTeaserCard({ poll }: Props) {
       },
     );
 
-    // Auto-collapse after the click registers visually
-    setTimeout(() => setExpanded(false), 250);
+    // Show the "Vote Recorded" confirmation, then auto-collapse so the user
+    // has a beat to register the action before the panel disappears.
+    setJustVoted(true);
+    setTimeout(() => setExpanded(false), 2500);
   };
 
   const ctaLabel = expanded ? "CLOSE" : wasVoted ? "RESULTS" : "VOTE";
@@ -223,6 +234,7 @@ export function PollTeaserCard({ poll }: Props) {
         rect={rect}
         panelRef={panelRef}
         showResults={showResults}
+        justVoted={justVoted}
         options={localOptions}
         votedOptionId={votedOptionId}
         onVote={handleVote}
@@ -278,6 +290,7 @@ function ExpandedPanel({
   rect,
   panelRef,
   showResults,
+  justVoted,
   options,
   votedOptionId,
   onVote,
@@ -288,6 +301,7 @@ function ExpandedPanel({
   rect: DOMRect | null;
   panelRef: React.RefObject<HTMLDivElement | null>;
   showResults: boolean;
+  justVoted: boolean;
   options: PollOption[];
   votedOptionId: number | undefined;
   onVote: (id: number) => void;
@@ -306,6 +320,11 @@ function ExpandedPanel({
           animate={{ height: "auto", opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.26, ease: EASE_OUT_EXPO }}
+          // Block clicks from bubbling to the card's <Link> wrapper through
+          // the React portal tree, which would otherwise navigate the user
+          // to /debates/:id and unmount the panel before the vote registers.
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
           style={{
             position: "fixed",
             top: rect.bottom - 1,
@@ -317,9 +336,39 @@ function ExpandedPanel({
         >
           <div className="p-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[9px] uppercase tracking-[0.25em] font-bold text-muted-foreground">
-                {showResults ? "Live Results" : "Cast Your Vote"}
-              </span>
+              <AnimatePresence mode="wait" initial={false}>
+                {justVoted ? (
+                  <motion.span
+                    key="just-voted"
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.22, ease: EASE_OUT_EXPO }}
+                    className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.25em] font-bold text-primary"
+                  >
+                    <motion.span
+                      initial={{ scale: 0, rotate: -90 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
+                      className="inline-flex"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    </motion.span>
+                    Vote Recorded
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="status"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                    className="text-[9px] uppercase tracking-[0.25em] font-bold text-muted-foreground"
+                  >
+                    {showResults ? "Live Results" : "Cast Your Vote"}
+                  </motion.span>
+                )}
+              </AnimatePresence>
               <button
                 type="button"
                 onClick={onClose}
@@ -358,7 +407,15 @@ function VoteList({
         <button
           key={opt.id}
           type="button"
-          onClick={() => onVote(opt.id)}
+          // React events bubble through the React tree (not the DOM), so a
+          // click here propagates up to the <Link> wrapping the card and
+          // triggers navigation to /debates/:id. Stop propagation + prevent
+          // default so the vote registers in place.
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onVote(opt.id);
+          }}
           disabled={disabled}
           className={cn(
             "group/opt relative w-full bg-background border border-border overflow-hidden cursor-pointer",

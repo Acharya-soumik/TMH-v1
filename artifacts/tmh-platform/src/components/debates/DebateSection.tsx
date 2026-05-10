@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Poll, PollListResponse } from "@workspace/api-client-react";
 import { HorizontalScroller } from "./HorizontalScroller";
@@ -72,10 +72,24 @@ export function DebateSection({ section }: Props) {
   });
 
   const { hasVoted } = useVoter();
-  const visiblePolls = useMemo(
-    () => (data ?? []).filter((p) => !hasVoted(p.id)),
-    [data, hasVoted],
-  );
+  // Snapshot the "already voted" set when data first arrives and freeze it.
+  // If we re-filter on every vote, the card the user *just* voted on gets
+  // unmounted mid-animation (the section's filter is re-run by useVoter's
+  // change event before the result-confirmation banner can finish). Polls
+  // voted in-session keep their slot until the next data fetch / page load,
+  // at which point they move to the Past Voted section.
+  const filterDataRef = useRef<Poll[] | null>(null);
+  const filteredCacheRef = useRef<Poll[]>([]);
+  const visiblePolls = useMemo(() => {
+    if (!data) return [];
+    if (data !== filterDataRef.current) {
+      filterDataRef.current = data;
+      filteredCacheRef.current = data.filter((p) => !hasVoted(p.id));
+    }
+    return filteredCacheRef.current;
+    // hasVoted intentionally omitted — see comment above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   // Hide section entirely when no posts (Decision E2) or all are filtered out
   if (!isLoading && visiblePolls.length === 0) return null;
