@@ -5,7 +5,7 @@ import {
   ChevronRight, X, Plus, RotateCcw, Save, Download,
   AlertTriangle, AlertCircle, CheckCircle2, Clock, Loader2,
   MessageSquare, TrendingUp, Activity, Trash2, History, BookX,
-  Settings, SlidersHorizontal, ChevronDown, ChevronsUpDown, Check
+  Settings, SlidersHorizontal, ChevronDown, ChevronsUpDown, Check, Pencil
 } from "lucide-react";
 
 type Mode = "explore" | "focused";
@@ -684,6 +684,18 @@ function ConfigPanel({
   onStart: () => void; isProcessing: boolean;
 }) {
   const [newGuardrail, setNewGuardrail] = useState("");
+  const [editingGuardrailIndex, setEditingGuardrailIndex] = useState<number | null>(null);
+  const [editingGuardrailValue, setEditingGuardrailValue] = useState("");
+
+  const commitGuardrailEdit = () => {
+    if (editingGuardrailIndex === null) return;
+    const trimmed = editingGuardrailValue.trim();
+    if (trimmed) {
+      setGuardrails(guardrails.map((g, idx) => (idx === editingGuardrailIndex ? trimmed : g)));
+    }
+    setEditingGuardrailIndex(null);
+    setEditingGuardrailValue("");
+  };
 
   const totalPillarCount = pillarCounts.debates + pillarCounts.predictions + pillarCounts.pulse;
 
@@ -803,13 +815,57 @@ function ConfigPanel({
               {guardrails.map((g, i) => (
                 <div key={i} className="flex items-start gap-1.5 group">
                   <Shield className="w-3 h-3 text-yellow-400/60 mt-0.5 shrink-0" />
-                  <span className="text-[11px] text-muted-foreground flex-1">{g}</span>
-                  <button
-                    onClick={() => setGuardrails(guardrails.filter((_, idx) => idx !== i))}
-                    className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 shrink-0"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
+                  {editingGuardrailIndex === i ? (
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editingGuardrailValue}
+                      onChange={e => setEditingGuardrailValue(e.target.value)}
+                      onBlur={commitGuardrailEdit}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          commitGuardrailEdit();
+                        } else if (e.key === "Escape") {
+                          setEditingGuardrailIndex(null);
+                          setEditingGuardrailValue("");
+                        }
+                      }}
+                      className="flex-1 bg-secondary border border-border px-1.5 py-0.5 text-[11px] text-foreground"
+                    />
+                  ) : (
+                    <span
+                      onClick={() => {
+                        setEditingGuardrailIndex(i);
+                        setEditingGuardrailValue(g);
+                      }}
+                      className="text-[11px] text-muted-foreground flex-1 cursor-text hover:text-foreground"
+                      title="Click to edit"
+                    >
+                      {g}
+                    </span>
+                  )}
+                  {editingGuardrailIndex !== i && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setEditingGuardrailIndex(i);
+                          setEditingGuardrailValue(g);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground shrink-0"
+                        title="Edit guardrail"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => setGuardrails(guardrails.filter((_, idx) => idx !== i))}
+                        className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 shrink-0"
+                        title="Remove guardrail"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
