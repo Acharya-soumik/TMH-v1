@@ -1777,10 +1777,10 @@ export default function Home() {
                     {t("Join the Debate")} <ArrowRight className="w-3 h-3" />
                   </Link>
                   <Link
-                    href="/pulse"
+                    href="/predictions"
                     className="inline-flex items-center gap-2 text-foreground/70 hover:text-foreground font-bold uppercase tracking-widest text-xs px-2 py-3 transition-colors font-serif underline underline-offset-4 decoration-primary/40"
                   >
-                    {t("See Live Data")}
+                    {t("Call The Future")}
                   </Link>
                 </motion.div>
 
